@@ -1,0 +1,15 @@
+iq_group_sqs_mautic.reset_password:
+  path: '/group/reset/password/{user_id}/{token}'
+  defaults:
+    _title: 'Password reset'
+    _controller: '\Drupal\iq_group_sqs_mautic\Controller\UserController::resetPassword'
+  requirements:
+    _access: 'TRUE'
+
+iq_group_sqs_mautic.user_form:
+  path: '/group/user/access'
+  defaults:
+    _title: 'Register or Login'
+    _form: '\Drupal\iq_group_sqs_mautic\Form\RegisterForm'
+  requirements:
+    _access: 'TRUE'

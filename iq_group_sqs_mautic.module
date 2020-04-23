@@ -1,0 +1,116 @@
+<?php
+
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+
+/**
+ * Implements hook_form_alter().
+ */
+function iq_group_sqs_mautic_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  /*var_dump($form_id);
+  die();*/
+
+  /*$user = \Drupal\user\Entity\User::load(132);
+  $login_url = user_pass_reset_url($user);
+
+  if ($login_url) {
+
+    drupal_set_message('OneTime LoginLink for ivan');
+    drupal_set_message($login_url);
+  }*/
+
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function iq_group_sqs_mautic_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  $form['actions']['submit']['#submit'][] = 'iq_group_sqs_mautic_after_register';
+  $form['#validate'][] = 'iq_group_sqs_mautic_after_register';
+}
+
+function iq_group_sqs_mautic_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+
+  // $default_preferences = $form_state->getFormObject()->field_iq_group_preferences->value;
+  //$form['field_iq_group_preferences']['widget']['#default_value'] = ;
+}
+
+
+/**
+ * Additional submit function after user register.
+ */
+function iq_group_sqs_mautic_after_register(&$form, FormStateInterface $form_state) {
+  // email exists
+  $email = $form_state->getValue('email');
+  if ($email)
+  {
+    // if there is no password
+    // resend token link
+  }
+  else {
+    // create a token for the user and send a token link
+  }
+  \Drupal::messenger()->addMessage('it has come to the after register');
+  // Automatically create a user and send him an email with token
+}
+
+/**
+ * Implements hook_user_login().
+ */
+function iq_group_sqs_mautic_user_login(\Drupal\user\UserInterface $account) {
+  \Drupal::messenger()->addMessage('we are in the login hook');
+  if ($account->hasRole('subscriber')) {
+    // redirect to destination if there is 1
+    if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
+      $destination = $_GET['destination'];
+      header("Location:".$destination);
+    }
+    // if not, he will be redirect to his profile page.
+    else {
+      $user_id = \Drupal::currentUser()->id();
+      header('Location:/user/' . $user_id . '/edit');
+    }
+//    return new RedirectResponse(Url::fromUserInput('/node/78')->toString());
+//    return new RedirectResponse(Url::fromRoute('user.edit')->toString());
+  }
+  else if ($account->hasRole('lead')) {
+    // redirect to
+    //return new RedirectResponse(Url::fromRoute('iq_emergency.settings')->toString());
+  }
+}
+
+
+/**
+ * Implements hook_node_access().
+ */
+function iq_group_sqs_mautic_node_access(\Drupal\node\NodeInterface $node, $op, \Drupal\Core\Session\AccountInterface $account) {
+  $group_contents = \Drupal::entityTypeManager()
+    ->getStorage('group_content')
+    ->loadByEntity($node);
+
+  // If the node does not belong to any group, we have nothing to say.
+  if (empty($group_contents)) {
+    return AccessResult::neutral();
+  }
+  return AccessResult::neutral();
+
+  // If he is not registered
+  if ($account->isAnonymous()) {
+    // Redirect him to the form to register with email (send additional param with the group)
+    return new RedirectResponse(Url::fromRoute('user.register')->toString() . "?destination=/node/" . $node->id());
+  }
+  // If he does not have token
+  else if ($account->field_iq_group_user_token->value == NULL) {
+    // Redirect him to the form to fill his password and set his token afterwards.
+    return new RedirectResponse(Url::fromRoute('user.edit')->toString() . "?destination=/node/" . $node->id());
+
+  }
+  // If he is registered with token, the the group module will take care of access.
+  else {
+    return AccessResult::neutral();
+
+  }
+
+}
