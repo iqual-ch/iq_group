@@ -41,15 +41,22 @@ class UserController extends ControllerBase {
         $user->addRole('subscriber');
         $user->save();
       }
-
+      $destination = "";
+      if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
+        $destination = $_GET['destination'];
+      }
       if (in_array('lead', $user->getRoles())) {
         // Redirect him to the login page with the destination.
-        $resetURL = Url::fromRoute('user.login',['mail' => $user->getEmail()]);
-        // show msg  " u are already a lead, login "
+        $resetURL = Url::fromRoute('user.login')->toString();
+        // @todo if there is a destination, attach it to the url
+        if ($destination != "") {
+          $resetURL .= "?destination=" . $destination;
+        }
       }
       else {
         // instead of redirecting the user to the one-time-login, log him in.
         user_login_finalize($user);
+        // it doesnt go here, because the login hook is triggered
         \Drupal::messenger()->addMessage('u logged in from tha link');
         return new RedirectResponse(Url::fromUserInput('/node/78')->toString());
 
@@ -57,9 +64,7 @@ class UserController extends ControllerBase {
         //$resetURL = user_pass_reset_url($user);
       }
 
-      if ($_GET['destination'] != NULL) {
-        $resetURL .= "?destination=" . $_GET['destination'];
-      }
+
       return new RedirectResponse($resetURL, 302);
     }
     else {

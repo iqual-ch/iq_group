@@ -13,3 +13,11 @@ iq_group_sqs_mautic.user_form:
     _form: '\Drupal\iq_group_sqs_mautic\Form\RegisterForm'
   requirements:
     _access: 'TRUE'
+
+iq_group_sqs_mautic.user_edit_form:
+  path: '/user/edit'
+  defaults:
+    _title: 'User edit'
+    _form: '\Drupal\iq_group_sqs_mautic\Form\UserEditForm'
+  requirements:
+    _role: 'authenticated'

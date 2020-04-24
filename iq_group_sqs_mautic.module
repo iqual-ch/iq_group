@@ -3,6 +3,7 @@
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
+use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -31,11 +32,25 @@ function iq_group_sqs_mautic_form_user_register_form_alter(&$form, \Drupal\Core\
   $form['#validate'][] = 'iq_group_sqs_mautic_after_register';
 }
 
-function iq_group_sqs_mautic_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+/*function iq_group_sqs_mautic_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  $result = \Drupal::entityTypeManager()->getStorage('group')->loadMultiple();
+  $options['_none'] = 'None';
+  /**
+   * @var  int $key
+   * @var  \Drupal\group\Entity\Group $group
+   * /
+  foreach ($result as $key => $group) {
+    $options[$group->id()] = $group->label();
+  }
+  $user = User::load(\Drupal::currentUser()->id());
+  $selected_preferences = $user->get('field_iq_group_preferences')->getValue();
+  $form['field_iq_group_preferences']['widget']['#options'] = $options;
+  var_dump(array_keys($form['field_iq_group_preferences']['widget']['#options']));
+  die();
 
-  // $default_preferences = $form_state->getFormObject()->field_iq_group_preferences->value;
-  //$form['field_iq_group_preferences']['widget']['#default_value'] = ;
-}
+   $default_preferences = $form_state->getFormObject()->field_iq_group_preferences->value;
+  $form['field_iq_group_preferences']['widget']['#default_value'] = ;
+}*/
 
 
 /**
@@ -69,8 +84,7 @@ function iq_group_sqs_mautic_user_login(\Drupal\user\UserInterface $account) {
     }
     // if not, he will be redirect to his profile page.
     else {
-      $user_id = \Drupal::currentUser()->id();
-      header('Location:/user/' . $user_id . '/edit');
+      header('Location:/user/edit');
     }
 //    return new RedirectResponse(Url::fromUserInput('/node/78')->toString());
 //    return new RedirectResponse(Url::fromRoute('user.edit')->toString());
