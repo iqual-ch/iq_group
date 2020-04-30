@@ -1,0 +1,22 @@
+uuid: 142ac773-d3bc-4d58-9e24-8334402a07cd
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.iq_group_whitepaper
+id: node.iq_group_whitepaper.status
+field_name: status
+entity_type: node
+bundle: iq_group_whitepaper
+label: Published
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

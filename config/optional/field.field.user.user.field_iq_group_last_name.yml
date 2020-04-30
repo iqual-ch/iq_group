@@ -1,0 +1,20 @@
+uuid: 53783d62-9abc-446b-8942-5c7f578a1890
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_iq_group_last_name
+  module:
+    - user
+id: user.user.field_iq_group_last_name
+field_name: field_iq_group_last_name
+entity_type: user
+bundle: user
+label: 'Last name'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

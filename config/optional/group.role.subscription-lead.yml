@@ -1,0 +1,18 @@
+uuid: ce3948c2-4ab8-461a-ad54-e3a52d1701cf
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.subscription
+id: subscription-lead
+label: Lead
+weight: -4
+internal: false
+audience: member
+group_type: subscription
+permissions_ui: true
+permissions:
+  - 'view group_node:iq_group_whitepaper content'
+  - 'view group_node:iq_group_whitepaper entity'
+  - 'view group_node:page content'
+  - 'view unpublished group_node:iq_group_whitepaper entity'

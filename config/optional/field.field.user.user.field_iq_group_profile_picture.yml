@@ -1,0 +1,31 @@
+uuid: bd7b7763-70fe-4457-ad92-5f10d0c54306
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_iq_group_profile_picture
+    - media.type.image
+    - media.type.svg
+  module:
+    - user
+id: user.user.field_iq_group_profile_picture
+field_name: field_iq_group_profile_picture
+entity_type: user
+bundle: user
+label: 'Profile picture'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image: image
+      svg: svg
+    sort:
+      field: _none
+    auto_create: false
+    auto_create_bundle: image
+field_type: entity_reference

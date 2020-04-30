@@ -1,0 +1,22 @@
+uuid: e6fc2742-9d72-4aa3-80fe-dccc29f979e3
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.iq_group_whitepaper
+id: node.iq_group_whitepaper.promote
+field_name: promote
+entity_type: node
+bundle: iq_group_whitepaper
+label: 'Promoted to front page'
+description: ''
+required: false
+translatable: true
+default_value:
+  -
+    value: 0
+default_value_callback: ''
+settings:
+  on_label: 'On'
+  off_label: 'Off'
+field_type: boolean

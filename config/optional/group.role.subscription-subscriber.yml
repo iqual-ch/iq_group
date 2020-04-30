@@ -1,0 +1,18 @@
+uuid: 47c46d85-e42e-42d2-becc-0e58a702c28a
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.subscription
+id: subscription-subscriber
+label: Subscriber
+weight: -5
+internal: false
+audience: member
+group_type: subscription
+permissions_ui: true
+permissions:
+  - 'view group_node:iq_group_whitepaper content'
+  - 'view group_node:iq_group_whitepaper entity'
+  - 'view group_node:page content'
+  - 'view unpublished group_node:iq_group_whitepaper entity'

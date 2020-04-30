@@ -2,7 +2,10 @@
 
 namespace Drupal\iq_group_sqs_mautic\Form;
 
+use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\Site\Settings;
+use Drupal\group\Entity\Group;
 use Drupal\user\Entity\User;
 
 class RegisterForm extends FormBase
@@ -43,7 +46,12 @@ class RegisterForm extends FormBase
       ];
     }
     else {
-      if(in_array('lead', $account->getRoles()) || in_array('subscriber', $account->getRoles())) {
+      $group = Group::load('5');
+      $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+      $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
+      $groupRoles = array_keys($groupRoles);
+
+      if(in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
         // show him the link to the resource
         $result = \Drupal::entityTypeManager()->getStorage('group')->loadMultiple();
         $options = [];
@@ -91,12 +99,17 @@ class RegisterForm extends FormBase
       if (count($result) > 0) {
         $user = \Drupal\user\Entity\User::load(reset($result));
         if ($user->field_iq_group_user_token->value == NULL) {
-          $user->set('field_iq_group_user_token', md5($user->getEmail()));
+          $data = time();
+          $data .= $user->id();
+          $data .= $user->getEmail();
+          $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
+          $user->set('field_iq_group_user_token', $hash_token);
           $user->save();
         }
         $url = 'https://' . self::getDomain() . '/group/reset/password/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
-        if ($_GET['destination'] != NULL) {
-          $url .= "?destination=" . $_GET['destination'];
+        $destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
+        if (isset($destination) && $destination != NULL) {
+          $url .= "?destination=" . $destination;
         }
         $result = mail($user->getEmail(), "SQS Mautic login", "Login through " . $url,
           "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
@@ -115,11 +128,17 @@ class RegisterForm extends FormBase
           'name' => $name,
           'status' => 1,
         ]);
-        $user->set('field_iq_group_user_token', md5($user->getEmail()));
+        $user->save();
+        $data = time();
+        $data .= $user->id();
+        $data .= $user->getEmail();
+        $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
+        $user->set('field_iq_group_user_token', $hash_token);
         $user->save();
         $url = 'https://' . self::getDomain() . '/group/reset/password/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
-        if ($_GET['destination'] != NULL) {
-          $url .= "?destination=" . $_GET['destination'];
+        $destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
+        if (isset($destination) && $destination != NULL) {
+          $url .= "?destination=" . $destination;
         }
         $result = mail($user->getEmail(), "SQS Mautic login", "Register through " . $url,
           "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");

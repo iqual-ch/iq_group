@@ -4,6 +4,8 @@ namespace Drupal\iq_group_sqs_mautic\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\group\Entity\Group;
+use Drupal\group\Entity\GroupRole;
 use Drupal\user\Entity\User;
 
 class UserEditForm extends FormBase
@@ -95,7 +97,22 @@ class UserEditForm extends FormBase
     $user->set('name', $name);
     if ($form_state->getValue('password') != NULL) {
       $user->setPassword($form_state->getValue('password'));
-      $user->addRole('lead');
+      // Add the role in newsletter (id=5) group.
+      $group = Group::load('5');
+      if ($group->getMember($user)) {
+        $membership = $group->getMember($user)->getGroupContent();
+        $groupRole = GroupRole::load('subscription-lead');
+        if ($groupRole != NULL && $groupRole->label() == 'Lead') {
+          $membership->group_roles[] = 'subscription-lead';
+          $membership->save();
+        }
+      }else {
+        $groupRole = GroupRole::load('subscription-lead');
+        if ($groupRole != NULL && $groupRole->label() == 'Lead') {
+          $group->addMember($user, ['group_roles' => [$groupRole->id()]]);
+        }
+      }
+
     }
     $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
     $user->save();

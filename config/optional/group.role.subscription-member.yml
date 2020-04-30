@@ -1,0 +1,17 @@
+uuid: c89bac1b-dbfb-4824-89e4-f9ea55a4e779
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.subscription
+id: subscription-member
+label: Member
+weight: -100
+internal: true
+audience: member
+group_type: subscription
+permissions_ui: true
+permissions:
+  - 'view group_node:iq_group_whitepaper content'
+  - 'view group_node:iq_group_whitepaper entity'
+  - 'view unpublished group_node:iq_group_whitepaper entity'

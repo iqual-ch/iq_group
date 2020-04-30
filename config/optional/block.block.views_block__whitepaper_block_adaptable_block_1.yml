@@ -1,0 +1,43 @@
+uuid: 9d18e2af-bb9b-4192-a6bc-efef2cd66027
+langcode: en
+status: true
+dependencies:
+  config:
+    - views.view.whitepaper_block
+  module:
+    - advanced_menu_condition
+    - pagedesigner_block
+    - pagedesigner_block_adaptable
+  theme:
+    - iq_custom
+id: views_block__whitepaper_block_adaptable_block_1
+theme: iq_custom
+region: pagedesigner
+weight: 0
+provider: null
+plugin: 'adaptable_views_block:whitepaper_block-adaptable_block_1'
+settings:
+  id: 'adaptable_views_block:whitepaper_block-adaptable_block_1'
+  label: ''
+  provider: pagedesigner_block_adaptable
+  label_display: visible
+  views_label: ''
+  items_per_page: none
+visibility:
+  advanced_menu_position:
+    id: advanced_menu_position
+    menu_position:
+      '': ''
+    negate: null
+    context_mapping: {  }
+  advanced_menu_position_not:
+    id: advanced_menu_position_not
+    not_menu_position:
+      '': ''
+    negate: null
+    context_mapping: {  }
+  pagedesigner_condition:
+    id: pagedesigner_condition
+    pagedesigner_condition: 0
+    negate: null
+    context_mapping: {  }

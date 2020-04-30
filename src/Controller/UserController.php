@@ -5,6 +5,11 @@ namespace Drupal\iq_group_sqs_mautic\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 use Drupal\Core\Url;
+use Drupal\group\Entity\Group;
+use Drupal\group\Entity\GroupRole;
+use Drupal\group\GroupRoleSynchronizer;
+use Drupal\iq_group_sqs_mautic\Form\RegisterForm;
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -21,51 +26,74 @@ class UserController extends ControllerBase {
       // if user ->id is same with the logged in user (check cookies)
       if (\Drupal::currentUser()->isAuthenticated()) {
         if ($user->id() == \Drupal::currentUser()->id()) {
-          // is he opt-ed in (is he subscriber or lead)
-          if ($user->hasRole('subscriber')) {
+          // is user opt-ed in (is user subscriber or lead)  if ($user->hasRole('subscriber'))
+          // If there is a destination in the URL.
+          if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
+            return new RedirectResponse(Url::fromUserInput($_GET['destination'])->toString());
+          }
+          else {
             return new RedirectResponse(Url::fromUserInput('/node/78')->toString());
           }
+
         }
         else {
           // Log out the user and continue.
           user_logout();
         }
       }
-      // If he is anonymous
+      // If user is anonymous
       else {
-
+        // If there is anything to do when he is anonymous.
       }
+      $group = Group::load('5');
+      $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+      $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
+      $groupRoles = array_keys($groupRoles);
 
-      if (!in_array('subscriber', $user->getRoles())) {
+
+      if (!in_array('subscription-subscriber', $groupRoles)) {
         // if he is not, only change him to subscriber
-        $user->addRole('subscriber');
-        $user->save();
+        // Add the role in newsletter (id=5) group.
+        $groupRole = GroupRole::load('subscription-subscriber');
+
+        $group = Group::load('5');
+        if ($group->getMember($user)) {
+          $membership = $group->getMember($user)->getGroupContent();
+          if ($groupRole != NULL && $groupRole->label() == 'Subscriber' && !in_array('subscription-subscriber', $membership->group_roles)) {
+            $membership->group_roles[] = 'subscription-subscriber';
+            $membership->save();
+          }
+        }else {
+          if ($groupRole != NULL && $groupRole->label() == 'Subscriber') {
+            $group->addMember($user, ['group_roles' => [$groupRole->id()]]);
+          }
+        }
       }
       $destination = "";
       if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
         $destination = $_GET['destination'];
       }
-      if (in_array('lead', $user->getRoles())) {
+
+      if (in_array('subscription-lead', $groupRoles)) {
         // Redirect him to the login page with the destination.
-        $resetURL = Url::fromRoute('user.login')->toString();
+        $resetURL = 'https://' . RegisterForm::getDomain() . '/user/login';
         // @todo if there is a destination, attach it to the url
-        if ($destination != "") {
+        /*if ($destination != "") {
           $resetURL .= "?destination=" . $destination;
-        }
+        }*/
       }
       else {
         // instead of redirecting the user to the one-time-login, log him in.
         user_login_finalize($user);
         // it doesnt go here, because the login hook is triggered
-        \Drupal::messenger()->addMessage('u logged in from tha link');
-        return new RedirectResponse(Url::fromUserInput('/node/78')->toString());
+        return new RedirectResponse($destination);
 
         //return new RedirectResponse(Url::fromUri('internal:/node/78')->toString());
         //$resetURL = user_pass_reset_url($user);
       }
+//      return new RedirectResponse($resetURL, 302);
+      return new RedirectResponse(Url::fromRoute('user.login', [], ['absolute' => TRUE])->toString());
 
-
-      return new RedirectResponse($resetURL, 302);
     }
     else {
       // Redirect the user to the resource & the private resource says like u are invalid.

@@ -1,0 +1,15 @@
+uuid: f9e6b841-3b17-4355-831f-d2590c152c97
+langcode: en
+status: true
+dependencies:
+  config:
+    - group.type.subscription
+id: subscription-outsider
+label: Outsider
+weight: -101
+internal: true
+audience: outsider
+group_type: subscription
+permissions_ui: true
+permissions:
+  - 'join group'
