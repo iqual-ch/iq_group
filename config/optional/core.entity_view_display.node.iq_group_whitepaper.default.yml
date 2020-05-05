@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.node.iq_group_whitepaper.field_iq_group_branches
     - field.field.node.iq_group_whitepaper.field_iq_group_node_group
     - field.field.node.iq_group_whitepaper.field_iq_group_whitepaper_file
     - node.type.iq_group_whitepaper
@@ -28,5 +29,6 @@ content:
     settings: {  }
     third_party_settings: {  }
 hidden:
+  field_iq_group_branches: true
   field_iq_group_node_group: true
   langcode: true

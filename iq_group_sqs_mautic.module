@@ -1,40 +1,90 @@
 <?php
 
+use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Url;
+use Drupal\Core\Site\Settings;
 use Drupal\file\FileInterface;
-use Drupal\user\Entity\User;
-use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\iq_group_sqs_mautic\Controller\UserController;
 use Drupal\node\Entity\Node;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupContent;
+use Drupal\iq_group_sqs_mautic\MauticEvents;
+use Drupal\iq_group_sqs_mautic\Event\MauticEvent;
 
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function iq_group_sqs_mautic_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  /*$form['account']['name']['#type'] = 'hidden';
+  $form['account']['name']['#required'] = FALSE;*/
   $form['actions']['submit']['#submit'][] = 'iq_group_sqs_mautic_after_register';
-  $form['#validate'][] = 'iq_group_sqs_mautic_after_register';
+  /*$form['#validate'][] = 'iq_group_sqs_mautic_register_validation';
+  $form['#validate'] = array_reverse($form['#validate']);*/
 }
 
+function iq_group_sqs_mautic_form_node_iq_group_whitepaper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  /*var_dump($form['field_iq_group_whitepaper_file']['widget']);
+  die();*/
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ */
+function iq_group_sqs_mautic_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  $form['actions']['submit']['#submit'][] = 'iq_group_sqs_mautic_after_register';
+  foreach ($form['field_iq_group_preferences']['widget']['#options'] as $key => $value) {
+    if (reset($value) == 'General') {
+      unset($form['field_iq_group_preferences']['widget']['#options'][$key]);
+    }
+  }
+}
+
+function iq_group_sqs_mautic_register_validation(&$form, FormStateInterface $form_state) {
+  $form['account']['name']['#value'] = $form_state->getValue('mail');
+}
 /**
  * Additional submit function after user register.
  */
 function iq_group_sqs_mautic_after_register(&$form, FormStateInterface $form_state) {
   // email exists
-  $email = $form_state->getValue('email');
-  if ($email)
-  {
-    // if there is no password
-    // resend token link
+  $mail = $form_state->getValue('mail');
+  @$user = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties([
+    'mail' => $mail
+  ]);
+  $user = reset($user);
+  if ($user != FALSE) {
+    if ($form_state->getValue('pass') != NULL) {
+      if ($user->field_iq_group_user_token->value == NULL) {
+        $data = time();
+        $data .= $user->id();
+        $data .= $user->getEmail();
+        $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
+        $user->set('field_iq_group_user_token', $hash_token);
+      }
+      // Add the role in general (id=5) group.
+      $group = Group::load('5');
+      $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+      $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
+      $groupRoles = array_keys($groupRoles);
+      if (!in_array('subscription-lead', $groupRoles)) {
+        UserController::addGroupRoleToUser($group, $user, 'subscription-lead');
+        $eventDispatcher = \Drupal::service('event_dispatcher');
+        $eventDispatcher->dispatch(MauticEvents::USER_PROFILE_EDIT, new MauticEvent($user));
+      }
+      // Add member to the other groups that the user has selected in the
+      // preferences field.
+      $groups = $form_state->getValue('preferences');
+      if ($groups != NULL && !empty($groups)) {
+        foreach ($groups as $key => $otherGroup) {
+          $otherGroup = Group::load($otherGroup);
+          if ($otherGroup != NULL)
+            UserController::addGroupRoleToUser($otherGroup, $user, 'subscription-lead');
+        }
+      }
+    }
   }
-  else {
-    // create a token for the user and send a token link
-  }
-  \Drupal::messenger()->addMessage('it has come to the after register');
-  // Automatically create a user and send him an email with token
 }
 
 /**
@@ -46,62 +96,30 @@ function iq_group_sqs_mautic_user_login(\Drupal\user\UserInterface $account) {
   $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
   $groupRoles = array_keys($groupRoles);
 
-  if (in_array('subscription-subscriber', $groupRoles)) {
+  if (in_array('subscription-lead', $groupRoles)) {
     // redirect to destination if there is 1
     if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
       $destination = $_GET['destination'];
       header("Location:".$destination);
     }
-    // if not, he will be redirect to his profile page.
+    // if not, he will be redirect to the set default redirect from
+    // iq group settings.
     else {
-      header('Location:/user/edit');
+      header('Location:' . \Drupal::config('iq_group_sqs_mautic.settings')->get('default_redirection'));
     }
-//    return new RedirectResponse(Url::fromUserInput('/node/78')->toString());
-//    return new RedirectResponse(Url::fromRoute('user.edit')->toString());
   }
-  else if (in_array('subscription-lead', $groupRoles)) {
-    // redirect to
-    //return new RedirectResponse(Url::fromRoute('iq_emergency.settings')->toString());
-  }
-}
-
-
-/**
- * Implements hook_node_access().
- */
-function iq_group_sqs_mautic_node_access(\Drupal\node\NodeInterface $node, $op, \Drupal\Core\Session\AccountInterface $account) {
-  $group_contents = \Drupal::entityTypeManager()
-    ->getStorage('group_content')
-    ->loadByEntity($node);
-
-  // If the node does not belong to any group, we have nothing to say.
-  if (empty($group_contents)) {
-    return AccessResult::neutral();
-  }
-  return AccessResult::neutral();
-
-  // If he is not registered
-  /*if ($account->isAnonymous()) {
-    $node = $node;
-    if (in_array($node->bundle(), ['iq_group_whitepaper'])) {
-      return AccessResult::forbidden();
-      // Redirect him to the form to register with email (send additional param with the group)
-      return new RedirectResponse(Url::fromRoute('user.register')->toString() . "?destination=/node/" . $node->id());
+  else if (in_array('subscription-subscriber', $groupRoles)) {
+    // redirect to destination if there is 1
+    if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
+      $destination = $_GET['destination'];
+      header("Location:".$destination);
     }
-    else return AccessResult::neutral();
-
+    // if not, he will be redirect to the set default redirect from
+    // iq group settings.
+    else {
+      header('Location:' . \Drupal::config('iq_group_sqs_mautic.settings')->get('default_redirection'));
+    }
   }
-  // If he does not have token (never should happen)
-  else if ($account->field_iq_group_user_token->value == NULL) {
-    // Redirect him to the form to fill his password and set his token afterwards.
-    return new RedirectResponse(Url::fromRoute('user.edit')->toString() . "?destination=/node/" . $node->id());
-
-  }
-  // If he is registered with token, the the group module will take care of access.
-  else {
-    return AccessResult::neutral();
-
-  }*/
 
 }
 
@@ -116,7 +134,39 @@ function iq_group_sqs_mautic_file_access(FileInterface $file, $operation, Accoun
   return AccessResult::neutral();
 }
 
-
+/**
+ * Implements hook_file_download().
+ */
+function iq_group_sqs_mautic_file_download($uri) {
+  /** @var \Drupal\file\Entity\File $file */
+  $file = \Drupal::entityTypeManager()->getStorage('file')->loadByProperties(['uri' => $uri]);
+  $file = reset($file);
+  if ($file != NULL) {
+    $whitepaper = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+      'type' => 'iq_group_whitepaper',
+      'field_iq_group_whitepaper_file' => $file->id(),
+    ]);
+    $whitepaper = reset($whitepaper);
+    if (isset($whitepaper) && $whitepaper->id() > 0)
+    {
+      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+      $existing_downloads = $user->get('field_iq_group_downloads')
+        ->getValue();
+      $downloads = [];
+      if (!empty($existing_downloads)) {
+        foreach ($existing_downloads as $key => $val) {
+          if ($val['target_id'] != $whitepaper->id())
+            $downloads[] = $val['target_id'];
+        }
+      }
+      $downloads[] = $whitepaper->id();
+      $user->set('field_iq_group_downloads', $downloads);
+      $user->save();
+      $eventDispatcher = \Drupal::service('event_dispatcher');
+      $eventDispatcher->dispatch(MauticEvents::USER_DOWNLOAD_WHITEPAPER, new MauticEvent($user));
+    }
+  }
+}
 
 /**
  * Feature to create the group content on a node create/edit.
@@ -142,6 +192,17 @@ function _node_field_group_settings() {
 
 
 function iq_group_sqs_mautic_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if ($form_id == 'user_register_form') {
+    $form['actions']['#submit'][] = '_node_field_group_add_custom_callback_group';
+/*    $result = \Drupal::entityTypeManager()
+      ->getStorage('group')
+      ->loadMultiple();
+    $options = [];
+    foreach ($result as $key => $group) {
+      $options[$group->id()] = $group->label();
+    }
+    $form['field_iq_group_preferences']['widget']['#options'] = $options;*/
+  }
   $settings = _node_field_group_settings();
   // Add node.
   if (in_array($form_id, $settings['form_id_add'])) {
@@ -264,6 +325,37 @@ function _node_field_group_edit_custom_callback_group($form, FormStateInterface 
  */
 function iq_group_sqs_mautic_views_pre_render(\Drupal\views\ViewExecutable $view) {
   if ($view->id() == 'whitepaper_block') {
-    $view->attachment_after = \Drupal::formBuilder()->getForm('Drupal\iq_group_sqs_mautic\Form\RegisterForm');
+    $registerForm = \Drupal::formBuilder()->getForm('Drupal\iq_group_sqs_mautic\Form\RegisterForm');
+    // If there is a resource selected (currently whitepaper, later it may vary).
+    if ($view->filter['nid']->value['value'] != NULL) {
+      unset($registerForm['preferences']);
+      $registerForm['destination']['#value'] = '/node/' .$view->filter['nid']->value['value'];
+      $destination = '/node/' .$view->filter['nid']->value['value'];
+    }
+    if (\Drupal::currentUser()->isAnonymous()) {
+      if (!isset($destination)) {
+        $destination = \Drupal::service('path.current')->getPath();
+      }
+      $registerForm['register_link'] = [
+        '#type' => 'markup',
+        '#markup' => '<a href="/user/register?destination=' . $destination . '">' . t('Register') . '</a> / ',
+        '#weight' => 100
+      ];
+      $registerForm['login_link'] = [
+        '#type' => 'markup',
+        '#markup' => '<a href="/user/login?destination=' . $destination . '">' . t('Login') . '</a>',
+        '#weight' => 100
+      ];
+    }
+
+
+    $view->attachment_after = $registerForm;
   }
+}
+
+function iq_group_sqs_mautic_form_user_login_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $form['forgot_password'] = [
+    '#type' => 'markup',
+    '#markup' => '<a href="/onetime-loginlink">'. t('Forgot password') . '</a>'
+  ];
 }

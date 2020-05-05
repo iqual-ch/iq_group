@@ -1,0 +1,46 @@
+uuid: 15a37a16-e5f7-4880-83ee-52e7e8429bbb
+langcode: en
+status: true
+dependencies:
+  module:
+    - advanced_menu_condition
+    - pagedesigner_block
+    - user
+  theme:
+    - iq_custom
+id: userlogin_2
+theme: iq_custom
+region: pagedesigner
+weight: 0
+provider: null
+plugin: user_login_block
+settings:
+  id: user_login_block
+  label: 'User login'
+  provider: user
+  label_display: '0'
+visibility:
+  advanced_menu_position:
+    id: advanced_menu_position
+    menu_position:
+      '': ''
+    negate: null
+    context_mapping: {  }
+  advanced_menu_position_not:
+    id: advanced_menu_position_not
+    not_menu_position:
+      '': ''
+    negate: null
+    context_mapping: {  }
+  pagedesigner_condition:
+    id: pagedesigner_condition
+    pagedesigner_condition: 0
+    negate: null
+    context_mapping: {  }
+  user_role:
+    id: user_role
+    roles:
+      anonymous: anonymous
+    negate: false
+    context_mapping:
+      user: '@user.current_user_context:current_user'

@@ -1,16 +1,15 @@
-uuid: f9e6b841-3b17-4355-831f-d2590c152c97
+uuid: e17ea3ec-6564-47bb-b433-1e7514c0e967
 langcode: en
 status: true
 dependencies:
   config:
     - group.type.subscription
-id: subscription-outsider
-label: Outsider
-weight: -101
+id: subscription-anonymous
+label: Anonymous
+weight: -102
 internal: true
-audience: outsider
+audience: anonymous
 group_type: subscription
 permissions_ui: true
 permissions:
-  - 'join group'
   - 'view group'

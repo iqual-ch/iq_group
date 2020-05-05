@@ -12,6 +12,7 @@ audience: member
 group_type: subscription
 permissions_ui: true
 permissions:
+  - 'view group'
   - 'view group_node:iq_group_whitepaper content'
   - 'view group_node:iq_group_whitepaper entity'
   - 'view unpublished group_node:iq_group_whitepaper entity'

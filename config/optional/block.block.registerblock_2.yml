@@ -1,0 +1,39 @@
+uuid: 50f16661-527b-4b81-bac0-1a583aa83567
+langcode: en
+status: true
+dependencies:
+  module:
+    - advanced_menu_condition
+    - iq_group_sqs_mautic
+    - pagedesigner_block
+  theme:
+    - iq_custom
+id: registerblock_2
+theme: iq_custom
+region: pagedesigner
+weight: 0
+provider: null
+plugin: register_block
+settings:
+  id: register_block
+  label: 'Register block'
+  provider: iq_group_sqs_mautic
+  label_display: visible
+visibility:
+  advanced_menu_position:
+    id: advanced_menu_position
+    menu_position:
+      '': ''
+    negate: null
+    context_mapping: {  }
+  advanced_menu_position_not:
+    id: advanced_menu_position_not
+    not_menu_position:
+      '': ''
+    negate: null
+    context_mapping: {  }
+  pagedesigner_condition:
+    id: pagedesigner_condition
+    pagedesigner_condition: 0
+    negate: null
+    context_mapping: {  }

@@ -8,14 +8,14 @@ use Drupal\Core\Site\Settings;
 use Drupal\group\Entity\Group;
 use Drupal\user\Entity\User;
 
-class RegisterForm extends FormBase
+class SignupForm extends FormBase
 {
 
   /**
    * {@inheritDoc}
    */
   public function getFormId() {
-    return 'iq_group_sqs_mautic_register_form';
+    return 'iq_group_sqs_mautic_signup_form';
   }
 
   /**
@@ -123,7 +123,7 @@ class RegisterForm extends FormBase
         if (isset($destination) && $destination != NULL) {
           $url .= "?destination=" . $destination;
         }
-        $result = mail($user->getEmail(), $this->t('Mautic login'), $this->t('Login through ') . $url,
+        $result = mail($user->getEmail(), $this->t("SQS Mautic login"), $this->t("Login through ") . $url,
           "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
       }
       // If the user does not exist
@@ -161,7 +161,7 @@ class RegisterForm extends FormBase
         if (isset($destination) && $destination != NULL) {
           $url .= "?destination=" . $destination;
         }
-        $result = mail($user->getEmail(), $this->t("SQS Mautic login"), $this->t("Register through ") . $url,
+        $result = mail($user->getEmail(), $this->t("SQS Mautic login"), $this->t("Signup through ") . $url,
           "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
       }
       \Drupal::messenger()->addMessage('We have sent you an email.');

@@ -1,0 +1,13 @@
+# Schema for the configuration files of the captcha module.
+#wrong_response_counter
+
+iq_group_sqs_mautic.settings:
+  type: config_object
+  label: 'iQual Group settings'
+  mapping:
+    default_redirection:
+      type: string
+      label: 'The default redirection for subscribers.'
+    general_group_id:
+      type: string
+      label: 'The id of the general group for access of the content.'

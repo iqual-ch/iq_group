@@ -1,0 +1,20 @@
+uuid: 538a2604-e9ca-4b14-9fc4-576ebf54d2e7
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+    - user
+id: user.field_iq_group_branches
+field_name: field_iq_group_branches
+entity_type: user
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false
