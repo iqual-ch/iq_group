@@ -1,0 +1,15 @@
+{
+  "name": "iqual/iq_group",
+  "description": "Iqual Group",
+  "type": "drupal-custom-module",
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://github.com/iqual-ch/iq_group"
+    }
+  ],
+  "require": {
+    "mikehaertl/php-shellcommand": "^1.6",
+    "drupal/drd": "*"
+  }
+}

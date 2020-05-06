@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\iq_group_sqs_mautic\Form;
+namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -8,7 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 /**
  * Class OneTimeLoginLinkForm.
  *
- * @package Drupal\iq_group_sqs_mautic\Form
+ * @package Drupal\iq_group\Form
  */
 class OneTimeLoginLinkForm extends FormBase {
 
@@ -16,7 +16,7 @@ class OneTimeLoginLinkForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'iq_group_sqs_mautic_onetime_loginlink_form';
+    return 'iq_group_onetime_loginlink_form';
   }
 
   /**

@@ -324,10 +324,7 @@ display:
               editor: '0'
               designer: '0'
               anonymous: '0'
-              subscriber: '0'
-              lead: '0'
-              megarole: '0'
-            placeholder: ''
+            placeholder: None
             min_placeholder: ''
             max_placeholder: ''
           is_grouped: false

@@ -1,8 +1,8 @@
 <?php
 
-namespace Drupal\iq_group_sqs_mautic\EventSubscriber;
+namespace Drupal\iq_group\EventSubscriber;
 
-use Drupal\iq_group_sqs_mautic\MauticEvents;
+use Drupal\iq_group\MauticEvents;
 use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -20,7 +20,7 @@ class MauticSubscriber implements EventSubscriberInterface {
    *   The event.
    */
   public function sendData(Event $event) {
-    \Drupal::logger('iq_group_sqs_mautic')->notice('mautic event triggered');
+    \Drupal::logger('iq_group')->notice('mautic event triggered');
     // Send data to mautic or to the mautic module.
   }
 

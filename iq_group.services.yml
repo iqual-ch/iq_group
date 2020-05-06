@@ -1,0 +1,5 @@
+services:
+  iq_group.mautic_subscriber:
+    class: Drupal\iq_group\EventSubscriber\MauticSubscriber
+    tags:
+      - {name: event_subscriber}

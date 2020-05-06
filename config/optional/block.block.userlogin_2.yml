@@ -7,9 +7,9 @@ dependencies:
     - pagedesigner_block
     - user
   theme:
-    - iq_custom
+    - custom_theme
 id: userlogin_2
-theme: iq_custom
+theme: custom_theme
 region: pagedesigner
 weight: 0
 provider: null

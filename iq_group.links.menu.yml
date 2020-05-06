@@ -1,7 +1,7 @@
-iq_group_sqs_mautic.iq_group_settings:
+iq_group.iq_group_settings:
   title: 'Iq Group Settings'
   description: 'Set the destination after login and general group'
-  route_name: iq_group_sqs_mautic.iq_group_settings
+  route_name: iq_group.iq_group_settings
   parent: system.admin_config_system
   weight: 10
 

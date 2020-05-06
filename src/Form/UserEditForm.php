@@ -1,14 +1,14 @@
 <?php
 
-namespace Drupal\iq_group_sqs_mautic\Form;
+namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupRole;
-use Drupal\iq_group_sqs_mautic\Controller\UserController;
-use Drupal\iq_group_sqs_mautic\Event\MauticEvent;
-use Drupal\iq_group_sqs_mautic\MauticEvents;
+use Drupal\iq_group\Controller\UserController;
+use Drupal\iq_group\Event\MauticEvent;
+use Drupal\iq_group\MauticEvents;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -38,7 +38,7 @@ class UserEditForm extends FormBase
   /**
    * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
    *
-   * @return \Drupal\Core\Controller\ControllerBase|\Drupal\iq_group_sqs_mautic\Controller\UserController
+   * @return \Drupal\Core\Controller\ControllerBase|\Drupal\iq_group\Controller\UserController
    */
   public static function create(ContainerInterface $container) {
     return new static(
@@ -50,7 +50,7 @@ class UserEditForm extends FormBase
    * {@inheritDoc}
    */
   public function getFormId() {
-    return 'iq_group_sqs_mautic_user_edit_form';
+    return 'iq_group_user_edit_form';
   }
 
   /**
@@ -85,14 +85,14 @@ class UserEditForm extends FormBase
        * @var  \Drupal\group\Entity\Group $group
        */
       foreach ($result as $key => $group) {
-        if ($group->id()!='5')
+        if ($group->id()!=\Drupal::config('iq_group.settings')->get('general_group_id'))
           $options[$group->id()] = $group->label();
       }
       $selected_preferences = $user->get('field_iq_group_preferences')
         ->getValue();
       $default_value = [];
       foreach ($selected_preferences as $key => $value) {
-        if ($value['target_id'] != '5')
+        if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
           $default_value = array_merge($default_value, [$value['target_id']]);
       }
       if ($currentPath == '/user/edit') {
@@ -114,7 +114,7 @@ class UserEditForm extends FormBase
         ->getValue();
       $default_branches = [];
       foreach ($selected_branches as $key => $value) {
-        if ($value['target_id'] != '5')
+        if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
           $default_branches = array_merge($default_branches, [$value['target_id']]);
       }
       if ($currentPath == '/user/edit') {
@@ -135,7 +135,7 @@ class UserEditForm extends FormBase
         '#title' => $this->t('Confirm password')
       ];
       $user_id = \Drupal::currentUser()->id();
-      $group = Group::load('5');
+      $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
       $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
       $groupRoles = array_keys($groupRoles);
@@ -189,7 +189,7 @@ class UserEditForm extends FormBase
       $user->setPassword($form_state->getValue('password'));
 
       // Add the role in general (id=5) group.
-      $group = Group::load('5');
+      $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
       $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
       $groupRoles = array_keys($groupRoles);

@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\iq_group_sqs_mautic\Event;
+namespace Drupal\iq_group\Event;
 
 use Symfony\Component\EventDispatcher\Event;
 

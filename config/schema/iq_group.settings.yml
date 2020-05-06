@@ -1,7 +1,7 @@
 # Schema for the configuration files of the captcha module.
 #wrong_response_counter
 
-iq_group_sqs_mautic.settings:
+iq_group.settings:
   type: config_object
   label: 'iQual Group settings'
   mapping:

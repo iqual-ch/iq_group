@@ -1,0 +1,32 @@
+uuid: c75ccd8c-0c33-41d2-b2a7-55f1829ecf17
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_iq_group_node_group
+    - group.type.subscription
+    - node.type.iq_group_whitepaper
+  content:
+    - 'group:subscription:841d8781-0afd-46c4-b33a-f2966fc4aec4'
+id: node.iq_group_whitepaper.field_iq_group_node_group
+field_name: field_iq_group_node_group
+entity_type: node
+bundle: iq_group_whitepaper
+label: Group
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    target_uuid: 841d8781-0afd-46c4-b33a-f2966fc4aec4
+default_value_callback: ''
+settings:
+  handler: 'default:group'
+  handler_settings:
+    target_bundles:
+      subscription: subscription
+    sort:
+      field: _none
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

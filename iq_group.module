@@ -6,25 +6,26 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\file\FileInterface;
-use Drupal\iq_group_sqs_mautic\Controller\UserController;
+use Drupal\iq_group\Controller\UserController;
 use Drupal\node\Entity\Node;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupContent;
-use Drupal\iq_group_sqs_mautic\MauticEvents;
-use Drupal\iq_group_sqs_mautic\Event\MauticEvent;
+use Drupal\iq_group\MauticEvents;
+use Drupal\iq_group\Event\MauticEvent;
+use Drupal\node\NodeInterface;
 
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
-function iq_group_sqs_mautic_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_group_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
   /*$form['account']['name']['#type'] = 'hidden';
   $form['account']['name']['#required'] = FALSE;*/
-  $form['actions']['submit']['#submit'][] = 'iq_group_sqs_mautic_after_register';
-  /*$form['#validate'][] = 'iq_group_sqs_mautic_register_validation';
+  $form['actions']['submit']['#submit'][] = 'iq_group_after_register';
+  /*$form['#validate'][] = 'iq_group_register_validation';
   $form['#validate'] = array_reverse($form['#validate']);*/
 }
 
-function iq_group_sqs_mautic_form_node_iq_group_whitepaper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_group_form_node_iq_group_whitepaper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
   /*var_dump($form['field_iq_group_whitepaper_file']['widget']);
   die();*/
 }
@@ -32,8 +33,8 @@ function iq_group_sqs_mautic_form_node_iq_group_whitepaper_form_alter(&$form, \D
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
-function iq_group_sqs_mautic_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
-  $form['actions']['submit']['#submit'][] = 'iq_group_sqs_mautic_after_register';
+function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  $form['actions']['submit']['#submit'][] = 'iq_group_after_register';
   foreach ($form['field_iq_group_preferences']['widget']['#options'] as $key => $value) {
     if (reset($value) == 'General') {
       unset($form['field_iq_group_preferences']['widget']['#options'][$key]);
@@ -41,13 +42,13 @@ function iq_group_sqs_mautic_form_user_form_alter(&$form, \Drupal\Core\Form\Form
   }
 }
 
-function iq_group_sqs_mautic_register_validation(&$form, FormStateInterface $form_state) {
+function iq_group_register_validation(&$form, FormStateInterface $form_state) {
   $form['account']['name']['#value'] = $form_state->getValue('mail');
 }
 /**
  * Additional submit function after user register.
  */
-function iq_group_sqs_mautic_after_register(&$form, FormStateInterface $form_state) {
+function iq_group_after_register(&$form, FormStateInterface $form_state) {
   // email exists
   $mail = $form_state->getValue('mail');
   @$user = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties([
@@ -64,7 +65,7 @@ function iq_group_sqs_mautic_after_register(&$form, FormStateInterface $form_sta
         $user->set('field_iq_group_user_token', $hash_token);
       }
       // Add the role in general (id=5) group.
-      $group = Group::load('5');
+      $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
       $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
       $groupRoles = array_keys($groupRoles);
@@ -90,7 +91,8 @@ function iq_group_sqs_mautic_after_register(&$form, FormStateInterface $form_sta
 /**
  * Implements hook_user_login().
  */
-function iq_group_sqs_mautic_user_login(\Drupal\user\UserInterface $account) {
+function iq_group_user_login(\Drupal\user\UserInterface $account) {
+  return;
   $group = Group::load('5');
   $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
   $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
@@ -105,7 +107,7 @@ function iq_group_sqs_mautic_user_login(\Drupal\user\UserInterface $account) {
     // if not, he will be redirect to the set default redirect from
     // iq group settings.
     else {
-      header('Location:' . \Drupal::config('iq_group_sqs_mautic.settings')->get('default_redirection'));
+      header('Location:' . \Drupal::config('iq_group.settings')->get('default_redirection'));
     }
   }
   else if (in_array('subscription-subscriber', $groupRoles)) {
@@ -117,7 +119,7 @@ function iq_group_sqs_mautic_user_login(\Drupal\user\UserInterface $account) {
     // if not, he will be redirect to the set default redirect from
     // iq group settings.
     else {
-      header('Location:' . \Drupal::config('iq_group_sqs_mautic.settings')->get('default_redirection'));
+      header('Location:' . \Drupal::config('iq_group.settings')->get('default_redirection'));
     }
   }
 
@@ -126,10 +128,20 @@ function iq_group_sqs_mautic_user_login(\Drupal\user\UserInterface $account) {
 /**
  * Implements hook_file_access().
  */
-function iq_group_sqs_mautic_file_access(FileInterface $file, $operation, AccountInterface $account) {
+function iq_group_file_access(FileInterface $file, $operation, AccountInterface $account) {
   // Block access to private file uploads for anonymous users.
+  $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
   if (\Drupal::currentUser()->isAnonymous()) {
     return AccessResult::forbidden();
+  }
+  else {
+    $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+    $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+    $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
+    $groupRoles = array_keys($groupRoles);
+    if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
+      return AccessResult::allowed();
+    }
   }
   return AccessResult::neutral();
 }
@@ -137,7 +149,7 @@ function iq_group_sqs_mautic_file_access(FileInterface $file, $operation, Accoun
 /**
  * Implements hook_file_download().
  */
-function iq_group_sqs_mautic_file_download($uri) {
+function iq_group_file_download($uri) {
   /** @var \Drupal\file\Entity\File $file */
   $file = \Drupal::entityTypeManager()->getStorage('file')->loadByProperties(['uri' => $uri]);
   $file = reset($file);
@@ -191,7 +203,7 @@ function _node_field_group_settings() {
 }
 
 
-function iq_group_sqs_mautic_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   if ($form_id == 'user_register_form') {
     $form['actions']['#submit'][] = '_node_field_group_add_custom_callback_group';
 /*    $result = \Drupal::entityTypeManager()
@@ -323,16 +335,17 @@ function _node_field_group_edit_custom_callback_group($form, FormStateInterface 
 /**
  * Implements hook_views_pre_render().
  */
-function iq_group_sqs_mautic_views_pre_render(\Drupal\views\ViewExecutable $view) {
+function iq_group_views_pre_render(\Drupal\views\ViewExecutable $view) {
   if ($view->id() == 'whitepaper_block') {
-    $registerForm = \Drupal::formBuilder()->getForm('Drupal\iq_group_sqs_mautic\Form\RegisterForm');
+    $registerForm = \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\RegisterForm');
     // If there is a resource selected (currently whitepaper, later it may vary).
-    if ($view->filter['nid']->value['value'] != NULL) {
-      unset($registerForm['preferences']);
-      $registerForm['destination']['#value'] = '/node/' .$view->filter['nid']->value['value'];
-      $destination = '/node/' .$view->filter['nid']->value['value'];
-    }
     if (\Drupal::currentUser()->isAnonymous()) {
+      if ($view->filter['nid']->value['value'] != NULL) {
+        unset($registerForm['preferences']);
+        $registerForm['destination']['#value'] = '/node/' .reset($view->filter['nid']->value['value']);
+        $destination = '/node/' .reset($view->filter['nid']->value['value']);
+      }
+
       if (!isset($destination)) {
         $destination = \Drupal::service('path.current')->getPath();
       }
@@ -346,16 +359,70 @@ function iq_group_sqs_mautic_views_pre_render(\Drupal\views\ViewExecutable $view
         '#markup' => '<a href="/user/login?destination=' . $destination . '">' . t('Login') . '</a>',
         '#weight' => 100
       ];
+      $view->attachment_after = $registerForm;
     }
-
-
-    $view->attachment_after = $registerForm;
   }
 }
 
-function iq_group_sqs_mautic_form_user_login_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+function iq_group_form_user_login_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $form['forgot_password'] = [
     '#type' => 'markup',
     '#markup' => '<a href="/onetime-loginlink">'. t('Forgot password') . '</a>'
   ];
+}
+
+/**
+ * Implements hook_node_access().
+ *
+ */
+function iq_group_node_access(NodeInterface $node, $op, AccountInterface $account) {
+  // We do not care about create access as we have our own wizard for that. Any
+  // operation aside from 'view', 'update' and 'delete' is also unsupported.
+  if (!in_array($op, ['view', 'update', 'delete'])) {
+    return AccessResult::neutral();
+  }
+
+  // Some modules, including the code in \Drupal\node\NodeForm::access() may
+  // check for 'view', 'update' or 'delete' access on new nodes, even though
+  // that makes little sense. We need to account for it to avoid crashes because
+  // we would otherwise query the DB with a non-existent node ID.
+  if ($node->isNew()) {
+    return AccessResult::neutral();
+  }
+
+  $plugin_id = 'group_node:' . $node->bundle();
+
+  // Load all of the group content for this node.
+  $group_contents = \Drupal::entityTypeManager()
+    ->getStorage('group_content')
+    ->loadByEntity($node);
+
+  // If the node does not belong to any group, we have nothing to say.
+  if (empty($group_contents)) {
+    return AccessResult::neutral();
+  }
+
+  /** @var \Drupal\group\Entity\GroupInterface[] $groups */
+  $groups = [];
+  foreach ($group_contents as $group_content) {
+    /** @var \Drupal\group\Entity\GroupContentInterface $group_content */
+    $group = $group_content->getGroup();
+    $groups[$group->id()] = $group;
+  }
+  if ($op == 'view') {
+    foreach ($groups as $group) {
+      if ($node->isPublished()) {
+        if ($group->hasPermission("view $plugin_id entity", $account)) {
+          return AccessResult::allowed();
+        }
+      }
+      elseif ($group->hasPermission("view unpublished $plugin_id entity", $account)) {
+        \Drupal::logger('gnode')->notice('yoo what');
+        return AccessResult::allowed();
+      }
+      \Drupal::logger('gnode')->notice('allowed in group');
+    }
+    return AccessResult::forbidden();
+  }
+  return AccessResult::neutral();
 }

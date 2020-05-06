@@ -9,9 +9,9 @@ dependencies:
     - pagedesigner_block
     - pagedesigner_block_adaptable
   theme:
-    - iq_custom
+    - custom_theme
 id: views_block__whitepaper_block_adaptable_block_1
-theme: iq_custom
+theme: custom_theme
 region: pagedesigner
 weight: 0
 provider: null

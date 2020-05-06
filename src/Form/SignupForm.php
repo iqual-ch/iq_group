@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\iq_group_sqs_mautic\Form;
+namespace Drupal\iq_group\Form;
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Form\FormBase;
@@ -15,7 +15,7 @@ class SignupForm extends FormBase
    * {@inheritDoc}
    */
   public function getFormId() {
-    return 'iq_group_sqs_mautic_signup_form';
+    return 'iq_group_signup_form';
   }
 
   /**
@@ -24,7 +24,7 @@ class SignupForm extends FormBase
   public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
     $account = \Drupal::currentUser();
     $default_preferences = [];
-    $group = Group::load('5');
+    $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
     $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
     $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
     $groupRoles = array_keys($groupRoles);
@@ -49,6 +49,17 @@ class SignupForm extends FormBase
           'spellcheck' => 'false',
         ],
       ];
+      $destination = \Drupal::service('path.current')->getPath();
+      $form['register_link'] = [
+        '#type' => 'markup',
+        '#markup' => '<a href="/user/register?destination=' . $destination . '">' . t('Register') . '</a> / ',
+        '#weight' => 100
+      ];
+      $form['login_link'] = [
+        '#type' => 'markup',
+        '#markup' => '<a href="/user/login?destination=' . $destination . '">' . t('Login') . '</a>',
+        '#weight' => 100
+      ];
     }
     else {
       if(in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
@@ -56,7 +67,7 @@ class SignupForm extends FormBase
         $selected_preferences = $user->get('field_iq_group_preferences')->getValue();
         foreach ($selected_preferences as $key => $value) {
           // If it is not the general group, add it.
-          if ($value['target_id'] != '5')
+          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
             $default_preferences = array_merge($default_preferences, [$value['target_id']]);
         }
       }
@@ -69,7 +80,7 @@ class SignupForm extends FormBase
      */
     foreach ($result as $key => $group) {
       // If it is not the general group, add it.
-      if ($group->id()!='5')
+      if ($group->id()!=\Drupal::config('iq_group.settings')->get('general_group_id'))
         $options[$group->id()] = $group->label();
     }
     $form['preferences'] = [
@@ -112,7 +123,7 @@ class SignupForm extends FormBase
           $user->set('field_iq_group_user_token', $hash_token);
           $user->save();
         }
-        $url = 'https://' . self::getDomain() . '/group/reset/password/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
+        $url = 'https://' . self::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
         if ($form_state->getValue('destination') != "")  {
           $destination = $form_state->getValue('destination');
         }
@@ -150,7 +161,7 @@ class SignupForm extends FormBase
           $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
         }
         $user->save();
-        $url = 'https://' . self::getDomain() . '/group/reset/password/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
+        $url = 'https://' . self::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
         if ($form_state->getValue('destination') != "")  {
           $destination = $form_state->getValue('destination');
         }

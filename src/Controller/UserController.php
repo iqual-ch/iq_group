@@ -1,14 +1,14 @@
 <?php
 
-namespace Drupal\iq_group_sqs_mautic\Controller;
+namespace Drupal\iq_group\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupRole;
-use Drupal\iq_group_sqs_mautic\Event\MauticEvent;
-use Drupal\iq_group_sqs_mautic\Form\RegisterForm;
-use Drupal\iq_group_sqs_mautic\MauticEvents;
+use Drupal\iq_group\Event\MauticEvent;
+use Drupal\iq_group\Form\RegisterForm;
+use Drupal\iq_group\MauticEvents;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -39,7 +39,7 @@ class UserController extends ControllerBase {
   /**
    * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
    *
-   * @return \Drupal\Core\Controller\ControllerBase|\Drupal\iq_group_sqs_mautic\Controller\UserController
+   * @return \Drupal\Core\Controller\ControllerBase|\Drupal\iq_group\Controller\UserController
    */
   public static function create(ContainerInterface $container) {
     return new static(
@@ -62,7 +62,7 @@ class UserController extends ControllerBase {
             return new RedirectResponse(Url::fromUserInput($_GET['destination'])->toString());
           }
           else {
-            return new RedirectResponse(Url::fromUserInput('/node/78')->toString());
+            return new RedirectResponse(Url::fromUserInput(\Drupal::config('iq_group.settings')->get('default_redirection'))->toString());
           }
 
         }
@@ -76,7 +76,7 @@ class UserController extends ControllerBase {
         // If there is anything to do when he is anonymous.
       }
       // Load General group (id=5) and get the roles for the user.
-      $group = Group::load('5');
+      $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
       $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
       $groupRoles = array_keys($groupRoles);
@@ -118,6 +118,15 @@ class UserController extends ControllerBase {
         // instead of redirecting the user to the one-time-login, log him in.
         user_login_finalize($user);
         // it doesnt go here, because the login hook is triggered
+        if (empty($destination)) {
+          if (\Drupal::config('iq_group.settings')->get('default_redirection')) {
+            $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
+          }
+          else {
+            $destination ="/homepage";
+          }
+
+        }
         return new RedirectResponse($destination);
 
         //return new RedirectResponse(Url::fromUri('internal:/node/78')->toString());

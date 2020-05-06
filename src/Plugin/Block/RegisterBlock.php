@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\iq_group_sqs_mautic\Plugin\Block;
+namespace Drupal\iq_group\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -20,6 +20,6 @@ class RegisterBlock extends BlockBase {
    * {@inheritdoc}
    */
   public function build() {
-    return \Drupal::formBuilder()->getForm('Drupal\iq_group_sqs_mautic\Form\RegisterForm');
+    return \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\RegisterForm');
   }
 }

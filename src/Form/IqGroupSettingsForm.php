@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\iq_group_sqs_mautic\Form;
+namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -11,7 +11,7 @@ use Drupal\user\RoleInterface;
 /**
  * Class IqGroupSettingsForm.
  *
- * @package Drupal\iq_group_sqs_mautic\Form
+ * @package Drupal\iq_group\Form
  */
 class IqGroupSettingsForm extends ConfigFormBase
 {
@@ -29,7 +29,7 @@ class IqGroupSettingsForm extends ConfigFormBase
    */
   public function buildForm(array $form, FormStateInterface $form_state)
   {
-    $config = $this->config('iq_group_sqs_mautic.settings');
+    $config = $this->config('iq_group.settings');
     $default_redirection = $config->get('default_redirection');
     $general_group_id = $config->get('general_group_id');
 
@@ -47,7 +47,7 @@ class IqGroupSettingsForm extends ConfigFormBase
       '#size' => 60,
       '#maxlength' => 128,
       '#description' => $this->t('Enter the general group ID'),
-      '#default_value' => '5'
+      '#default_value' => \Drupal::config('iq_group.settings')->get('general_group_id')
     ];
 
     $form['actions']['#type'] = 'actions';
@@ -65,7 +65,7 @@ class IqGroupSettingsForm extends ConfigFormBase
    */
   public function submitForm(array &$form, FormStateInterface $form_state)
   {
-    $this->config('iq_group_sqs_mautic.settings')
+    $this->config('iq_group.settings')
       ->set('default_redirection', $form_state->getValue('default_redirection'))
       ->set('general_group_id', $form_state->getValue('general_group_id'))
       ->save();
@@ -80,7 +80,7 @@ class IqGroupSettingsForm extends ConfigFormBase
    */
   protected function getEditableConfigNames()
   {
-    return ['iq_group_sqs_mautic.settings'];
+    return ['iq_group.settings'];
   }
 
 }

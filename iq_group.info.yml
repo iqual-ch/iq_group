@@ -5,5 +5,7 @@ type: module
 core: 8.x
 dependencies:
   - drupal:group
+  - gnode:gnode
   - login_emailusername:login_emailusername
   - onetime_loginlink:onetime_loginlink
+  - pagedesigner_block_adaptable:pagedesigner_block_adaptable
