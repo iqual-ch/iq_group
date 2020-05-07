@@ -2,6 +2,7 @@
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Site\Settings;
@@ -33,13 +34,15 @@ function iq_group_form_node_iq_group_whitepaper_form_alter(&$form, \Drupal\Core\
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
-function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  $form['language']['#type'] = 'markup';
   $form['actions']['submit']['#submit'][] = 'iq_group_after_register';
   foreach ($form['field_iq_group_preferences']['widget']['#options'] as $key => $value) {
     if (reset($value) == 'General') {
       unset($form['field_iq_group_preferences']['widget']['#options'][$key]);
     }
   }
+
 }
 
 function iq_group_register_validation(&$form, FormStateInterface $form_state) {
@@ -92,8 +95,8 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
  * Implements hook_user_login().
  */
 function iq_group_user_login(\Drupal\user\UserInterface $account) {
-  return;
-  $group = Group::load('5');
+
+  $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
   $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
   $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
   $groupRoles = array_keys($groupRoles);
@@ -110,7 +113,9 @@ function iq_group_user_login(\Drupal\user\UserInterface $account) {
       header('Location:' . \Drupal::config('iq_group.settings')->get('default_redirection'));
     }
   }
-  else if (in_array('subscription-subscriber', $groupRoles)) {
+  return ;
+
+  if (in_array('subscription-subscriber', $groupRoles)) {
     // redirect to destination if there is 1
     if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
       $destination = $_GET['destination'];

@@ -95,9 +95,17 @@ class UserEditForm extends FormBase
         if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
           $default_value = array_merge($default_value, [$value['target_id']]);
       }
+      $form['password'] = [
+        '#type' => 'password',
+        '#title' => $this->t('Password')
+      ];
+      $form['password_confirm'] = [
+        '#type' => 'password',
+        '#title' => $this->t('Confirm password')
+      ];
       if ($currentPath == '/user/edit') {
         $form['preferences'] = [
-          '#type' => 'select',
+          '#type' => 'checkboxes',
           '#options' => $options,
           '#multiple' => TRUE,
           '#default_value' => $default_value,
@@ -119,21 +127,14 @@ class UserEditForm extends FormBase
       }
       if ($currentPath == '/user/edit') {
         $form['branches'] = [
-          '#type' => 'select',
+          '#type' => 'checkboxes',
           '#options' => $term_options,
           '#default_value' => $default_branches,
           '#multiple' => TRUE,
           '#title' => $this->t('Branches')
         ];
       }
-      $form['password'] = [
-        '#type' => 'password',
-        '#title' => $this->t('Password')
-      ];
-      $form['password_confirm'] = [
-        '#type' => 'password',
-        '#title' => $this->t('Confirm password')
-      ];
+
       $user_id = \Drupal::currentUser()->id();
       $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
       $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
@@ -207,6 +208,8 @@ class UserEditForm extends FormBase
       }
     }
     $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
+    $user->set('field_iq_group_branches', $form_state->getValue('branches'));
+
     $user->save();
     $this->eventDispatcher->dispatch(MauticEvents::USER_PROFILE_EDIT, new MauticEvent($user));
     // Redirect after saving

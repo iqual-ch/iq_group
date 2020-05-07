@@ -32,7 +32,6 @@ class SignupForm extends FormBase
       $form['mail'] = [
         '#type' => 'email',
         '#title' => $this->t('Email address'),
-        '#description' => $this->t('A valid email address. All emails from the system will be sent to this address. The email address is not made public and will only be used if you wish to receive a new password or wish to receive certain news or notifications by email.'),
         '#required' => !$account->getEmail(),
         '#default_value' => $account->getEmail(),
       ];
@@ -97,7 +96,7 @@ class SignupForm extends FormBase
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
       '#type' => 'submit',
-      '#value' => $this->t('Submit'),
+      '#value' => $this->t('Sign up'),
       '#button_type' => 'primary',
     ];
 
@@ -175,7 +174,7 @@ class SignupForm extends FormBase
         $result = mail($user->getEmail(), $this->t("SQS Mautic login"), $this->t("Signup through ") . $url,
           "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
       }
-      \Drupal::messenger()->addMessage('We have sent you an email.');
+      \Drupal::messenger()->addMessage($this->t('Thanks for signing up. You will get an email with more information for login.'));
     }
     else {
       $user = User::load(\Drupal::currentUser()->id());

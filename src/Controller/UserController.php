@@ -107,6 +107,11 @@ class UserController extends ControllerBase {
         // Redirect him to the login page with the destination.
         $resetURL = 'https://' . RegisterForm::getDomain() . '/user/login';
         // @todo if there is a destination, attach it to the url
+        if (empty($destination)) {
+          if (\Drupal::config('iq_group.settings')->get('default_redirection')) {
+            $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
+          }
+        }
         if ($destination != "") {
           $resetURL .= "?destination=" . $destination;
         }
@@ -125,7 +130,6 @@ class UserController extends ControllerBase {
           else {
             $destination ="/homepage";
           }
-
         }
         return new RedirectResponse($destination);
 

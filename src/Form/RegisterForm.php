@@ -32,7 +32,6 @@ class RegisterForm extends FormBase
       $form['mail'] = [
         '#type' => 'email',
         '#title' => $this->t('Email address'),
-        '#description' => $this->t('A valid email address. All emails from the system will be sent to this address. The email address is not made public and will only be used if you wish to receive a new password or wish to receive certain news or notifications by email.'),
         '#required' => !$account->getEmail(),
         '#default_value' => $account->getEmail(),
       ];
