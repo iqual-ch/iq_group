@@ -160,7 +160,14 @@ class RegisterForm extends FormBase
         if (isset($destination) && $destination != NULL) {
           $url .= "?destination=" . $destination;
         }
-        $result = mail($user->getEmail(), $this->t("SQS Mautic login"), $this->t("Register through ") . $url,
+        $renderable = [
+          '#theme' => 'signup_template',
+          '#EMAIL_TITLE' => 'Anmelde­bestätigung Newsletter',
+          '#EMAIL_PREVIEW_TEXT' => 'Anmelde­bestätigung Newsletter',
+          '#EMAIL_URL' => $url,
+        ];
+        $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+        $result = mail($user->getEmail(), $this->t("Anmelde­bestätigung Newsletter"), $rendered,
           "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
       }
       \Drupal::messenger()->addMessage('We have sent you an email.');

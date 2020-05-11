@@ -133,7 +133,7 @@ class SignupForm extends FormBase
         if (isset($destination) && $destination != NULL) {
           $url .= "?destination=" . $destination;
         }
-        $result = mail($user->getEmail(), $this->t("SQS Mautic login"), $this->t("Login through ") . $url,
+        $result = mail($user->getEmail(), $this->t("Anmelde­bestätigung Newsletter"), $this->t("Login through ") . $url,
           "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
       }
       // If the user does not exist
@@ -171,10 +171,17 @@ class SignupForm extends FormBase
         if (isset($destination) && $destination != NULL) {
           $url .= "?destination=" . $destination;
         }
-        $result = mail($user->getEmail(), $this->t("SQS Mautic login"), $this->t("Signup through ") . $url,
+        $renderable = [
+          '#theme' => 'signup_template',
+          '#EMAIL_TITLE' => 'Anmelde­bestätigung Newsletter',
+          '#EMAIL_PREVIEW_TEXT' => 'Anmelde­bestätigung Newsletter',
+          '#EMAIL_URL' => $url,
+        ];
+        $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+        $result = mail($user->getEmail(), $this->t("Anmelde­bestätigung Newsletter"), $rendered,
           "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
       }
-      \Drupal::messenger()->addMessage($this->t('Thanks for signing up. You will get an email with more information for login.'));
+      \Drupal::messenger()->addMessage($this->t('Thanks for signing up. You will get an email with more information to login.'));
     }
     else {
       $user = User::load(\Drupal::currentUser()->id());

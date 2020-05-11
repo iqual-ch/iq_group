@@ -431,3 +431,16 @@ function iq_group_node_access(NodeInterface $node, $op, AccountInterface $accoun
   }
   return AccessResult::neutral();
 }
+
+function iq_group_theme($existing, $type, $theme, $path) {
+  $text = '';
+  return [
+    'signup_template' => [
+      'variables' => [
+        'EMAIL_TITLE' => "Sign up",
+        'EMAIL_PREVIEW_TEXT' => 'Newsletter Sign up',
+        'EMAIL_URL' => $text
+      ],
+    ],
+  ];
+}
