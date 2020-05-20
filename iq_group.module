@@ -19,11 +19,14 @@ use Drupal\node\NodeInterface;
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function iq_group_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
-  /*$form['account']['name']['#type'] = 'hidden';
-  $form['account']['name']['#required'] = FALSE;*/
+  $form['account']['name']['#type'] = 'hidden';
+  $form['account']['name']['#required'] = FALSE;
   $form['actions']['submit']['#submit'][] = 'iq_group_after_register';
-  /*$form['#validate'][] = 'iq_group_register_validation';
-  $form['#validate'] = array_reverse($form['#validate']);*/
+  $form['#validate'][] = 'iq_group_register_validation';
+  $form['#validate'] = array_reverse($form['#validate']);
+  //var_dump($form['#validate']);
+  //var_dump(array_keys($form['account']));
+  //die();
 }
 
 function iq_group_form_node_iq_group_whitepaper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
@@ -34,8 +37,10 @@ function iq_group_form_node_iq_group_whitepaper_form_alter(&$form, \Drupal\Core\
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
-function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
   $form['language']['#type'] = 'markup';
+  $form['account']['name']['#type'] = 'hidden';
+  $form['account']['mail']['#description'] = '';
   $form['actions']['submit']['#submit'][] = 'iq_group_after_register';
   foreach ($form['field_iq_group_preferences']['widget']['#options'] as $key => $value) {
     if (reset($value) == 'General') {
@@ -46,12 +51,14 @@ function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterf
 }
 
 function iq_group_register_validation(&$form, FormStateInterface $form_state) {
+  $form_state->setValue('name', $form_state->getValue('mail'));
   $form['account']['name']['#value'] = $form_state->getValue('mail');
 }
+
 /**
  * Additional submit function after user register.
  */
-function iq_group_after_register(&$form, FormStateInterface $form_state) {
+function iq_group_after_register(&$form, FormStateInterface $form_state, $form_id) {
   // email exists
   $mail = $form_state->getValue('mail');
   @$user = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties([
@@ -209,6 +216,9 @@ function _node_field_group_settings() {
 
 
 function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if ($form_id == 'iq_group_user_edit_form') {
+
+  }
   if ($form_id == 'user_register_form') {
     $form['actions']['#submit'][] = '_node_field_group_add_custom_callback_group';
 /*    $result = \Drupal::entityTypeManager()
@@ -442,5 +452,38 @@ function iq_group_theme($existing, $type, $theme, $path) {
         'EMAIL_URL' => $text
       ],
     ],
+    'login_template' => [
+      'variables' => [
+        'EMAIL_TITLE' => "Login",
+        'EMAIL_PREVIEW_TEXT' => 'Login',
+        'EMAIL_URL' => $text
+      ],
+    ],
+    'whitepaper_template' => [
+      'variables' => [
+        'EMAIL_TITLE' => "Whitepaper",
+        'EMAIL_PREVIEW_TEXT' => 'Whitepaper download',
+        'EMAIL_URL' => $text
+      ],
+    ],
   ];
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function iq_group_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+
+  $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+  if ($entity->bundle() == 'iq_group_whitepaper') {
+    $user_edit = \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\UserEditForm');
+    $build['user_wrapper'] = [
+      '#type' => 'fieldset',
+      '#title' => t('User settings'),
+      '#prefix' => '<br/><br/>',
+    ];
+    $build['user_wrapper']['user_block'] = $user_edit;
+    $build['user_wrapper']['#weight'] = 150000;
+  }
+
 }

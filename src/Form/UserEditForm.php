@@ -95,15 +95,10 @@ class UserEditForm extends FormBase
         if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
           $default_value = array_merge($default_value, [$value['target_id']]);
       }
-      $form['password'] = [
-        '#type' => 'password',
-        '#title' => $this->t('Password')
-      ];
-      $form['password_confirm'] = [
-        '#type' => 'password',
-        '#title' => $this->t('Confirm password')
-      ];
-      if ($currentPath == '/user/edit') {
+
+      /** @var Node $node */
+      $node = \Drupal::routeMatch()->getParameter('node');
+      if ($currentPath == '/user/edit' || (!empty($node) && $node->bundle() == 'iq_group_whitepaper')) {
         $form['preferences'] = [
           '#type' => 'checkboxes',
           '#options' => $options,
@@ -125,7 +120,8 @@ class UserEditForm extends FormBase
         if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
           $default_branches = array_merge($default_branches, [$value['target_id']]);
       }
-      if ($currentPath == '/user/edit') {
+
+      if ($currentPath == '/user/edit' || (!empty($node) && $node->bundle() == 'iq_group_whitepaper')) {
         $form['branches'] = [
           '#type' => 'checkboxes',
           '#options' => $term_options,
@@ -134,7 +130,18 @@ class UserEditForm extends FormBase
           '#title' => $this->t('Branches')
         ];
       }
-
+      $form['password_text'] = [
+        '#type' => 'markup',
+        '#markup' => 'Wenn Sie ein Passwort setzen, erstellen Sie automatisch ein Login. Sie können anschliessend Ihre Newsletter Präferenzen direkt im Benutzerkonto ändern.'
+      ];
+      $form['password'] = [
+        '#type' => 'password',
+        '#title' => $this->t('Password')
+      ];
+      $form['password_confirm'] = [
+        '#type' => 'password',
+        '#title' => $this->t('Confirm password')
+      ];
       $user_id = \Drupal::currentUser()->id();
       $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
       $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
@@ -152,10 +159,19 @@ class UserEditForm extends FormBase
         else {
           unset($form['password']);
           unset($form['password_confirm']);
+          unset($form['password_text']);
           $form['full_profile_edit'] = [
             '#type' => 'markup',
-            '#markup' => '<a href="/user/' . $user_id . '/edit">Edit profile</a>'
+            '#markup' => '</br><a href="/user/' . $user_id . '/edit">' . t('Edit profile') . '</a>'
           ];
+          if (!empty($node) && $node->bundle() == 'iq_group_whitepaper') {
+            $form['actions']['#type'] = 'actions';
+            $form['actions']['submit'] = [
+              '#type' => 'submit',
+              '#value' => $this->t('Save'),
+              '#button_type' => 'primary',
+            ];
+          }
           return $form;
         }
       }
@@ -163,7 +179,7 @@ class UserEditForm extends FormBase
       $form['actions']['#type'] = 'actions';
       $form['actions']['submit'] = [
         '#type' => 'submit',
-        '#value' => $this->t('Submit'),
+        '#value' => $this->t('Save'),
         '#button_type' => 'primary',
       ];
     }

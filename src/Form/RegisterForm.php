@@ -122,7 +122,14 @@ class RegisterForm extends FormBase
         if (isset($destination) && $destination != NULL) {
           $url .= "?destination=" . $destination;
         }
-        $result = mail($user->getEmail(), $this->t('Mautic login'), $this->t('Login through ') . $url,
+        $renderable = [
+          '#theme' => 'whitepaper_template',
+          '#EMAIL_TITLE' => 'Whitepaper Download',
+          '#EMAIL_PREVIEW_TEXT' => 'Whitepaper Download',
+          '#EMAIL_URL' => $url,
+        ];
+        $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+        $result = mail($user->getEmail(), $this->t("Whitepaper Download"), $rendered,
           "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
       }
       // If the user does not exist
@@ -161,13 +168,13 @@ class RegisterForm extends FormBase
           $url .= "?destination=" . $destination;
         }
         $renderable = [
-          '#theme' => 'signup_template',
-          '#EMAIL_TITLE' => 'Anmelde­bestätigung Newsletter',
-          '#EMAIL_PREVIEW_TEXT' => 'Anmelde­bestätigung Newsletter',
+          '#theme' => 'whitepaper_template',
+          '#EMAIL_TITLE' => 'Whitepaper Download',
+          '#EMAIL_PREVIEW_TEXT' => 'Whitepaper Download',
           '#EMAIL_URL' => $url,
         ];
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-        $result = mail($user->getEmail(), $this->t("Anmelde­bestätigung Newsletter"), $rendered,
+        $result = mail($user->getEmail(), $this->t("Whitepaper Download"), $rendered,
           "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
       }
       \Drupal::messenger()->addMessage('We have sent you an email.');

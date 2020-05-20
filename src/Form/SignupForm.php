@@ -133,7 +133,17 @@ class SignupForm extends FormBase
         if (isset($destination) && $destination != NULL) {
           $url .= "?destination=" . $destination;
         }
-        $result = mail($user->getEmail(), $this->t("Anmelde­bestätigung Newsletter"), $this->t("Login through ") . $url,
+        $renderable = [
+          '#theme' => 'login_template',
+          '#EMAIL_TITLE' => 'Registrierung Benutzerkonto SQS',
+          '#EMAIL_PREVIEW_TEXT' => 'Registrierung Benutzerkonto SQS',
+          '#EMAIL_URL' => $url,
+        ];
+        $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+        $mail_subject = $this->t("Registrierung Benutzerkonto SQS");
+        mb_internal_encoding("UTF-8");
+        $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
+        $result = mail($user->getEmail(), $mail_subject , $rendered,
           "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
       }
       // If the user does not exist
@@ -177,8 +187,11 @@ class SignupForm extends FormBase
           '#EMAIL_PREVIEW_TEXT' => 'Anmelde­bestätigung Newsletter',
           '#EMAIL_URL' => $url,
         ];
+        $mail_subject = $this->t("Anmelde­bestätigung Newsletter");
+        mb_internal_encoding("UTF-8");
+        $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-        $result = mail($user->getEmail(), $this->t("Anmelde­bestätigung Newsletter"), $rendered,
+        $result = mail($user->getEmail(), $mail_subject , $rendered,
           "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
       }
       \Drupal::messenger()->addMessage($this->t('Thanks for signing up. You will get an email with more information to login.'));
