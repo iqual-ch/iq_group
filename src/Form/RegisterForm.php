@@ -48,6 +48,13 @@ class RegisterForm extends FormBase
           'spellcheck' => 'false',
         ],
       ];
+      $form['data_privacy'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('I have read the terms and conditions and data protection regulations and I agree.'),
+        '#default_value' => false,
+        '#weight' => 100,
+        '#required' => true,
+      ];
     }
     else {
       if(in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
@@ -88,6 +95,15 @@ class RegisterForm extends FormBase
       '#value' => $this->t('Submit'),
       '#button_type' => 'primary',
     ];
+    if (isset($form['data_privacy'])) {
+      $form['actions']['submit']['#states'] = [
+        'disabled' => [
+          ':input[name="data_privacy"]' => [
+            'checked' => false,
+          ],
+        ],
+      ];
+    }
 
     return $form;
   }

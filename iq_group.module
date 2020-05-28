@@ -6,6 +6,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\Url;
 use Drupal\file\FileInterface;
 use Drupal\iq_group\Controller\UserController;
 use Drupal\node\Entity\Node;
@@ -14,6 +15,8 @@ use Drupal\group\Entity\GroupContent;
 use Drupal\iq_group\MauticEvents;
 use Drupal\iq_group\Event\MauticEvent;
 use Drupal\node\NodeInterface;
+use Drupal\views\ViewExecutable;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
@@ -103,11 +106,11 @@ function iq_group_after_register(&$form, FormStateInterface $form_state, $form_i
  */
 function iq_group_user_login(\Drupal\user\UserInterface $account) {
 
+
   $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
   $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
   $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
   $groupRoles = array_keys($groupRoles);
-
   if (in_array('subscription-lead', $groupRoles)) {
     // redirect to destination if there is 1
     if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
@@ -117,7 +120,9 @@ function iq_group_user_login(\Drupal\user\UserInterface $account) {
     // if not, he will be redirect to the set default redirect from
     // iq group settings.
     else {
-      header('Location:' . \Drupal::config('iq_group.settings')->get('default_redirection'));
+      $member_area = \Drupal::config('iq_group.settings')->get('default_redirection');
+      $response = new RedirectResponse(Url::fromUserInput($member_area)->toString());
+      $response->send();
     }
   }
   return ;
@@ -220,6 +225,13 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
   }
   if ($form_id == 'user_register_form') {
+    $form['data_privacy'] = [
+      '#type' => 'checkbox',
+      '#title' => t('I have read the terms and conditions and data protection regulations and I agree.'),
+      '#default_value' => false,
+      '#required' => true,
+      '#weight' => 10,
+    ];
     $form['actions']['#submit'][] = '_node_field_group_add_custom_callback_group';
 /*    $result = \Drupal::entityTypeManager()
       ->getStorage('group')
@@ -486,4 +498,21 @@ function iq_group_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInte
     $build['user_wrapper']['#weight'] = 150000;
   }
 
+}
+
+
+function iq_group_form_views_exposed_form_alter(&$form, Drupal\Core\Form\FormStateInterface $form_state, $form_id)
+{
+  // Set default values for the branches from the logged in user.
+  if ($form['#id'] == 'views-exposed-form-whitepapers-by-branch-page-1') {
+    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    $ids = $user->get('field_iq_group_branches')->getValue();
+    $branches = [];
+    foreach ($ids as $key => $branch) {
+      $branches[] = $branch['target_id'];
+    }
+    if (empty($_GET['field_iq_group_branches_target_id'])) {
+      $form['field_iq_group_branches_target_id']['#value'] = $branches;
+    }
+  }
 }

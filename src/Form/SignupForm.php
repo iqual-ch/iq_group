@@ -48,17 +48,25 @@ class SignupForm extends FormBase
           'spellcheck' => 'false',
         ],
       ];
+      $form['data_privacy'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('I have read the terms and conditions and data protection regulations and I agree.'),
+        '#default_value' => false,
+        '#weight' => 100,
+        '#required' => true,
+      ];
       $destination = \Drupal::service('path.current')->getPath();
       $form['register_link'] = [
         '#type' => 'markup',
         '#markup' => '<a href="/user/register?destination=' . $destination . '">' . t('Register') . '</a> / ',
-        '#weight' => 100
+        '#weight' => 101
       ];
       $form['login_link'] = [
         '#type' => 'markup',
         '#markup' => '<a href="/user/login?destination=' . $destination . '">' . t('Login') . '</a>',
-        '#weight' => 100
+        '#weight' => 101
       ];
+
     }
     else {
       if(in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
@@ -100,6 +108,15 @@ class SignupForm extends FormBase
       '#button_type' => 'primary',
     ];
 
+    if (isset($form['data_privacy'])) {
+      $form['actions']['submit']['#states'] = [
+        'disabled' => [
+          ':input[name="data_privacy"]' => [
+            'checked' => false,
+          ],
+        ],
+      ];
+    }
     return $form;
   }
 
