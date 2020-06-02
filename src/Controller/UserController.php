@@ -51,7 +51,7 @@ class UserController extends ControllerBase {
     \Drupal::service('page_cache_kill_switch')->trigger();
     $user = User::load($user_id);
     // is the token valid for that user
-    if ($token == $user->field_iq_group_user_token->value) {
+    if (!empty($token) && $token === $user->field_iq_group_user_token->value) {
 
       // if user ->id is same with the logged in user (check cookies)
       if (\Drupal::currentUser()->isAuthenticated()) {
