@@ -26,4 +26,9 @@ final class MauticEvents {
    * Name of the event fired after the user edits profile.
    */
   const USER_PROFILE_EDIT = 'iq_group.userProfileEdit';
+
+  /**
+   * Name of the event fired after a user profile is updated.
+   */
+  const USER_PROFILE_UPDATE = 'iq_group.userProfileUpdate';
 }

@@ -516,3 +516,20 @@ function iq_group_form_views_exposed_form_alter(&$form, Drupal\Core\Form\FormSta
     }
   }
 }
+
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function iq_group_user_update(\Drupal\user\UserInterface $account) {
+  $user = \Drupal\user\Entity\User::load($account->id());
+
+  $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+
+  if ($group->getMember($user)) {
+      \Drupal::logger('iq_group')->notice('custom_user_update');
+
+      $eventDispatcher = \Drupal::service('event_dispatcher');
+      $eventDispatcher->dispatch(MauticEvents::USER_PROFILE_UPDATE, new MauticEvent($user));
+  }
+}
