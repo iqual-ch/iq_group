@@ -50,6 +50,7 @@ class UserController extends ControllerBase {
   function resetPassword($user_id, $token) {
     \Drupal::service('page_cache_kill_switch')->trigger();
     $user = User::load($user_id);
+    
     // is the token valid for that user
     if (!empty($token) && $token === $user->field_iq_group_user_token->value) {
 
@@ -115,9 +116,12 @@ class UserController extends ControllerBase {
         if ($destination != "") {
           $resetURL .= "?destination=" . $destination;
         }
-        $response = new RedirectResponse($resetURL, 302);
-        $response->send();
-        return;
+        \Drupal::messenger()->addMessage('Ihr Konto ist Passwortgeschützt. Melden Sie sich an.');
+        
+        return new RedirectResponse($resetURL);
+        // $response = new RedirectResponse($resetURL, 302);
+        // $response->send();
+        // return;
       }
       else {
         // instead of redirecting the user to the one-time-login, log him in.
@@ -131,6 +135,7 @@ class UserController extends ControllerBase {
             $destination ="/homepage";
           }
         }
+
         return new RedirectResponse($destination);
 
         //return new RedirectResponse(Url::fromUri('internal:/node/78')->toString());
