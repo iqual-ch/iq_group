@@ -202,6 +202,7 @@ class SignupForm extends FormBase
           '#theme' => 'signup_template',
           '#EMAIL_TITLE' => 'Anmelde­bestätigung Newsletter',
           '#EMAIL_PREVIEW_TEXT' => 'Anmelde­bestätigung Newsletter',
+          '#USER_PREFERENCES' => $user->field_iq_group_preferences->value,
           '#EMAIL_URL' => $url,
         ];
         $mail_subject = $this->t("Anmelde­bestätigung Newsletter");
