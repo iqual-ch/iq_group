@@ -49,6 +49,23 @@ class IqGroupSettingsForm extends ConfigFormBase
       '#description' => $this->t('Enter the general group ID'),
       '#default_value' => \Drupal::config('iq_group.settings')->get('general_group_id')
     ];
+    $form['name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Name of the sender.'),
+      '#default_value' => \Drupal::config('iq_group.settings')->get('name')
+    ];
+    $form['from'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Email address of the sender.'),
+      '#description' => $this->t('This will be displayed as the sender on the emails.'),
+      '#default_value' => \Drupal::config('iq_group.settings')->get('from')
+    ];
+    $form['reply_to'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Reply-to address.'),
+      '#description' => $this->t('This will be the reply-to email address.'),
+      '#default_value' => \Drupal::config('iq_group.settings')->get('reply_to')
+    ];
 
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
@@ -68,6 +85,9 @@ class IqGroupSettingsForm extends ConfigFormBase
     $this->config('iq_group.settings')
       ->set('default_redirection', $form_state->getValue('default_redirection'))
       ->set('general_group_id', $form_state->getValue('general_group_id'))
+      ->set('name', $form_state->getValue('name'))
+      ->set('from', $form_state->getValue('from'))
+      ->set('reply_to', $form_state->getValue('reply_to'))
       ->save();
 
     parent::submitForm($form, $form_state);

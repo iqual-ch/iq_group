@@ -112,6 +112,10 @@ class RegisterForm extends FormBase
    * {@inheritDoc}
    */
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+    $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
+    $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
+    $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
+    $email_reply_to = $iqGroupSettingsConfig->get('reply_to') != NULL ? $iqGroupSettingsConfig->get('reply_to') : 'support@iqual.ch';
     if (\Drupal::currentUser()->isAnonymous()) {
       $result = \Drupal::entityQuery('user')
         ->condition('mail', $form_state->getValue('mail'), 'LIKE')
@@ -146,7 +150,7 @@ class RegisterForm extends FormBase
         ];
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
         $result = mail($user->getEmail(), $this->t("Whitepaper Download"), $rendered,
-          "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
+          "From: ".$email_name ."<". $email_from ."> ". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
       }
       // If the user does not exist
       else {
@@ -191,7 +195,7 @@ class RegisterForm extends FormBase
         ];
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
         $result = mail($user->getEmail(), $this->t("Whitepaper Download"), $rendered,
-          "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
+          "From: ".$email_name ."<". $email_from ."> ". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
       }
       \Drupal::messenger()->addMessage('We have sent you an email.');
     }

@@ -2,6 +2,7 @@
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -15,6 +16,7 @@ use Drupal\group\Entity\GroupContent;
 use Drupal\iq_group\MauticEvents;
 use Drupal\iq_group\Event\MauticEvent;
 use Drupal\node\NodeInterface;
+use Drupal\user\UserInterface;
 use Drupal\views\ViewExecutable;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
@@ -44,7 +46,7 @@ function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterf
   $form['language']['#type'] = 'markup';
   $form['account']['name']['#type'] = 'hidden';
   $form['account']['mail']['#description'] = '';
-  $form['actions']['submit']['#submit'][] = 'iq_group_after_register';
+  //$form['actions']['submit']['#submit'][] = 'iq_group_after_register';
   foreach ($form['field_iq_group_preferences']['widget']['#options'] as $key => $value) {
     if (reset($value) == 'General') {
       unset($form['field_iq_group_preferences']['widget']['#options'][$key]);
@@ -67,8 +69,14 @@ function iq_group_after_register(&$form, FormStateInterface $form_state, $form_i
   @$user = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties([
     'mail' => $mail
   ]);
+  /** @var \Drupal\user\Entity\User $user */
   $user = reset($user);
+
   if ($user != FALSE) {
+    $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
+    $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
+    $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
+    $email_reply_to = $iqGroupSettingsConfig->get('reply_to') != NULL ? $iqGroupSettingsConfig->get('reply_to') : 'support@iqual.ch';
     if ($form_state->getValue('pass') != NULL) {
       if ($user->field_iq_group_user_token->value == NULL) {
         $data = time();
@@ -98,7 +106,39 @@ function iq_group_after_register(&$form, FormStateInterface $form_state, $form_i
         }
       }
     }
+    \Drupal::messenger()->deleteByType(\Drupal\Core\Messenger\MessengerInterface::TYPE_STATUS);
+    \Drupal::messenger()->addMessage('Besten Dank für die Registrierung. Sie erhalten in Kürze von uns eine E-Mail mit einem Bestätigungslink.');
+    if ($form_state->getValue('destination') != "")  {
+      $destination = $form_state->getValue('destination');
+    }
+    else {
+      // @todo Set a destination if it is a signup form or not?
+      //$destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
+    }
+    $url = 'https://' . \Drupal\iq_group\Form\SignupForm::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
+    if (isset($destination) && $destination != NULL) {
+      $url .= "?destination=" . $destination;
+    }
+    $renderable = [
+      '#theme' => 'register_template',
+      '#EMAIL_TITLE' => 'Registrierung Benutzerkonto SQS',
+      '#EMAIL_PREVIEW_TEXT' => 'Registrierung Benutzerkonto SQS',
+      '#EMAIL_URL' => $url,
+    ];
+    $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+    $mail_subject = t("Registrierung Benutzerkonto SQS");
+    mb_internal_encoding("UTF-8");
+    $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
+    // Send a registration email and set the pending activation flag.
+    $result = mail($user->getEmail(), $mail_subject , $rendered,
+      "From: ".$email_name ."<". $email_from ."> ". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
+    $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
+    $store->set($user->id().'_pending_activation', true);
+    $form_state->setRedirect('user.register');
+
   }
+
+
 }
 
 /**
@@ -225,6 +265,7 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
   }
   if ($form_id == 'user_register_form') {
+    $form['user_picture']['widget'][0]['#description'] = 'Erlaubte dateitypen: ' . reset($form['user_picture']['widget'][0]['#upload_validators']['file_validate_extensions']);
     $form['data_privacy'] = [
       '#type' => 'checkbox',
       '#title' => t('I have read the terms and conditions and data protection regulations and I agree.'),
@@ -392,9 +433,24 @@ function iq_group_views_pre_render(\Drupal\views\ViewExecutable $view) {
 }
 
 function iq_group_form_user_login_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $form['title'] = [
+    '#type' => 'markup',
+    '#markup' => "<h1>Anmeldung zur SQS  Member Area</h1>",
+    '#weight' => -100
+  ];
+  $destination = '/user/register';
+  if (!empty($_GET['destination'])) {
+    $destination.='?destination=' . $_GET['destination'];
+  }
   $form['forgot_password'] = [
     '#type' => 'markup',
-    '#markup' => '<a href="/onetime-loginlink">'. t('Forgot password') . '</a>'
+    '#markup' => '<a href="/onetime-loginlink">'. t('Forgot password') . '</a> / ',
+    '#weight' => 100
+  ];
+  $form['register_link'] = [
+    '#type' => 'markup',
+    '#markup' => '<a href="'. $destination .  '">' . t('Register') . '</a>',
+    '#weight' => 100
   ];
 }
 
@@ -478,6 +534,13 @@ function iq_group_theme($existing, $type, $theme, $path) {
         'EMAIL_URL' => $text
       ],
     ],
+    'register_template' => [
+      'variables' => [
+        'EMAIL_TITLE' => "Registration",
+        'EMAIL_PREVIEW_TEXT' => 'Registration',
+        'EMAIL_URL' => $text
+      ],
+    ],
   ];
 }
 
@@ -498,22 +561,27 @@ function iq_group_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInte
     $build['user_wrapper']['#weight'] = 150000;
   }
 
-}
 
+}
 
 function iq_group_form_views_exposed_form_alter(&$form, Drupal\Core\Form\FormStateInterface $form_state, $form_id)
 {
+
   // Set default values for the branches from the logged in user.
   if ($form['#id'] == 'views-exposed-form-whitepapers-by-branch-page-1') {
     $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
     $ids = $user->get('field_iq_group_branches')->getValue();
+
     $branches = [];
+
     foreach ($ids as $key => $branch) {
       $branches[] = $branch['target_id'];
     }
-    if (empty($_GET['field_iq_group_branches_target_id'])) {
+    if (in_array(\Drupal::request()->server->get('REQUEST_METHOD'), ['GET', 'HEAD'])) {
+      $form['field_iq_group_branches_target_id']['#default_value']['value'] = $branches;
       $form['field_iq_group_branches_target_id']['#value'] = $branches;
     }
+
   }
 }
 
@@ -526,7 +594,7 @@ function iq_group_user_update(\Drupal\user\UserInterface $account) {
 
   $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
 
-  if ($group->getMember($user)) {
+  if ($group->getMember($user) && !$user->isNew()) {
       \Drupal::logger('iq_group')->notice('custom_user_update');
 
       $eventDispatcher = \Drupal::service('event_dispatcher');

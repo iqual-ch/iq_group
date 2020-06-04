@@ -11,3 +11,12 @@ iq_group.settings:
     general_group_id:
       type: string
       label: 'The id of the general group for access of the content.'
+    name:
+      type: string
+      label: 'The name of the sender in the emails.'
+    from:
+      type: string
+      label: 'The sender email address.'
+    reply_to:
+      type: string
+      label: 'The reply-to email address.'

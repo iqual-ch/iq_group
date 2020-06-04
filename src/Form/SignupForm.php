@@ -124,6 +124,11 @@ class SignupForm extends FormBase
    * {@inheritDoc}
    */
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+    $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
+    $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
+    $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
+    $email_reply_to = $iqGroupSettingsConfig->get('reply_to') != NULL ? $iqGroupSettingsConfig->get('reply_to') : 'support@iqual.ch';
+
     if (\Drupal::currentUser()->isAnonymous()) {
       $result = \Drupal::entityQuery('user')
         ->condition('mail', $form_state->getValue('mail'), 'LIKE')
@@ -161,7 +166,7 @@ class SignupForm extends FormBase
         mb_internal_encoding("UTF-8");
         $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
         $result = mail($user->getEmail(), $mail_subject , $rendered,
-          "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
+          "From: ".$email_name ."<". $email_from ."> ". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
       }
       // If the user does not exist
       else {
@@ -210,7 +215,7 @@ class SignupForm extends FormBase
         $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
         $result = mail($user->getEmail(), $mail_subject , $rendered,
-          "From: support@iqual.ch" . "\r\nReply-to: support@iqual.ch" . "\r\nContent-Type: text/html");
+          "From: ".$email_name ."<". $email_from ."> ". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
       }
       \Drupal::messenger()->addMessage($this->t('Thanks for signing up. You will get an email with more information to login.'));
     }

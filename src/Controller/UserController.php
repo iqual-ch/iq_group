@@ -48,8 +48,22 @@ class UserController extends ControllerBase {
   }
 
   function resetPassword($user_id, $token) {
+    /** @var \Drupal\user\SharedTempStore $store */
+    $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
+
     \Drupal::service('page_cache_kill_switch')->trigger();
     $user = User::load($user_id);
+
+    if (!empty($store->get($user_id . '_pending_activation'))) {
+      $user->set('status', 1);
+      $user->save();
+      $store->delete($user_id . '_pending_activation');
+    }
+    else if ((!empty($user) && $user->status->value == 0)) {
+      \Drupal::messenger()->addMessage($this->t('Your account has been blocked.'), 'error');
+      return new RedirectResponse(Url::fromRoute('<front>')->toString());
+    }
+
     
     // is the token valid for that user
     if (!empty($token) && $token === $user->field_iq_group_user_token->value) {
@@ -118,10 +132,10 @@ class UserController extends ControllerBase {
         }
         \Drupal::messenger()->addMessage('Ihr Konto ist Passwortgeschützt. Melden Sie sich an.');
         
-        return new RedirectResponse($resetURL);
-        // $response = new RedirectResponse($resetURL, 302);
-        // $response->send();
-        // return;
+        //return new RedirectResponse($resetURL);
+         $response = new RedirectResponse($resetURL, 302);
+         $response->send();
+         return;
       }
       else {
         // instead of redirecting the user to the one-time-login, log him in.
