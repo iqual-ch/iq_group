@@ -600,3 +600,18 @@ function iq_group_user_update(\Drupal\user\UserInterface $account) {
       $eventDispatcher->dispatch(MauticEvents::USER_PROFILE_UPDATE, new MauticEvent($user));
   }
 }
+
+
+/**
+ * Implements hook_ENTITY_TYPE_predelete().
+ */
+function iq_group_user_predelete(\Drupal\user\UserInterface $account) {
+  $user = \Drupal\user\Entity\User::load($account->id());
+
+  $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+
+  if ($group->getMember($user)) {
+      $eventDispatcher = \Drupal::service('event_dispatcher');
+      $eventDispatcher->dispatch(MauticEvents::USER_PROFILE_DELETE, new MauticEvent($user));
+  }
+}
