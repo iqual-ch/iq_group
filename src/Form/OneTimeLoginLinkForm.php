@@ -79,7 +79,7 @@ class OneTimeLoginLinkForm extends FormBase {
       //$params['message'] = OfferChecker::getEmailTemplate(t('Passwort wiederherstellen'), t('Passwort wiederherstellen'), '<a href="'. $login_url .'">Hier </a> können Sie Ihr Passwort wiederherstellen.');
       $params['message'] = '<a href="'. $login_url .'">'. $this->t('Click here') .'</a> ' . $this->t(' to reset your password');
       $result = mail($user_email_name, $params["subject"], $params['message'],
-        "From: ".$email_name ."<". $email_from ."> ". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
+        "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
 
     }
   }

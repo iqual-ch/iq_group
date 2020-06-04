@@ -150,7 +150,7 @@ class RegisterForm extends FormBase
         ];
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
         $result = mail($user->getEmail(), $this->t("Whitepaper Download"), $rendered,
-          "From: ".$email_name ."<". $email_from ."> ". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
+          "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
       }
       // If the user does not exist
       else {
@@ -195,7 +195,7 @@ class RegisterForm extends FormBase
         ];
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
         $result = mail($user->getEmail(), $this->t("Whitepaper Download"), $rendered,
-          "From: ".$email_name ."<". $email_from ."> ". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
+          "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
       }
       \Drupal::messenger()->addMessage('We have sent you an email.');
     }
