@@ -596,8 +596,6 @@ function iq_group_user_update(\Drupal\user\UserInterface $account) {
   $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
 
   if ($group->getMember($user) && !$user->isNew()) {
-      \Drupal::logger('iq_group')->notice('custom_user_update');
-
       $eventDispatcher = \Drupal::service('event_dispatcher');
       $eventDispatcher->dispatch(MauticEvents::USER_PROFILE_UPDATE, new MauticEvent($user));
   }
