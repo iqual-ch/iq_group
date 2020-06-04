@@ -131,7 +131,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state, $form_i
     $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
     // Send a registration email and set the pending activation flag.
     $result = mail($user->getEmail(), $mail_subject , $rendered,
-      "From: ".$email_name ."<". $email_from ."> ". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
+      "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
     $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
     $store->set($user->id().'_pending_activation', true);
     $form_state->setRedirect('user.register');
@@ -264,8 +264,10 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   if ($form_id == 'iq_group_user_edit_form') {
 
   }
-  if ($form_id == 'user_register_form') {
+  if ($form_id == 'user_form' || $form_id == 'user_register_form') {
     $form['user_picture']['widget'][0]['#description'] = 'Erlaubte dateitypen: ' . reset($form['user_picture']['widget'][0]['#upload_validators']['file_validate_extensions']);
+  }
+  if ($form_id == 'user_register_form') {
     $form['data_privacy'] = [
       '#type' => 'checkbox',
       '#title' => t('I have read the terms and conditions and data protection regulations and I agree.'),
@@ -302,7 +304,6 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     }
   }
 }
-
 
 function _node_field_group_add_custom_callback_group($form, FormStateInterface $form_state) {
   $settings = _node_field_group_settings();
