@@ -1,7 +1,8 @@
-uuid: e96aace5-0257-46c2-925a-116ab1d638fc
-langcode: en
+langcode: de
 status: true
 dependencies: {  }
+_core:
+  default_config_hash: zCDDuIzWHqSzeTE05Vgkp6QPeZoSFd9GXETPa-Wmlr8
 id: subscription
 label: Subscription
 description: ''

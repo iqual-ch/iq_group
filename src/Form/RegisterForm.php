@@ -116,6 +116,7 @@ class RegisterForm extends FormBase
     $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
     $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
     $email_reply_to = $iqGroupSettingsConfig->get('reply_to') != NULL ? $iqGroupSettingsConfig->get('reply_to') : 'support@iqual.ch';
+    $project_name = $iqGroupSettingsConfig->get('project_name') != NULL ? $iqGroupSettingsConfig->get('project_name') : "";
     if (\Drupal::currentUser()->isAnonymous()) {
       $result = \Drupal::entityQuery('user')
         ->condition('mail', $form_state->getValue('mail'), 'LIKE')
@@ -147,6 +148,7 @@ class RegisterForm extends FormBase
           '#EMAIL_TITLE' => 'Whitepaper Download',
           '#EMAIL_PREVIEW_TEXT' => 'Whitepaper Download',
           '#EMAIL_URL' => $url,
+          '#EMAIL_PROJECT_NAME' => $project_name,
         ];
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
         $result = mail($user->getEmail(), $this->t("Whitepaper Download"), $rendered,
@@ -192,6 +194,7 @@ class RegisterForm extends FormBase
           '#EMAIL_TITLE' => 'Whitepaper Download',
           '#EMAIL_PREVIEW_TEXT' => 'Whitepaper Download',
           '#EMAIL_URL' => $url,
+          '#EMAIL_PROJECT_NAME' => $project_name,
         ];
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
         $result = mail($user->getEmail(), $this->t("Whitepaper Download"), $rendered,

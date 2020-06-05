@@ -1,4 +1,3 @@
-uuid: 15a37a16-e5f7-4880-83ee-52e7e8429bbb
 langcode: en
 status: true
 dependencies:
@@ -7,9 +6,9 @@ dependencies:
     - pagedesigner_block
     - user
   theme:
-    - custom_theme
+    - iq_custom
 id: userlogin_2
-theme: custom_theme
+theme: iq_custom
 region: pagedesigner
 weight: 0
 provider: null

@@ -15,7 +15,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
- * IQ Group SQS Mautic controller.
+ * IQ Group controller.
  */
 class UserController extends ControllerBase {
 
@@ -131,7 +131,6 @@ class UserController extends ControllerBase {
           $resetURL .= "?destination=" . $destination;
         }
         \Drupal::messenger()->addMessage('Ihr Konto ist Passwortgeschützt. Melden Sie sich an.');
-        
         //return new RedirectResponse($resetURL);
          $response = new RedirectResponse($resetURL, 302);
          $response->send();

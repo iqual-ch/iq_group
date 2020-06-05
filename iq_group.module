@@ -63,7 +63,7 @@ function iq_group_register_validation(&$form, FormStateInterface $form_state) {
 /**
  * Additional submit function after user register.
  */
-function iq_group_after_register(&$form, FormStateInterface $form_state, $form_id) {
+function iq_group_after_register(&$form, FormStateInterface $form_state) {
   // email exists
   $mail = $form_state->getValue('mail');
   @$user = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties([
@@ -87,14 +87,17 @@ function iq_group_after_register(&$form, FormStateInterface $form_state, $form_i
       }
       // Add the role in general (id=5) group.
       $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-      $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
-      $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
-      $groupRoles = array_keys($groupRoles);
-      if (!in_array('subscription-lead', $groupRoles)) {
-        UserController::addGroupRoleToUser($group, $user, 'subscription-lead');
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
+      if (!empty($group)) {
+        $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+        $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
+        $groupRoles = array_keys($groupRoles);
+        if (!in_array('subscription-lead', $groupRoles)) {
+          UserController::addGroupRoleToUser($group, $user, 'subscription-lead');
+          $eventDispatcher = \Drupal::service('event_dispatcher');
+          $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
+        }
       }
+
       // Add member to the other groups that the user has selected in the
       // preferences field.
       $groups = $form_state->getValue('preferences');
@@ -119,14 +122,16 @@ function iq_group_after_register(&$form, FormStateInterface $form_state, $form_i
     if (isset($destination) && $destination != NULL) {
       $url .= "?destination=" . $destination;
     }
+    $project_name = $iqGroupSettingsConfig->get('project_name') != NULL ? $iqGroupSettingsConfig->get('project_name') : "";
     $renderable = [
       '#theme' => 'register_template',
-      '#EMAIL_TITLE' => 'Registrierung Benutzerkonto SQS',
-      '#EMAIL_PREVIEW_TEXT' => 'Registrierung Benutzerkonto SQS',
+      '#EMAIL_TITLE' => 'Registrierung Benutzerkonto ' . $project_name,
+      '#EMAIL_PREVIEW_TEXT' => 'Registrierung Benutzerkonto ' . $project_name,
       '#EMAIL_URL' => $url,
+      '#EMAIL_PROJECT_NAME' => $project_name,
     ];
     $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-    $mail_subject = t("Registrierung Benutzerkonto SQS");
+    $mail_subject = t("Registrierung Benutzerkonto " . $project_name);
     mb_internal_encoding("UTF-8");
     $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
     // Send a registration email and set the pending activation flag.
@@ -264,7 +269,7 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   if ($form_id == 'iq_group_user_edit_form') {
 
   }
-  if ($form_id == 'user_form' || $form_id == 'user_register_form') {
+  if ($form_id == 'user_form' || $form_id == 'user_register_form' && !empty($form['user_picture'])) {
     $form['user_picture']['widget'][0]['#description'] = 'Erlaubte dateitypen: ' . reset($form['user_picture']['widget'][0]['#upload_validators']['file_validate_extensions']);
   }
   if ($form_id == 'user_register_form') {
@@ -434,9 +439,12 @@ function iq_group_views_pre_render(\Drupal\views\ViewExecutable $view) {
 }
 
 function iq_group_form_user_login_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+
+  $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
+  $login_intro = $iqGroupSettingsConfig->get('login_intro') != NULL ? $iqGroupSettingsConfig->get('login_intro') : 'Welcome';
   $form['title'] = [
     '#type' => 'markup',
-    '#markup' => "<h1>Anmeldung zur SQS  Member Area</h1>",
+    '#markup' => "<h1>". $login_intro ."</h1>",
     '#weight' => -100
   ];
   $destination = '/user/register';
@@ -518,28 +526,32 @@ function iq_group_theme($existing, $type, $theme, $path) {
       'variables' => [
         'EMAIL_TITLE' => "Sign up",
         'EMAIL_PREVIEW_TEXT' => 'Newsletter Sign up',
-        'EMAIL_URL' => $text
+        'EMAIL_URL' => $text,
+        'EMAIL_PROJECT_NAME' => 'Project name'
       ],
     ],
     'login_template' => [
       'variables' => [
         'EMAIL_TITLE' => "Login",
         'EMAIL_PREVIEW_TEXT' => 'Login',
-        'EMAIL_URL' => $text
+        'EMAIL_URL' => $text,
+        'EMAIL_PROJECT_NAME' => 'Project name'
       ],
     ],
     'whitepaper_template' => [
       'variables' => [
         'EMAIL_TITLE' => "Whitepaper",
         'EMAIL_PREVIEW_TEXT' => 'Whitepaper download',
-        'EMAIL_URL' => $text
+        'EMAIL_URL' => $text,
+        'EMAIL_PROJECT_NAME' => 'Project name'
       ],
     ],
     'register_template' => [
       'variables' => [
         'EMAIL_TITLE' => "Registration",
         'EMAIL_PREVIEW_TEXT' => 'Registration',
-        'EMAIL_URL' => $text
+        'EMAIL_URL' => $text,
+        'EMAIL_PROJECT_NAME' => 'Project name'
       ],
     ],
   ];
@@ -595,7 +607,7 @@ function iq_group_user_update(\Drupal\user\UserInterface $account) {
 
   $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
 
-  if ($group->getMember($user) && !$user->isNew()) {
+  if (!empty($group) && $group->getMember($user) && !$user->isNew()) {
       $eventDispatcher = \Drupal::service('event_dispatcher');
       $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_UPDATE, new IqGroupEvent($user));
   }
@@ -610,7 +622,7 @@ function iq_group_user_predelete(\Drupal\user\UserInterface $account) {
   $group = Group::load(\Drupal::config('iq_group.settings')
     ->get('general_group_id'));
 
-  if ($group->getMember($user)) {
+  if (!empty($group) && $group->getMember($user)) {
     $eventDispatcher = \Drupal::service('event_dispatcher');
     $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_DELETE, new IqGroupEvent($user));
   }

@@ -8,7 +8,7 @@ use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Event subscriber to handle mautic events.
+ * Event subscriber to handle iq_group events.
  */
 class IqGroupSubscriber implements EventSubscriberInterface {
 
@@ -20,8 +20,8 @@ class IqGroupSubscriber implements EventSubscriberInterface {
    *   The event.
    */
   public function sendData(Event $event) {
-    \Drupal::logger('iq_group')->notice('mautic event triggered');
-    // Send data to mautic or to the mautic module.
+    \Drupal::logger('iq_group')->notice('iq_group event triggered');
+    // Send data to any API integration module.
   }
 
   /**

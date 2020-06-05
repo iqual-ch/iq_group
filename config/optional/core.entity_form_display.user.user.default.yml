@@ -1,5 +1,4 @@
-uuid: 1739af78-7a88-4a57-8596-4b9568bca70a
-langcode: en
+langcode: de
 status: true
 dependencies:
   config:
@@ -10,27 +9,79 @@ dependencies:
     - field.field.user.user.field_iq_group_preferences
     - field.field.user.user.field_iq_group_profile_picture
     - field.field.user.user.field_iq_group_user_token
+    - field.field.user.user.user_picture
+    - image.style.thumbnail
   module:
+    - field_group
+    - image
     - path
     - user
+third_party_settings:
+  field_group:
+    group_settings:
+      children:
+        - language
+        - field_iq_group_preferences
+        - field_iq_group_branches
+      parent_name: ''
+      weight: 2
+      format_type: fieldset
+      region: content
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        required_fields: true
+      label: Settings
+    group_user_profile:
+      children:
+        - field_iq_group_first_name
+        - field_iq_group_last_name
+        - user_picture
+      parent_name: ''
+      weight: 1
+      format_type: fieldset
+      region: content
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        required_fields: true
+      label: 'User profile'
+    group_account_settings:
+      children:
+        - account
+        - path
+      parent_name: ''
+      weight: 0
+      format_type: fieldset
+      region: content
+      format_settings:
+        id: ''
+        classes: ''
+        description: ''
+        required_fields: true
+      label: 'Account settings'
+_core:
+  default_config_hash: QFv6hPZI3hLAmIT8XylyEBVE98v7-W2uYp_zEFZY1F4
 id: user.user.default
 targetEntityType: user
 bundle: user
 mode: default
 content:
   account:
-    weight: 0
+    weight: 1
     region: content
     settings: {  }
     third_party_settings: {  }
   field_iq_group_branches:
-    weight: 8
+    weight: 7
     settings: {  }
     third_party_settings: {  }
     type: options_buttons
     region: content
   field_iq_group_first_name:
-    weight: 5
+    weight: 1
     settings:
       size: 60
       placeholder: ''
@@ -38,7 +89,7 @@ content:
     type: string_textfield
     region: content
   field_iq_group_last_name:
-    weight: 6
+    weight: 2
     settings:
       size: 60
       placeholder: ''
@@ -46,38 +97,33 @@ content:
     type: string_textfield
     region: content
   field_iq_group_preferences:
-    weight: 4
+    weight: 6
     settings: {  }
     third_party_settings: {  }
     type: options_buttons
     region: content
-  field_iq_group_profile_picture:
-    weight: 7
-    settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-    type: entity_reference_autocomplete
-    region: content
   language:
-    weight: 1
+    weight: 5
     region: content
     settings: {  }
     third_party_settings: {  }
   path:
     type: path
-    weight: 3
-    region: content
-    settings: {  }
-    third_party_settings: {  }
-  timezone:
     weight: 2
     region: content
     settings: {  }
     third_party_settings: {  }
+  user_picture:
+    type: image_image
+    weight: 3
+    region: content
+    settings:
+      progress_indicator: throbber
+      preview_image_style: thumbnail
+    third_party_settings: {  }
 hidden:
   field_iq_group_downloads: true
+  field_iq_group_profile_picture: true
   field_iq_group_user_token: true
   langcode: true
+  timezone: true

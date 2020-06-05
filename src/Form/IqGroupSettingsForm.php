@@ -51,20 +51,34 @@ class IqGroupSettingsForm extends ConfigFormBase
     ];
     $form['name'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Name of the sender.'),
+      '#title' => $this->t('Name of the sender'),
       '#default_value' => \Drupal::config('iq_group.settings')->get('name')
     ];
     $form['from'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Email address of the sender.'),
+      '#title' => $this->t('Email address of the sender'),
       '#description' => $this->t('This will be displayed as the sender on the emails.'),
       '#default_value' => \Drupal::config('iq_group.settings')->get('from')
     ];
     $form['reply_to'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Reply-to address.'),
+      '#title' => $this->t('Reply-to address'),
       '#description' => $this->t('This will be the reply-to email address.'),
       '#default_value' => \Drupal::config('iq_group.settings')->get('reply_to')
+    ];
+
+    $form['login_intro'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Login introduction text'),
+      '#description' => $this->t('This text will be displayed on the login page.'),
+      '#default_value' => \Drupal::config('iq_group.settings')->get('login_intro')
+    ];
+
+    $form['project_name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Project name'),
+      '#description' => $this->t('This name will be used in emails.'),
+      '#default_value' => \Drupal::config('iq_group.settings')->get('project_name')
     ];
 
     $form['actions']['#type'] = 'actions';
@@ -88,6 +102,8 @@ class IqGroupSettingsForm extends ConfigFormBase
       ->set('name', $form_state->getValue('name'))
       ->set('from', $form_state->getValue('from'))
       ->set('reply_to', $form_state->getValue('reply_to'))
+      ->set('login_intro', $form_state->getValue('login_intro'))
+      ->set('project_name', $form_state->getValue('project_name'))
       ->save();
 
     parent::submitForm($form, $form_state);

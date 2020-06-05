@@ -128,6 +128,7 @@ class SignupForm extends FormBase
     $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
     $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
     $email_reply_to = $iqGroupSettingsConfig->get('reply_to') != NULL ? $iqGroupSettingsConfig->get('reply_to') : 'support@iqual.ch';
+    $project_name = $iqGroupSettingsConfig->get('project_name') != NULL ? $iqGroupSettingsConfig->get('project_name') : "";
 
     if (\Drupal::currentUser()->isAnonymous()) {
       $result = \Drupal::entityQuery('user')
@@ -157,12 +158,13 @@ class SignupForm extends FormBase
         }
         $renderable = [
           '#theme' => 'login_template',
-          '#EMAIL_TITLE' => 'Registrierung Benutzerkonto SQS',
-          '#EMAIL_PREVIEW_TEXT' => 'Registrierung Benutzerkonto SQS',
+          '#EMAIL_TITLE' => 'Registrierung Benutzerkonto ' . $project_name ,
+          '#EMAIL_PREVIEW_TEXT' => 'Registrierung Benutzerkonto ' . $project_name,
           '#EMAIL_URL' => $url,
+          '#EMAIL_PROJECT_NAME' => $project_name
         ];
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-        $mail_subject = $this->t("Registrierung Benutzerkonto SQS");
+        $mail_subject = $this->t("Registrierung Benutzerkonto " . $project_name);
         mb_internal_encoding("UTF-8");
         $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
         $result = mail($user->getEmail(), $mail_subject , $rendered,
@@ -209,6 +211,7 @@ class SignupForm extends FormBase
           '#EMAIL_PREVIEW_TEXT' => 'Anmelde­bestätigung Newsletter',
           '#USER_PREFERENCES' => $user->field_iq_group_preferences->value,
           '#EMAIL_URL' => $url,
+          '#EMAIL_PROJECT_NAME' => $project_name,
         ];
         $mail_subject = $this->t("Anmelde­bestätigung Newsletter");
         mb_internal_encoding("UTF-8");
