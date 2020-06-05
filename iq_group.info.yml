@@ -1,5 +1,5 @@
 name: iQual Group Integration module
-description: Integration module for SQS Mautic
+description: Integration module for Group
 package: Custom
 type: module
 core: 8.x
