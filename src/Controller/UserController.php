@@ -6,9 +6,9 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Url;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupRole;
-use Drupal\iq_group\Event\MauticEvent;
+use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\Form\RegisterForm;
-use Drupal\iq_group\MauticEvents;
+use Drupal\iq_group\IqGroupEvents;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -99,7 +99,7 @@ class UserController extends ControllerBase {
       // If he is not opted-in (not a subscriber nor a lead).
       if (!in_array('subscription-subscriber', $groupRoles) && !in_array('subscription-lead', $groupRoles)) {
         self::addGroupRoleToUser($group, $user, 'subscription-subscriber');
-        $this->eventDispatcher->dispatch(MauticEvents::USER_OPT_IN, new MauticEvent( $user));
+        $this->eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent( $user));
       }
       // Add member to the other groups that the user has selected in the
       // preferences field.

@@ -7,7 +7,7 @@ use Symfony\Component\EventDispatcher\Event;
 /**
  * Event that is fired when a user is handled.
  */
-class MauticEvent extends Event {
+class IqGroupEvent extends Event {
 
   /**
    * The event data for the user.

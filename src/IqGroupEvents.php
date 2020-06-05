@@ -5,7 +5,7 @@ namespace Drupal\iq_group;
 /**
  *
  */
-final class MauticEvents {
+final class IqGroupEvents {
 
   /**
    * Name of the event fired after user opts in.

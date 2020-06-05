@@ -7,8 +7,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupRole;
 use Drupal\iq_group\Controller\UserController;
-use Drupal\iq_group\Event\MauticEvent;
-use Drupal\iq_group\MauticEvents;
+use Drupal\iq_group\Event\IqGroupEvent;
+use Drupal\iq_group\IqGroupEvents;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -212,7 +212,7 @@ class UserEditForm extends FormBase
       $groupRoles = array_keys($groupRoles);
       if (!in_array('subscription-lead', $groupRoles)) {
         UserController::addGroupRoleToUser($group, $user, 'subscription-lead');
-        $this->eventDispatcher->dispatch(MauticEvents::USER_PROFILE_EDIT, new MauticEvent($user));
+        $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
       }
       // Add member to the other groups that the user has selected in the
       // preferences field.
@@ -227,7 +227,7 @@ class UserEditForm extends FormBase
     $user->set('field_iq_group_branches', $form_state->getValue('branches'));
 
     $user->save();
-    $this->eventDispatcher->dispatch(MauticEvents::USER_PROFILE_EDIT, new MauticEvent($user));
+    $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
     // Redirect after saving
     // It would be on the same page as the private resource, so no redirect.
   }
