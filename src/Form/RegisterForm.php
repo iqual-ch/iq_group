@@ -48,10 +48,10 @@ class RegisterForm extends FormBase
           'spellcheck' => 'false',
         ],
       ];
+      $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ? \Drupal::config('iq_group.settings')->get('terms_and_conditions') : "https://www.sqs.ch/de/datenschutzbestimmungen";
       $form['data_privacy'] = [
         '#type' => 'checkbox',
-        '#title' => $this->t('I have read the terms and conditions and data protection regulations and I agree.'),
-        '#default_value' => false,
+        '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),        '#default_value' => false,
         '#weight' => 100,
         '#required' => true,
       ];
@@ -197,7 +197,7 @@ class RegisterForm extends FormBase
         $result = mail($user->getEmail(), $this->t("Whitepaper Download"), $rendered,
           "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
       }
-      \Drupal::messenger()->addMessage('We have sent you an email.');
+      \Drupal::messenger()->addMessage($this->t('We have sent you an email.'));
     }
     else {
       $user = User::load(\Drupal::currentUser()->id());

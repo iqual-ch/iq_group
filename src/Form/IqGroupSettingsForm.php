@@ -67,6 +67,13 @@ class IqGroupSettingsForm extends ConfigFormBase
       '#default_value' => \Drupal::config('iq_group.settings')->get('reply_to')
     ];
 
+    $form['terms_and_conditions'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Terms and conditions'),
+      '#description' => $this->t('This URL will be linked with the terms and conditions in the forms.'),
+      '#default_value' => \Drupal::config('iq_group.settings')->get('terms_and_conditions')
+    ];
+
     $form['actions']['#type'] = 'actions';
     $form['actions']['submit'] = [
       '#type' => 'submit',
@@ -88,6 +95,7 @@ class IqGroupSettingsForm extends ConfigFormBase
       ->set('name', $form_state->getValue('name'))
       ->set('from', $form_state->getValue('from'))
       ->set('reply_to', $form_state->getValue('reply_to'))
+      ->set('terms_and_conditions', $form_state->getValue('terms_and_conditions'))
       ->save();
 
     parent::submitForm($form, $form_state);

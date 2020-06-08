@@ -48,9 +48,9 @@ class SignupForm extends FormBase
           'spellcheck' => 'false',
         ],
       ];
-      $form['data_privacy'] = [
+      $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ? \Drupal::config('iq_group.settings')->get('terms_and_conditions') : "https://www.sqs.ch/de/datenschutzbestimmungen";      $form['data_privacy'] = [
         '#type' => 'checkbox',
-        '#title' => $this->t('I have read the terms and conditions and data protection regulations and I agree.'),
+        '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),        '#default_value' => false,
         '#default_value' => false,
         '#weight' => 100,
         '#required' => true,
