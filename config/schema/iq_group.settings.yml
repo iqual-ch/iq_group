@@ -26,3 +26,6 @@ iq_group.settings:
     project name:
       type: string
       label: 'The name of the project.'
+    terms_and_conditions:
+      type: string
+      label: 'The terms and conditions link.'

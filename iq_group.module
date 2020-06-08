@@ -270,12 +270,13 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
   }
   if ($form_id == 'user_form' || $form_id == 'user_register_form' && !empty($form['user_picture'])) {
-    $form['user_picture']['widget'][0]['#description'] = 'Erlaubte dateitypen: ' . reset($form['user_picture']['widget'][0]['#upload_validators']['file_validate_extensions']);
+    $form['user_picture']['widget'][0]['#description'] = t('Available types: ') . str_replace(' ', ', ', trim(reset($form['user_picture']['widget'][0]['#upload_validators']['file_validate_extensions'])));
   }
   if ($form_id == 'user_register_form') {
+    $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ? \Drupal::config('iq_group.settings')->get('terms_and_conditions') : "https://www.sqs.ch/de/datenschutzbestimmungen";
     $form['data_privacy'] = [
       '#type' => 'checkbox',
-      '#title' => t('I have read the terms and conditions and data protection regulations and I agree.'),
+      '#title' => t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
       '#default_value' => false,
       '#required' => true,
       '#weight' => 10,
@@ -581,7 +582,7 @@ function iq_group_form_views_exposed_form_alter(&$form, Drupal\Core\Form\FormSta
 {
 
   // Set default values for the branches from the logged in user.
-  if ($form['#id'] == 'views-exposed-form-whitepapers-by-branch-page-1') {
+  /*if ($form['#id'] == 'views-exposed-form-whitepapers-by-branch-page-1') {
     $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
     $ids = $user->get('field_iq_group_branches')->getValue();
 
@@ -595,7 +596,8 @@ function iq_group_form_views_exposed_form_alter(&$form, Drupal\Core\Form\FormSta
       $form['field_iq_group_branches_target_id']['#value'] = $branches;
     }
 
-  }
+  }*/
+  $form['field_iq_group_branches_target_id']['#description'] = t('When none are selected, all are shown.');
 }
 
 
