@@ -354,16 +354,18 @@ function iq_group_form_views_exposed_form_alter(&$form, Drupal\Core\Form\FormSta
 
 
 /**
- * Implements hook_ENTITY_TYPE_update().
+ * Implements hook_ENTITY_TYPE_presave().
  */
-function iq_group_user_update(\Drupal\user\UserInterface $account) {
-  $user = \Drupal\user\Entity\User::load($account->id());
+function iq_group_user_presave(\Drupal\user\UserInterface $account) {
+  if (!$account->isNew()) {
+    // $user = \Drupal\user\Entity\User::load($account->id());
 
-  $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+    $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
 
-  if (!empty($group) && $group->getMember($user) && !$user->isNew()) {
-      $eventDispatcher = \Drupal::service('event_dispatcher');
-      $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_UPDATE, new IqGroupEvent($user));
+    if (!empty($group) && $group->getMember($account)) {
+        $eventDispatcher = \Drupal::service('event_dispatcher');
+        $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_UPDATE, new IqGroupEvent($account));
+    }
   }
 }
 
