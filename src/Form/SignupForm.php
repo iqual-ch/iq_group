@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Site\Settings;
 use Drupal\group\Entity\Group;
+use Drupal\iq_group\Controller\UserController;
 use Drupal\user\Entity\User;
 
 class SignupForm extends FormBase
@@ -145,7 +146,7 @@ class SignupForm extends FormBase
           $user->set('field_iq_group_user_token', $hash_token);
           $user->save();
         }
-        $url = 'https://' . self::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
+        $url = 'https://' . UserController::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
         if ($form_state->getValue('destination') != "")  {
           $destination = $form_state->getValue('destination');
         }
@@ -196,7 +197,7 @@ class SignupForm extends FormBase
           $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
         }
         $user->save();
-        $url = 'https://' . self::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
+        $url = 'https://' . UserController::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
         if ($form_state->getValue('destination') != "")  {
           $destination = $form_state->getValue('destination');
         }
@@ -233,21 +234,5 @@ class SignupForm extends FormBase
       // redirect if needed.
     }
 
-  }
-  public static function getDomain() {
-    if (!empty($_SERVER["HTTP_HOST"]) || getenv("VIRTUAL_HOSTS")) {
-      $virtual_host = "";
-      if (getenv("VIRTUAL_HOSTS")) {
-        $virtual_hosts = explode(",", getenv("VIRTUAL_HOSTS"));
-
-        if (count($virtual_hosts) > 1) {
-          $virtual_host = $virtual_hosts[1];
-        } else {
-          $virtual_host = $virtual_hosts[0];
-        }
-      }
-      $domain = empty($virtual_host) ? $_SERVER["HTTP_HOST"] : $virtual_host;
-    }
-    return $domain;
   }
 }

@@ -6,14 +6,6 @@ iq_group.reset_password:
   requirements:
     _access: 'TRUE'
 
-iq_group.user_form:
-  path: '/group/user/access'
-  defaults:
-    _title: 'Register or Login'
-    _form: '\Drupal\iq_group\Form\RegisterForm'
-  requirements:
-    _access: 'TRUE'
-
 iq_group.user_edit_form:
   path: '/user/edit'
   defaults:

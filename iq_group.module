@@ -34,11 +34,6 @@ function iq_group_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormSt
   //die();
 }
 
-function iq_group_form_node_iq_group_whitepaper_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
-  /*var_dump($form['field_iq_group_whitepaper_file']['widget']);
-  die();*/
-}
-
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
@@ -130,7 +125,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
       // @todo Set a destination if it is a signup form or not?
       //$destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
     }
-    $url = 'https://' . \Drupal\iq_group\Form\SignupForm::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
+    $url = 'https://' . UserController::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
     if (isset($destination) && $destination != NULL) {
       $url .= "?destination=" . $destination;
     }
@@ -198,33 +193,6 @@ function iq_group_user_login(\Drupal\user\UserInterface $account) {
   }
 
 }
-
-/**
- * Implements hook_file_access().
- */
-function iq_group_file_access(FileInterface $file, $operation, AccountInterface $account) {
-  // Block access to private file uploads for anonymous users.
-  $user = \Drupal::currentUser()->getAccount();
-  $whitepaper = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
-    'type' => 'iq_group_whitepaper',
-    'field_iq_group_whitepaper_file' => $file->id(),
-  ]);
-  if (\Drupal::currentUser()->isAnonymous() && !empty($whitepaper)) {
-    return AccessResult::forbidden();
-  }
-  else {
-    $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-    $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
-    $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
-    $groupRoles = array_keys($groupRoles);
-    if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
-      return AccessResult::allowed();
-    }
-  }
-  return AccessResult::neutral();
-}
-
-
 
 function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
@@ -381,23 +349,6 @@ function iq_group_theme($existing, $type, $theme, $path) {
 
 function iq_group_form_views_exposed_form_alter(&$form, Drupal\Core\Form\FormStateInterface $form_state, $form_id)
 {
-
-  // Set default values for the branches from the logged in user.
-  /*if ($form['#id'] == 'views-exposed-form-whitepapers-by-branch-page-1') {
-    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
-    $ids = $user->get('field_iq_group_branches')->getValue();
-
-    $branches = [];
-
-    foreach ($ids as $key => $branch) {
-      $branches[] = $branch['target_id'];
-    }
-    if (in_array(\Drupal::request()->server->get('REQUEST_METHOD'), ['GET', 'HEAD'])) {
-      $form['field_iq_group_branches_target_id']['#default_value']['value'] = $branches;
-      $form['field_iq_group_branches_target_id']['#value'] = $branches;
-    }
-
-  }*/
   $form['field_iq_group_branches_target_id']['#description'] = t('When none are selected, all are shown.');
 }
 

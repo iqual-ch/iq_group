@@ -6,7 +6,6 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\group\Entity\Group;
-use Drupal\group\Entity\GroupRole;
 use Drupal\iq_group\Controller\UserController;
 use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\IqGroupEvents;
@@ -90,47 +89,54 @@ class UserEditForm extends FormBase
         if ($group->id()!=\Drupal::config('iq_group.settings')->get('general_group_id'))
           $options[$group->id()] = $group->label();
       }
-      $selected_preferences = $user->get('field_iq_group_preferences')
-        ->getValue();
-      $default_value = [];
-      foreach ($selected_preferences as $key => $value) {
-        if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
-          $default_value = array_merge($default_value, [$value['target_id']]);
+      if ($user->hasField('field_iq_group_preferences')) {
+        $selected_preferences = $user->get('field_iq_group_preferences')
+          ->getValue();
+        $default_value = [];
+        foreach ($selected_preferences as $key => $value) {
+          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
+            $default_value = array_merge($default_value, [$value['target_id']]);
+        }
+
+        /** @var Node $node */
+        $node = \Drupal::routeMatch()->getParameter('node');
+        if ($currentPath == '/user/edit' || (!empty($node) && $node->bundle() == 'iq_group_whitepaper')) {
+          $form['preferences'] = [
+            '#type' => 'checkboxes',
+            '#options' => $options,
+            '#multiple' => TRUE,
+            '#default_value' => $default_value,
+            '#title' => $this->t('Preferences')
+          ];
+        }
       }
 
-      /** @var Node $node */
-      $node = \Drupal::routeMatch()->getParameter('node');
-      if ($currentPath == '/user/edit' || (!empty($node) && $node->bundle() == 'iq_group_whitepaper')) {
-        $form['preferences'] = [
-          '#type' => 'checkboxes',
-          '#options' => $options,
-          '#multiple' => TRUE,
-          '#default_value' => $default_value,
-          '#title' => $this->t('Preferences')
-        ];
-      }
-      $vid = 'branches';
-      $terms =\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
-      $term_options = [];
-      foreach ($terms as $term) {
-        $term_options[$term->tid] = $term->name;
-      }
-      $selected_branches = $user->get('field_iq_group_branches')
-        ->getValue();
-      $default_branches = [];
-      foreach ($selected_branches as $key => $value) {
-        if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
-          $default_branches = array_merge($default_branches, [$value['target_id']]);
+      if ($user->hasField('field_iq_group_branches')) {
+        $vid = 'branches';
+        $terms =\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
+        $term_options = [];
+        foreach ($terms as $term) {
+          $term_options[$term->tid] = $term->name;
+        }
+        $selected_branches = $user->get('field_iq_group_branches')
+          ->getValue();
+        $default_branches = [];
+        foreach ($selected_branches as $key => $value) {
+          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
+            $default_branches = array_merge($default_branches, [$value['target_id']]);
+        }
+        if ($currentPath == '/user/edit' || (!empty($node) && $node->bundle() == 'iq_group_whitepaper')) {
+          $form['branches'] = [
+            '#type' => 'checkboxes',
+            '#options' => $term_options,
+            '#default_value' => $default_branches,
+            '#multiple' => TRUE,
+            '#title' => $this->t('Branches')
+          ];
+        }
       }
 
-      if ($currentPath == '/user/edit' || (!empty($node) && $node->bundle() == 'iq_group_whitepaper')) {
-        $form['branches'] = [
-          '#type' => 'checkboxes',
-          '#options' => $term_options,
-          '#default_value' => $default_branches,
-          '#multiple' => TRUE,
-          '#title' => $this->t('Branches')
-        ];
+      if ($currentPath == '/user/edit') {
         $negotiator = \Drupal::languageManager()->getNegotiator();
         $user_language_added = $negotiator && $negotiator->isNegotiationMethodEnabled(LanguageNegotiationUser::METHOD_ID, LanguageInterface::TYPE_INTERFACE);
         $user_preferred_langcode = $user->getPreferredLangcode();
@@ -153,8 +159,8 @@ class UserEditForm extends FormBase
           // language are synchronized. It can be removed if a different behavior is
           // desired.
         ];
-
       }
+
       $form['password_text'] = [
         '#type' => 'markup',
         '#markup' => 'Wenn Sie ein Passwort setzen, erstellen Sie automatisch ein Login. Sie können anschliessend Ihre Newsletter Präferenzen direkt im Benutzerkonto ändern.'
@@ -175,7 +181,7 @@ class UserEditForm extends FormBase
       // If user is a lead, show link or edit profile directly.
       if (in_array('subscription-lead', $groupRoles)) {
         if ($currentPath == '/user/edit') {
-          $resetURL = 'https://' . RegisterForm::getDomain() . '/user/' . $user_id .'/edit';
+          $resetURL = 'https://' . UserController::getDomain() . '/user/' . $user_id .'/edit';
           // @todo if there is a destination, attach it to the url
           $response = new RedirectResponse($resetURL, 302);
           $response->send();
@@ -189,15 +195,6 @@ class UserEditForm extends FormBase
             '#type' => 'markup',
             '#markup' => '</br><a href="/user/' . $user_id . '/edit">' . t('Edit profile') . '</a>'
           ];
-          if (!empty($node) && $node->bundle() == 'iq_group_whitepaper') {
-            $form['actions']['#type'] = 'actions';
-            $form['actions']['submit'] = [
-              '#type' => 'submit',
-              '#value' => $this->t('Save'),
-              '#button_type' => 'primary',
-            ];
-          }
-          return $form;
         }
       }
 
@@ -258,21 +255,5 @@ class UserEditForm extends FormBase
     $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
     // Redirect after saving
     // It would be on the same page as the private resource, so no redirect.
-  }
-  public static function getDomain() {
-    if (!empty($_SERVER["HTTP_HOST"]) || getenv("VIRTUAL_HOSTS")) {
-      $virtual_host = "";
-      if (getenv("VIRTUAL_HOSTS")) {
-        $virtual_hosts = explode(",", getenv("VIRTUAL_HOSTS"));
-
-        if (count($virtual_hosts) > 1) {
-          $virtual_host = $virtual_hosts[1];
-        } else {
-          $virtual_host = $virtual_hosts[0];
-        }
-      }
-      $domain = empty($virtual_host) ? $_SERVER["HTTP_HOST"] : $virtual_host;
-    }
-    return $domain;
   }
 }

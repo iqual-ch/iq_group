@@ -7,7 +7,6 @@ use Drupal\Core\Url;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupRole;
 use Drupal\iq_group\Event\IqGroupEvent;
-use Drupal\iq_group\Form\RegisterForm;
 use Drupal\iq_group\IqGroupEvents;
 use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -120,7 +119,7 @@ class UserController extends ControllerBase {
       if (in_array('subscription-lead', $groupRoles)) {
 
         // Redirect him to the login page with the destination.
-        $resetURL = 'https://' . RegisterForm::getDomain() . '/user/login';
+        $resetURL = 'https://' . UserController::getDomain() . '/user/login';
         // @todo if there is a destination, attach it to the url
         if (empty($destination)) {
           if (\Drupal::config('iq_group.settings')->get('default_redirection')) {
@@ -177,5 +176,21 @@ class UserController extends ControllerBase {
         $group->addMember($user, ['group_roles' => [$groupRole->id()]]);
       }
     }
+  }
+  public static function getDomain() {
+    if (!empty($_SERVER["HTTP_HOST"]) || getenv("VIRTUAL_HOSTS")) {
+      $virtual_host = "";
+      if (getenv("VIRTUAL_HOSTS")) {
+        $virtual_hosts = explode(",", getenv("VIRTUAL_HOSTS"));
+
+        if (count($virtual_hosts) > 1) {
+          $virtual_host = $virtual_hosts[1];
+        } else {
+          $virtual_host = $virtual_hosts[0];
+        }
+      }
+      $domain = empty($virtual_host) ? $_SERVER["HTTP_HOST"] : $virtual_host;
+    }
+    return $domain;
   }
 }
