@@ -222,13 +222,13 @@ class UserEditForm extends FormBase
    * {@inheritDoc}
    */
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    $user = \Drupal::currentUser()->getAccount();
+    $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
     if ($form_state->getValue('name') != NULL) {
       $name = $form_state->getValue('name');
     }
     $user->set('name', $name);
-    if ($form_state->getValue('language.preferred_langcode') != NULL) {
-      $user->set('preferred_langcode', $form_state->getValue('language.preferred_langcode'));
+    if ($form_state->getValue('preferred_langcode') != NULL) {
+      $user->set('preferred_langcode', $form_state->getValue('preferred_langcode'));
     }
     if ($form_state->getValue('password') != NULL) {
       $user->setPassword($form_state->getValue('password'));
