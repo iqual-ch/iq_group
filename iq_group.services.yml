@@ -1,5 +1,0 @@
-services:
-  iq_group.iq_group_subscriber:
-    class: Drupal\iq_group\EventSubscriber\IqGroupSubscriber
-    tags:
-      - {name: event_subscriber}

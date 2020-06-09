@@ -13,11 +13,6 @@ final class IqGroupEvents {
   const USER_OPT_IN = 'iq_group.userOptIn';
 
   /**
-   * Name of the event fired after user downloads a whitepaper.
-   */
-  const USER_DOWNLOAD_WHITEPAPER = 'iq_group.userDownloadWhitepaper';
-
-  /**
    * Name of the event fired user gets the lead role.
    */
   const USER_PROMOTE_LEAD = 'iq_group.userPromoteLead';
