@@ -4,6 +4,7 @@ namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupRole;
 use Drupal\iq_group\Controller\UserController;
@@ -11,6 +12,7 @@ use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\IqGroupEvents;
 use Drupal\node\Entity\Node;
 use Drupal\user\Entity\User;
+use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -129,6 +131,29 @@ class UserEditForm extends FormBase
           '#multiple' => TRUE,
           '#title' => $this->t('Branches')
         ];
+        $negotiator = \Drupal::languageManager()->getNegotiator();
+        $user_language_added = $negotiator && $negotiator->isNegotiationMethodEnabled(LanguageNegotiationUser::METHOD_ID, LanguageInterface::TYPE_INTERFACE);
+        $user_preferred_langcode = $user->getPreferredLangcode();
+        $form['language'] = [
+          '#type' => \Drupal::languageManager()->isMultilingual() ? 'details' : 'container',
+          '#title' => $this->t('Language settings'),
+          '#open' => TRUE,
+          // Display language selector when either creating a user on the admin
+          // interface or editing a user account.
+          //'#access' => !$register || $admin,
+        ];
+
+        $form['language']['preferred_langcode'] = [
+          '#type' => 'language_select',
+          '#title' => $this->t('Site language'),
+          '#languages' => LanguageInterface::STATE_CONFIGURABLE,
+          '#default_value' => $user_preferred_langcode,
+          '#description' => $user_language_added ? $this->t("This account's preferred language for emails and site presentation.") : $this->t("This account's preferred language for emails."),
+          // This is used to explain that user preferred language and entity
+          // language are synchronized. It can be removed if a different behavior is
+          // desired.
+        ];
+
       }
       $form['password_text'] = [
         '#type' => 'markup',
@@ -197,11 +222,14 @@ class UserEditForm extends FormBase
    * {@inheritDoc}
    */
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    $user = \Drupal::currentUser()->getAccount();
     if ($form_state->getValue('name') != NULL) {
       $name = $form_state->getValue('name');
     }
     $user->set('name', $name);
+    if ($form_state->getValue('language.preferred_langcode') != NULL) {
+      $user->set('preferred_langcode', $form_state->getValue('language.preferred_langcode'));
+    }
     if ($form_state->getValue('password') != NULL) {
       $user->setPassword($form_state->getValue('password'));
 

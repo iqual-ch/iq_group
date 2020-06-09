@@ -179,10 +179,12 @@ class SignupForm extends FormBase
         else {
           $name = $form_state->getValue('mail');
         }
+        $currentLanguage = $language = \Drupal::languageManager()->getCurrentLanguage()->getId();;
         $user = \Drupal\user\Entity\User::create([
           'mail' => $form_state->getValue('mail'),
           'name' => $name,
           'status' => 1,
+          'preferred_langcode' => $currentLanguage,
         ]);
         $user->save();
         $data = time();

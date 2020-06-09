@@ -31,4 +31,10 @@ class UserEditBlock extends BlockBase {
     return \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\UserEditForm');
   }
 
+  /**
+   * {@inheritDoc}
+   */
+  public function getCacheMaxAge() {
+    return 0;
+  }
 }
