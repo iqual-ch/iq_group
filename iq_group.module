@@ -43,6 +43,18 @@ function iq_group_form_node_iq_group_whitepaper_form_alter(&$form, \Drupal\Core\
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  $user = \Drupal::currentUser()->getAccount();
+  // If user is subscriber, redirect him to the user edit form.
+  $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+  if (!empty($group)) {
+    $group_role_storage = \Drupal::entityTypeManager()
+      ->getStorage('group_role');
+    $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
+    $groupRoles = array_keys($groupRoles);
+    if (in_array('subscription-subscriber', $groupRoles)) {
+      header("Location:/user/edit");
+    }
+  }
   $form['language']['#type'] = 'markup';
   $form['account']['name']['#type'] = 'hidden';
   $form['account']['mail']['#description'] = '';
@@ -187,8 +199,12 @@ function iq_group_user_login(\Drupal\user\UserInterface $account) {
  */
 function iq_group_file_access(FileInterface $file, $operation, AccountInterface $account) {
   // Block access to private file uploads for anonymous users.
-  $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
-  if (\Drupal::currentUser()->isAnonymous()) {
+  $user = \Drupal::currentUser()->getAccount();
+  $whitepaper = \Drupal::entityTypeManager()->getStorage('node')->loadByProperties([
+    'type' => 'iq_group_whitepaper',
+    'field_iq_group_whitepaper_file' => $file->id(),
+  ]);
+  if (\Drupal::currentUser()->isAnonymous() && !empty($whitepaper)) {
     return AccessResult::forbidden();
   }
   else {
@@ -218,7 +234,7 @@ function iq_group_file_download($uri) {
     $whitepaper = reset($whitepaper);
     if (isset($whitepaper) && $whitepaper->id() > 0)
     {
-      $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+      $user = \Drupal::currentUser()->getAccount();
       $existing_downloads = $user->get('field_iq_group_downloads')
         ->getValue();
       $downloads = [];
@@ -261,6 +277,18 @@ function _node_field_group_settings() {
 
 
 function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+
+  // Disable cancel methods for non-admin users.
+  if ($form_id == 'user_cancel_form' && \Drupal::currentUser()->id() != '1') {
+      unset($form['user_cancel_method']['#options']['user_cancel_block_unpublish']);
+      unset($form['user_cancel_method']['user_cancel_block_unpublish']);
+      unset($form['user_cancel_method']['#options']['user_cancel_block']);
+      unset($form['user_cancel_method']['user_cancel_block']);
+      $form['user_cancel_method']['#default_value'] = 'user_cancel_reassign';
+
+      // If needed, the description can be changed with the following text.
+      // $form['user_cancel_method']['#options']['user_cancel_reassign'] = t('Delete my account.');
+  }
   if ($form_id == 'iq_group_user_edit_form') {
 
   }
@@ -412,8 +440,13 @@ function iq_group_views_pre_render(\Drupal\views\ViewExecutable $view) {
     if (\Drupal::currentUser()->isAnonymous()) {
       if ($view->filter['nid']->value['value'] != NULL) {
         unset($registerForm['preferences']);
-        $registerForm['destination']['#value'] = '/node/' .reset($view->filter['nid']->value['value']);
-        $destination = '/node/' .reset($view->filter['nid']->value['value']);
+        $nid = $view->filter['nid']->value['value'];
+        if (is_array($nid)) {
+          $nid = reset($nid);
+        }
+        $registerForm['destination']['#value'] = '/node/' . $nid;
+        $destination = '/node/' . $nid;
+        \Drupal::logger('iq_group')->notice(json_encode($view->filter['nid']->value['value']));
       }
 
       if (!isset($destination)) {
@@ -551,7 +584,7 @@ function iq_group_theme($existing, $type, $theme, $path) {
  */
 function iq_group_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
 
-  $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+  $user = \Drupal::currentUser()->getAccount();
   if ($entity->bundle() == 'iq_group_whitepaper') {
     $user_edit = \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\UserEditForm');
     $build['user_wrapper'] = [
