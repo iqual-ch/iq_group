@@ -349,12 +349,6 @@ function iq_group_theme($existing, $type, $theme, $path) {
   ];
 }
 
-function iq_group_form_views_exposed_form_alter(&$form, Drupal\Core\Form\FormStateInterface $form_state, $form_id)
-{
-  $form['field_iq_group_branches_target_id']['#description'] = t('When none are selected, all are shown.');
-}
-
-
 /**
  * Implements hook_ENTITY_TYPE_presave().
  */

@@ -75,6 +75,7 @@ class UserEditForm extends FormBase
           'autocapitalize' => 'off',
           'spellcheck' => 'false',
         ],
+        '#weight' => 10,
       ];
       // show him the link to the resource
       $result = \Drupal::entityTypeManager()
@@ -100,13 +101,14 @@ class UserEditForm extends FormBase
 
         /** @var Node $node */
         $node = \Drupal::routeMatch()->getParameter('node');
-        if ($currentPath == '/user/edit' || (!empty($node) && $node->bundle() == 'iq_group_whitepaper')) {
+        if ($currentPath == '/user/edit') {
           $form['preferences'] = [
             '#type' => 'checkboxes',
             '#options' => $options,
             '#multiple' => TRUE,
             '#default_value' => $default_value,
-            '#title' => $this->t('Preferences')
+            '#title' => $this->t('Preferences'),
+            '#weight' => 20,
           ];
         }
       }
@@ -125,13 +127,14 @@ class UserEditForm extends FormBase
           if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
             $default_branches = array_merge($default_branches, [$value['target_id']]);
         }
-        if ($currentPath == '/user/edit' || (!empty($node) && $node->bundle() == 'iq_group_whitepaper')) {
+        if ($currentPath == '/user/edit') {
           $form['branches'] = [
             '#type' => 'checkboxes',
             '#options' => $term_options,
             '#default_value' => $default_branches,
             '#multiple' => TRUE,
-            '#title' => $this->t('Branches')
+            '#title' => $this->t('Branches'),
+            '#weight' => 30,
           ];
         }
       }
@@ -144,6 +147,7 @@ class UserEditForm extends FormBase
           '#type' => \Drupal::languageManager()->isMultilingual() ? 'details' : 'container',
           '#title' => $this->t('Language settings'),
           '#open' => TRUE,
+          '#weight' => 40,
           // Display language selector when either creating a user on the admin
           // interface or editing a user account.
           //'#access' => !$register || $admin,
@@ -158,24 +162,30 @@ class UserEditForm extends FormBase
           // This is used to explain that user preferred language and entity
           // language are synchronized. It can be removed if a different behavior is
           // desired.
+          '#weight' => 41,
+        ];
+        $form['member_area_title'] = [
+          '#type' => 'markup',
+          '#markup' => t('<h1>Login to create an @project_name Member Area</h1>', ['@project_name' => \Drupal::config('iq_group.settings')->get('project_name')]),
+          '#weight' => 50,
         ];
       }
 
-      $form['member_area_title'] = [
-        '#type' => 'markup',
-        '#markup' => t('<h1>Login to create an @project_name Member Area</h1>', ['@project_name' => \Drupal::config('iq_group.settings')->get('project_name')])
-      ];
+
       $form['password_text'] = [
         '#type' => 'markup',
-        '#markup' => t('When you create a password, you are automatically creating a login. You can then choose your preferences for the newsletter.')
+        '#markup' => t('When you create a password, you are automatically creating a login. You can then choose your preferences for the newsletter.'),
+        '#weight' => 60,
       ];
       $form['password'] = [
         '#type' => 'password',
-        '#title' => $this->t('Password')
+        '#title' => $this->t('Password'),
+        '#weight' => 61,
       ];
       $form['password_confirm'] = [
         '#type' => 'password',
-        '#title' => $this->t('Confirm password')
+        '#title' => $this->t('Confirm password'),
+        '#weight' => 62,
       ];
       $user_id = \Drupal::currentUser()->id();
       $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
@@ -197,7 +207,8 @@ class UserEditForm extends FormBase
           unset($form['password_text']);
           $form['full_profile_edit'] = [
             '#type' => 'markup',
-            '#markup' => '</br><a href="/user/' . $user_id . '/edit">' . t('Edit profile') . '</a>'
+            '#markup' => '</br><a href="/user/' . $user_id . '/edit">' . t('Profile settings') . '</a>',
+            '#weight' => 70,
           ];
         }
       }
@@ -207,6 +218,7 @@ class UserEditForm extends FormBase
         '#type' => 'submit',
         '#value' => $this->t('Save'),
         '#button_type' => 'primary',
+        '#weight' => 80,
       ];
     }
     return $form;
@@ -252,8 +264,12 @@ class UserEditForm extends FormBase
           UserController::addGroupRoleToUser($otherGroup, $user, 'subscription-lead');
       }
     }
-    $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
-    $user->set('field_iq_group_branches', $form_state->getValue('branches'));
+    if ($form_state->getValue('branches')!= NULL) {
+      $user->set('field_iq_group_branches', $form_state->getValue('branches'));
+    }
+    if ($form_state->getValue('preferences') != NULL) {
+      $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
+    }
 
     $user->save();
     $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
