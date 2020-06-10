@@ -164,11 +164,6 @@ class UserEditForm extends FormBase
           // desired.
           '#weight' => 41,
         ];
-        $form['member_area_title'] = [
-          '#type' => 'markup',
-          '#markup' => t('<h1>Login to create an @project_name Member Area</h1>', ['@project_name' => \Drupal::config('iq_group.settings')->get('project_name')]),
-          '#weight' => 50,
-        ];
       }
 
 
@@ -187,11 +182,19 @@ class UserEditForm extends FormBase
         '#title' => $this->t('Confirm password'),
         '#weight' => 62,
       ];
+
       $user_id = \Drupal::currentUser()->id();
       $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
       $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
       $groupRoles = array_keys($groupRoles);
+      if (in_array('subscription-subscriber', $groupRoles)) {
+        $form['member_area_title'] = [
+          '#type' => 'markup',
+          '#markup' => t('<h1>Login to create an @project_name Member Area</h1>', ['@project_name' => \Drupal::config('iq_group.settings')->get('project_name')]),
+          '#weight' => 50,
+        ];
+      }
       // If user is a lead, show link or edit profile directly.
       if (in_array('subscription-lead', $groupRoles)) {
         if ($currentPath == '/user/edit') {
@@ -207,7 +210,7 @@ class UserEditForm extends FormBase
           unset($form['password_text']);
           $form['full_profile_edit'] = [
             '#type' => 'markup',
-            '#markup' => '</br><a href="/user/' . $user_id . '/edit">' . t('Profile settings') . '</a>',
+            '#markup' => '</br><a href="/user/' . $user_id . '/edit">' . t('Edit profile') . '</a>',
             '#weight' => 70,
           ];
         }
@@ -271,6 +274,7 @@ class UserEditForm extends FormBase
       $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
     }
 
+    \Drupal::messenger()->addMessage(t('Your profile has been saved. Now you have access to :project_name Member Area.', [':project_name' => \Drupal::config('iq_group.settings')->get('project_name')]));
     $user->save();
     $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
     // Redirect after saving
