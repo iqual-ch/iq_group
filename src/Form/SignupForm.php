@@ -212,10 +212,16 @@ class SignupForm extends FormBase
           '#theme' => 'signup_template',
           '#EMAIL_TITLE' => 'Anmelde­bestätigung Newsletter',
           '#EMAIL_PREVIEW_TEXT' => 'Anmelde­bestätigung Newsletter',
-          '#USER_PREFERENCES' => $user->field_iq_group_preferences->value,
+          '#USER_PREFERENCES' => [],
           '#EMAIL_URL' => $url,
           '#EMAIL_PROJECT_NAME' => $project_name,
         ];
+
+        // Make array of user preference ids available to template
+        if (!$user->get('field_iq_group_preferences')->isEmpty()) {
+          $renderable["#USER_PREFERENCES"] = array_filter(array_column($user->field_iq_group_preferences->getValue(), 'target_id'));
+        }
+
         $mail_subject = $this->t("Anmelde­bestätigung Newsletter");
         mb_internal_encoding("UTF-8");
         $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
