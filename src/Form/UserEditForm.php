@@ -161,9 +161,13 @@ class UserEditForm extends FormBase
         ];
       }
 
+      $form['member_area_title'] = [
+        '#type' => 'markup',
+        '#markup' => t('<h1>Login to create an @project_name Member Area</h1>', ['@project_name' => \Drupal::config('iq_group.settings')->get('project_name')])
+      ];
       $form['password_text'] = [
         '#type' => 'markup',
-        '#markup' => 'Wenn Sie ein Passwort setzen, erstellen Sie automatisch ein Login. Sie können anschliessend Ihre Newsletter Präferenzen direkt im Benutzerkonto ändern.'
+        '#markup' => t('When you create a password, you are automatically creating a login. You can then choose your preferences for the newsletter.')
       ];
       $form['password'] = [
         '#type' => 'password',

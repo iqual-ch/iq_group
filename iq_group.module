@@ -205,7 +205,9 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       $form['user_cancel_method']['#default_value'] = 'user_cancel_reassign';
 
       // If needed, the description can be changed with the following text.
-      // $form['user_cancel_method']['#options']['user_cancel_reassign'] = t('Delete my account.');
+      $form['user_cancel_method']['#options']['user_cancel_reassign'] = t('Delete my account.');
+      $form['user_cancel_method']['#title'] = t('Account deletion');
+      unset($form['description']);
   }
   if ($form_id == 'iq_group_user_edit_form') {
 
@@ -239,7 +241,7 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 function iq_group_form_user_login_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
   $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
-  $login_intro = $iqGroupSettingsConfig->get('login_intro') != NULL ? $iqGroupSettingsConfig->get('login_intro') : 'Welcome';
+  $login_intro = $iqGroupSettingsConfig->get('login_intro') != NULL ? $iqGroupSettingsConfig->get('login_intro') : t('Welcome');
   $form['title'] = [
     '#type' => 'markup',
     '#markup' => "<h1>". $login_intro ."</h1>",
