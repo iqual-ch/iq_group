@@ -158,6 +158,8 @@ class UserController extends ControllerBase {
     }
     else {
       // Redirect the user to the resource & the private resource says like u are invalid.
+      \Drupal::messenger()->addMessage($this->t('This link is invalid or has expired.'), 'error');
+      return new RedirectResponse(Url::fromRoute('user.register')->toString());
     }
   }
 
