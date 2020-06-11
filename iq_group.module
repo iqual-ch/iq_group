@@ -134,9 +134,16 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
       '#theme' => 'register_template',
       '#EMAIL_TITLE' => 'Registrierung Benutzerkonto ' . $project_name,
       '#EMAIL_PREVIEW_TEXT' => 'Registrierung Benutzerkonto ' . $project_name,
+      '#USER_PREFERENCES' => [],
       '#EMAIL_URL' => $url,
       '#EMAIL_PROJECT_NAME' => $project_name,
     ];
+
+    // Make array of user preference ids available to template
+    if (!$user->get('field_iq_group_preferences')->isEmpty()) {
+      $renderable["#USER_PREFERENCES"] = array_filter(array_column($user->field_iq_group_preferences->getValue(), 'target_id'));
+    }
+
     $rendered = \Drupal::service('renderer')->renderPlain($renderable);
     $mail_subject = t("Registrierung Benutzerkonto " . $project_name);
     mb_internal_encoding("UTF-8");
@@ -344,7 +351,8 @@ function iq_group_theme($existing, $type, $theme, $path) {
         'EMAIL_TITLE' => "Registration",
         'EMAIL_PREVIEW_TEXT' => 'Registration',
         'EMAIL_URL' => $text,
-        'EMAIL_PROJECT_NAME' => 'Project name'
+        'EMAIL_PROJECT_NAME' => 'Project name',
+        'USER_PREFERENCES' => []
       ],
     ],
   ];
