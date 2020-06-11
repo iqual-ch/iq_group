@@ -327,7 +327,8 @@ function iq_group_theme($existing, $type, $theme, $path) {
         'EMAIL_TITLE' => "Sign up",
         'EMAIL_PREVIEW_TEXT' => 'Newsletter Sign up',
         'EMAIL_URL' => $text,
-        'EMAIL_PROJECT_NAME' => 'Project name'
+        'EMAIL_PROJECT_NAME' => 'Project name',
+        'USER_PREFERENCES' => []
       ],
     ],
     'login_template' => [
