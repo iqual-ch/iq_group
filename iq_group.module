@@ -132,8 +132,8 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
     $project_name = $iqGroupSettingsConfig->get('project_name') != NULL ? $iqGroupSettingsConfig->get('project_name') : "";
     $renderable = [
       '#theme' => 'register_template',
-      '#EMAIL_TITLE' => 'Registrierung Benutzerkonto ' . $project_name,
-      '#EMAIL_PREVIEW_TEXT' => 'Registrierung Benutzerkonto ' . $project_name,
+      '#EMAIL_TITLE' => t("Confirm account registration"),
+      '#EMAIL_PREVIEW_TEXT' => t("Confirm registration of @project_name account", ['@project_name' => $project_name]),
       '#USER_PREFERENCES' => [],
       '#EMAIL_URL' => $url,
       '#EMAIL_PROJECT_NAME' => $project_name,
@@ -145,7 +145,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
     }
 
     $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-    $mail_subject = t("Registrierung Benutzerkonto " . $project_name);
+    $mail_subject = t("Confirm account registration");
     mb_internal_encoding("UTF-8");
     $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
     // Send a registration email and set the pending activation flag.

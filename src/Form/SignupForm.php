@@ -159,13 +159,13 @@ class SignupForm extends FormBase
         }
         $renderable = [
           '#theme' => 'login_template',
-          '#EMAIL_TITLE' => 'Registrierung Benutzerkonto ' . $project_name ,
-          '#EMAIL_PREVIEW_TEXT' => 'Registrierung Benutzerkonto ' . $project_name,
+          '#EMAIL_TITLE' => $this->t("Sign into your account"),
+          '#EMAIL_PREVIEW_TEXT' => $this->t("Sign into your @project_name account", ['@project_name' => $project_name]),
           '#EMAIL_URL' => $url,
           '#EMAIL_PROJECT_NAME' => $project_name
         ];
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-        $mail_subject = $this->t("Registrierung Benutzerkonto " . $project_name);
+        $mail_subject = $this->t("Sign into your account");
         mb_internal_encoding("UTF-8");
         $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
         $result = mail($user->getEmail(), $mail_subject , $rendered,
@@ -210,8 +210,8 @@ class SignupForm extends FormBase
         }
         $renderable = [
           '#theme' => 'signup_template',
-          '#EMAIL_TITLE' => 'Anmelde­bestätigung Newsletter',
-          '#EMAIL_PREVIEW_TEXT' => 'Anmelde­bestätigung Newsletter',
+          '#EMAIL_TITLE' => $this->t("Please confirm subscription"),
+          '#EMAIL_PREVIEW_TEXT' => $this->t("Please confirm subscription"),
           '#USER_PREFERENCES' => [],
           '#EMAIL_URL' => $url,
           '#EMAIL_PROJECT_NAME' => $project_name,
@@ -222,7 +222,7 @@ class SignupForm extends FormBase
           $renderable["#USER_PREFERENCES"] = array_filter(array_column($user->field_iq_group_preferences->getValue(), 'target_id'));
         }
 
-        $mail_subject = $this->t("Anmelde­bestätigung Newsletter");
+        $mail_subject = $this->t("Confirm subscription");
         mb_internal_encoding("UTF-8");
         $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
