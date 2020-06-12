@@ -152,10 +152,10 @@ class SignupForm extends FormBase
         }
         else {
           // @todo Set a destination if it is a signup form or not?
-          //$destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
+          $destination = \Drupal\Core\Url::fromRoute('<front>')->toString();
         }
         if (isset($destination) && $destination != NULL) {
-          $url .= "?destination=" . $destination;
+          $url .= "?destination=" . $destination . "&signup=1";
         }
         $renderable = [
           '#theme' => 'login_template',
@@ -203,10 +203,10 @@ class SignupForm extends FormBase
         }
         else {
           // @todo Set a destination if it is a signup form or not?
-          //$destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
+          $destination = \Drupal\Core\Url::fromRoute('<front>')->toString();
         }
         if (isset($destination) && $destination != NULL) {
-          $url .= "?destination=" . $destination;
+          $url .= "?destination=" . $destination . "&signup=1";
         }
         $renderable = [
           '#theme' => 'signup_template',

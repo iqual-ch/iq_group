@@ -66,6 +66,9 @@ class UserController extends ControllerBase {
     
     // is the token valid for that user
     if (!empty($token) && $token === $user->field_iq_group_user_token->value) {
+      if (!empty($_GET['signup'])) {
+        \Drupal::messenger()->addMessage(t('Thank you for signing up for newsletter.'));
+      }
 
       // if user ->id is same with the logged in user (check cookies)
       if (\Drupal::currentUser()->isAuthenticated()) {

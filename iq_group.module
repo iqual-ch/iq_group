@@ -164,7 +164,10 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
  * Implements hook_user_login().
  */
 function iq_group_user_login(\Drupal\user\UserInterface $account) {
-
+  // If the user is resetting his/her password, prevent the redirection.
+  if (strpos(\Drupal::request()->getRequestUri(), "/user/reset/") >= 0) {
+    return;
+  }
 
   $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
   $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
@@ -185,20 +188,6 @@ function iq_group_user_login(\Drupal\user\UserInterface $account) {
     }
   }
   return ;
-
-  if (in_array('subscription-subscriber', $groupRoles)) {
-    // redirect to destination if there is 1
-    if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
-      $destination = $_GET['destination'];
-      header("Location:".$destination);
-    }
-    // if not, he will be redirect to the set default redirect from
-    // iq group settings.
-    else {
-      header('Location:' . \Drupal::config('iq_group.settings')->get('default_redirection'));
-    }
-  }
-
 }
 
 function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
@@ -260,7 +249,7 @@ function iq_group_form_user_login_form_alter(&$form, FormStateInterface $form_st
   }
   $form['forgot_password'] = [
     '#type' => 'markup',
-    '#markup' => '<a href="/onetime-loginlink">'. t('Forgot password') . '</a> / ',
+    '#markup' => '<a href="/user/password">'. t('Forgot password') . '</a> / ',
     '#weight' => 100
   ];
   $form['register_link'] = [
@@ -397,4 +386,15 @@ function iq_group_page_attachments(array &$attachments)
   if (\Drupal::routeMatch()->getRouteName() == 'entity.user.canonical') {
     $attachments['#attached']['library'][] = 'ui_patterns/button_cta.button';
   }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function iq_group_form_user_pass_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  $form['intro_title'] = [
+    '#type' => 'markup',
+    '#markup' => '<div class="iqbm-text"><h1>' . t('Reset password') . '</h1></div>',
+    '#weight' => -100
+  ];
 }
