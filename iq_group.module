@@ -203,7 +203,9 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       // If needed, the description can be changed with the following text.
       $form['user_cancel_method']['#options']['user_cancel_reassign'] = t('Delete my account.');
       $form['user_cancel_method']['#title'] = t('Account deletion');
+
       unset($form['description']);
+      $form['actions']['submit']['#submit'] = ['iq_group_user_cancel_submit'];
   }
   if ($form_id == 'iq_group_user_edit_form') {
 
@@ -344,6 +346,24 @@ function iq_group_theme($existing, $type, $theme, $path) {
         'USER_PREFERENCES' => []
       ],
     ],
+    'reset_password_template' => [
+      'variables' => [
+        'EMAIL_TITLE' => "Reset Password",
+        'EMAIL_PREVIEW_TEXT' => 'Reset Password',
+        'EMAIL_URL' => $text,
+        'EMAIL_PROJECT_NAME' => 'Project name',
+        'USER_PREFERENCES' => []
+      ],
+    ],
+    'delete_account_template' => [
+      'variables' => [
+        'EMAIL_TITLE' => "Delete account",
+        'EMAIL_PREVIEW_TEXT' => 'Account Removal',
+        'EMAIL_URL' => $text,
+        'EMAIL_PROJECT_NAME' => 'Project name',
+        'USER_PREFERENCES' => []
+      ],
+    ],
   ];
 }
 
@@ -397,4 +417,90 @@ function iq_group_form_user_pass_alter(&$form, \Drupal\Core\Form\FormStateInterf
     '#markup' => '<div class="iqbm-text"><h1>' . t('Reset password') . '</h1></div>',
     '#weight' => -100
   ];
+  $form['actions']['submit']['#submit'] = ['iq_group_reset_pass_submit'];
+}
+
+/**
+ * Submit function to send mail for password reset.
+ */
+function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state) {
+  $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+
+  $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
+  $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
+  $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
+  $email_reply_to = $iqGroupSettingsConfig->get('reply_to') != NULL ? $iqGroupSettingsConfig->get('reply_to') : 'support@iqual.ch';
+  $project_name = $iqGroupSettingsConfig->get('project_name') != NULL ? $iqGroupSettingsConfig->get('project_name') : "";
+  $account = $form_state->getValue('account');
+  // Mail one time login URL and instructions using current language.
+  $renderable = [
+    '#theme' => 'reset_password_template',
+    '#EMAIL_TITLE' => t("Reset Password"),
+    '#EMAIL_PREVIEW_TEXT' => t("New password for @project_name account", ['@project_name' => $project_name]),
+    '#USER_PREFERENCES' => [],
+    '#EMAIL_URL' => user_pass_reset_url($account),
+    '#EMAIL_PROJECT_NAME' => $project_name,
+  ];
+
+  // Make array of user preference ids available to template
+  if (!$account->get('field_iq_group_preferences')->isEmpty()) {
+    $renderable["#USER_PREFERENCES"] = array_filter(array_column($account->field_iq_group_preferences->getValue(), 'target_id'));
+  }
+
+  $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+  $mail_subject = t("Reset Password");
+  mb_internal_encoding("UTF-8");
+  $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
+  // Send a registration email and set the pending activation flag.
+  $result = mail($account->getEmail(), $mail_subject , $rendered,
+    "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
+  if (!empty($result)) {
+    \Drupal::logger('user')->notice('Password reset instructions mailed to %name at %email.', ['%name' => $account->getUsername(), '%email' => $account->getEmail()]);
+    \Drupal::messenger()->addStatus(t('Further instructions have been sent to your email address.'));
+  }
+  $form_state->setRedirect('user.page');
+}
+
+/**
+ * Submit function to send confirmation mail for deletion of account.
+ */
+function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_state) {
+  $account = \Drupal::currentUser();
+  $user = \Drupal\user\Entity\User::load($account->id());
+
+  $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+
+  $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
+  $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
+  $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
+  $email_reply_to = $iqGroupSettingsConfig->get('reply_to') != NULL ? $iqGroupSettingsConfig->get('reply_to') : 'support@iqual.ch';
+  $project_name = $iqGroupSettingsConfig->get('project_name') != NULL ? $iqGroupSettingsConfig->get('project_name') : "";
+  $account = $form_state->getValue('account');
+  // Mail one time login URL and instructions using current language.
+  $renderable = [
+    '#theme' => 'delete_account_template',
+    '#EMAIL_TITLE' => t("Delete account"),
+    '#EMAIL_PREVIEW_TEXT' => t("Delete account @project_name", ['@project_name' => $project_name]),
+    '#USER_PREFERENCES' => [],
+    '#EMAIL_URL' => user_cancel_url($user),
+    '#EMAIL_PROJECT_NAME' => $project_name,
+  ];
+
+  // Make array of user preference ids available to template
+  if (!$user->get('field_iq_group_preferences')->isEmpty()) {
+    $renderable["#USER_PREFERENCES"] = array_filter(array_column($user->field_iq_group_preferences->getValue(), 'target_id'));
+  }
+
+  $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+  $mail_subject = t("Confirm account deletion");
+  mb_internal_encoding("UTF-8");
+  $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
+  // Send a registration email and set the pending activation flag.
+  $result = mail($user->getEmail(), $mail_subject , $rendered,
+    "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
+  if (!empty($result)) {
+    \Drupal::logger('user')->notice('Account deletion instructions mailed to %name at %email.', ['%name' => $user->getUsername(), '%email' => $user->getEmail()]);
+    \Drupal::messenger()->addStatus(t('Further instructions to delete your account have been sent to your email address.'));
+  }
+  $form_state->setRedirect('user.page');
 }
