@@ -8,3 +8,4 @@ dependencies:
   - gnode:gnode
   - login_emailusername:login_emailusername
   - pagedesigner_block_adaptable:pagedesigner_block_adaptable
+  - iq_user_base:iq_user_base

@@ -9,6 +9,7 @@
     }
   ],
   "require": {
-    "drupal/group": "*"
+    "drupal/group": "*",
+    "iqual/iq_user_base": "*"
   }
 }
