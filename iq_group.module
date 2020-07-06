@@ -435,8 +435,8 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
   // Mail one time login URL and instructions using current language.
   $renderable = [
     '#theme' => 'reset_password_template',
-    '#EMAIL_TITLE' => t("Reset Password"),
-    '#EMAIL_PREVIEW_TEXT' => t("New password for @project_name account", ['@project_name' => $project_name]),
+    '#EMAIL_TITLE' => t("Confirm password reset"),
+    '#EMAIL_PREVIEW_TEXT' => t("Confirm password reset for @project_name account", ['@project_name' => $project_name]),
     '#USER_PREFERENCES' => [],
     '#EMAIL_URL' => user_pass_reset_url($account),
     '#EMAIL_PROJECT_NAME' => $project_name,
@@ -479,8 +479,8 @@ function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_stat
   // Mail one time login URL and instructions using current language.
   $renderable = [
     '#theme' => 'delete_account_template',
-    '#EMAIL_TITLE' => t("Delete account"),
-    '#EMAIL_PREVIEW_TEXT' => t("Delete account @project_name", ['@project_name' => $project_name]),
+    '#EMAIL_TITLE' => t("Confirm account deletion"),
+    '#EMAIL_PREVIEW_TEXT' => t("Confirm the deletion of your @project_name account", ['@project_name' => $project_name]),
     '#USER_PREFERENCES' => [],
     '#EMAIL_URL' => user_cancel_url($user),
     '#EMAIL_PROJECT_NAME' => $project_name,
