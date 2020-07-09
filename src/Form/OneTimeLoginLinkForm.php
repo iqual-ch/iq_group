@@ -4,6 +4,7 @@ namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\iq_group\Controller\UserController;
 
 /**
  * Class OneTimeLoginLinkForm.
@@ -70,16 +71,13 @@ class OneTimeLoginLinkForm extends FormBase {
     $login_url = user_pass_reset_url($user_account);
 
     if ($login_url) {
-      $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
-      $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
-      $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
-      $email_reply_to = $iqGroupSettingsConfig->get('reply_to') != NULL ? $iqGroupSettingsConfig->get('reply_to') : 'support@iqual.ch';
+      $iqGroupSettings = UserController::getIqGroupSettings();
       \Drupal::messenger()->addMessage($user_email_name . ' wurde eine Email gesendet zur Passwortwiederherstellung.');
       $params['subject'] = $this->t('Password reset');
       //$params['message'] = OfferChecker::getEmailTemplate(t('Passwort wiederherstellen'), t('Passwort wiederherstellen'), '<a href="'. $login_url .'">Hier </a> können Sie Ihr Passwort wiederherstellen.');
       $params['message'] = '<a href="'. $login_url .'">'. $this->t('Click here') .'</a> ' . $this->t(' to reset your password');
       $result = mail($user_email_name, $params["subject"], $params['message'],
-        "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
+        "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");
 
     }
   }

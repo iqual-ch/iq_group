@@ -1,0 +1,150 @@
+msgid "Thank you for the registration. You will get an email with the login link."
+msgstr "Besten Dank für die Registrierung. Sie erhalten in Kürze von uns eine E-Mail mit einem Bestätigungslink."
+
+msgid "Your account has been blocked."
+msgstr "Ihr Konto wurde gesperrt."
+
+msgid "I confirm that I would like to delete my account."
+msgstr "Ich bestätige, dass ich mein Benutzerkonto löschen möchte."
+
+msgid "Account deletion"
+msgstr "Benutzerkonto löschen"
+
+msgid "Available types: "
+msgstr "Erlaubte Dateitypen: "
+
+msgid "I have read the <a href=\"@terms_and_conditions\" target=\"_blank\">terms and conditions</a> and data protection regulations and I agree."
+msgstr "Ich akzeptiere die <a href=\"@terms_and_conditions\" target=\"_blank\">SQS-Datenschutzbestimmungen</a>."
+
+msgid "Welcome"
+msgstr "Willkommen"
+
+msgid "Forgot password"
+msgstr "Passwort vergessen"
+
+msgid "Create an account"
+msgstr "Konto erstellen"
+
+msgid "Reset password"
+msgstr "Passwort zurücksetzen"
+
+msgid "New password for @project_name account"
+msgstr "Neues Passwort für das Konto @project_name"
+
+msgid "Password reset instructions mailed to %name at %email."
+msgstr "Ein neues Passwort für %name wurde an %email versendet."
+
+msgid "Further instructions have been sent to your email address."
+msgstr "Weitere Anweisungen wurden an Ihre E-Mail-Adresse versandt."
+
+msgid "Delete account"
+msgstr "Konto löschen"
+
+msgid "Delete account @project_name"
+msgstr "Konto löschen @project_name"
+
+msgid "Confirm account deletion"
+msgstr "Bestätigen Sie die Löschung Ihres Benutzerkontos"
+
+msgid "Further instructions to delete your account have been sent to your email address."
+msgstr "Weitere Anweisungen zum Löschen Ihres Accounts erhalten Sie per E-Mail."
+
+msgid "Enter your email"
+msgstr "E-mail-Adresse"
+
+msgid "Submit"
+msgstr "Absenden"
+
+msgid "Invalid User!"
+msgstr "Ungültige E-mail-Adresse"
+
+msgid "Password reset"
+msgstr "Passwort zurücksetzen"
+
+msgid "Email address"
+msgstr "E-Mail-Adresse"
+
+msgid "Username"
+msgstr "Username"
+
+msgid "Several special characters are allowed, including space, period (.), hyphen (-), apostrophe ('), underscore (_), and the @ sign."
+msgstr "Einige Sonderzeichen sind erlaubt, z. B. Leerzeichen, Punkt (.), Bindestrich (-), Apostroph ('), Unterstrich(_) und das @ Zeichen."
+
+msgid "I have read the <a href=\"@terms_and_conditions\" target=\"_blank\">terms and conditions</a> and data protection regulations and I agree."
+msgstr "Ich akzeptiere die <a href=\"@terms_and_conditions\" target=\"_blank\">Datenschutzbestimmungen</a>."
+
+msgid "Login"
+msgstr "Login"
+
+msgid "Preferences"
+msgstr "Präferenzen"
+
+msgid "Sign up"
+msgstr "Sign up"
+
+msgid "Sign into your account"
+msgstr "Melden Sie sich an"
+
+
+msgid "Sign into your @project_name account"
+msgstr "Melden Sie sich in Ihrem @project_name Benutzerkonto an"
+
+msgid "Thanks for signing up. You will get an email with more information to login."
+msgstr "Danke für die Anmeldung. Sie erhalten eine E-Mail mit weiteren Informationen zum anmelden."
+
+msgid "Confirm subscription"
+msgstr "Abonnement bestätigen"
+
+msgid "Please confirm subscription"
+msgstr "Bitte Abonnement bestätigen"
+
+msgid "Branches"
+msgstr "Branchen"
+
+msgid "Language settings"
+msgstr "Spracheinstellungen"
+
+msgid "Site language"
+msgstr "Sprache der Website"
+
+msgid "This account's preferred language for emails and site presentation."
+msgstr "Die bevorzugte Sprache dieses Benutzerkontos für E-Mails und die Darstellung der Website."
+
+msgid "When you create a password, you are automatically creating a login. You can then choose your preferences for the newsletter."
+msgstr "Wenn Sie ein Passwort setzen, erstellen Sie automatisch ein Login. Sie können anschliessend Ihre Newsletter Präferenzen direkt im Benutzerkonto ändern."
+
+msgid "Password"
+msgstr "Passwort"
+
+msgid "Confirm password"
+msgstr "Passwort bestätigen"
+
+msgid "<h1>Login to create an @project_name Member Area</h1>"
+msgstr "<h1>Login für @project_name Member Area erstellen</h1>"
+
+msgid "Edit profile"
+msgstr "Profil bearbeiten"
+
+msgid "Save"
+msgstr "Speichern"
+
+msgid "The specified passwords do not match."
+msgstr "Die eingegebenen Passwörter stimmen nicht überein."
+
+msgid "Your profile has been saved. Now you have access to :project_name Member Area."
+msgstr "Ihr Benutzeraccount wurde gespeichert. Sie haben nun Zugriff auf die :project_name Member Area."
+
+msgid "Thank you for the registration. You will get an email with the login link."
+msgstr "Besten Dank für die Registrierung. Sie erhalten in Kürze von uns eine E-Mail mit einem Bestätigungslink."
+
+msgid "Confirm account registration"
+msgstr "Bestätigen Sie die Registrierung Ihres Benutzerkontos"
+
+msgid "Confirm registration of @project_name account"
+msgstr "Bestätigen Sie die Registrierung Ihres @project_name Benutzerkontos"
+
+msgid "Confirm account registration"
+msgstr "Bestätigen Sie die Registrierung Ihres Benutzerkontos"
+
+msgid "I have read the <a href=\"@terms_and_conditions\" target=\"_blank\">terms and conditions</a> and data protection regulations and I agree."
+msgstr "Ich akzeptiere die <a href=\"@terms_and_conditions\" target=\"_blank\">SQS-Datenschutzbestimmungen</a>."

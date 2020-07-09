@@ -8,6 +8,15 @@ iq_group.settings:
     default_redirection:
       type: string
       label: 'The default redirection for subscribers.'
+    redirection_after_register:
+      type: string
+      label: 'The redirection after register.'
+    redirection_after_signup:
+      type: string
+      label: 'The redirection after signup.'
+    redirection_after_account_delete:
+      type: string
+      label: 'The redirection after the account is deleted.'
     general_group_id:
       type: string
       label: 'The id of the general group for access of the content.'
@@ -29,3 +38,6 @@ iq_group.settings:
     terms_and_conditions:
       type: string
       label: 'The terms and conditions link.'
+    project_address:
+      type: string
+      label: 'The address of the project.'

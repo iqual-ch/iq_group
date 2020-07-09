@@ -59,7 +59,7 @@ class SignupForm extends FormBase
       $destination = \Drupal::service('path.current')->getPath();
       $form['register_link'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="/user/register?destination=' . $destination . '">' . t('Register') . '</a> / ',
+        '#markup' => '<a href="/user/register?destination=' . $destination . '">' . t('Create an account') . '</a> / ',
         '#weight' => 101
       ];
       $form['login_link'] = [
@@ -125,12 +125,7 @@ class SignupForm extends FormBase
    * {@inheritDoc}
    */
   public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
-    $email_name = $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : 'Iqual';
-    $email_from = $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : 'support@iqual.ch';
-    $email_reply_to = $iqGroupSettingsConfig->get('reply_to') != NULL ? $iqGroupSettingsConfig->get('reply_to') : 'support@iqual.ch';
-    $project_name = $iqGroupSettingsConfig->get('project_name') != NULL ? $iqGroupSettingsConfig->get('project_name') : "";
-
+    $iqGroupSettings = UserController::getIqGroupSettings();
     if (\Drupal::currentUser()->isAnonymous()) {
       $result = \Drupal::entityQuery('user')
         ->condition('mail', $form_state->getValue('mail'), 'LIKE')
@@ -152,7 +147,7 @@ class SignupForm extends FormBase
         }
         else {
           // @todo Set a destination if it is a signup form or not?
-          $destination = \Drupal\Core\Url::fromRoute('<front>')->toString();
+          $destination = \Drupal\Core\Url::fromUserInput($iqGroupSettings['redirection_after_signup'])->toString();
         }
         if (isset($destination) && $destination != NULL) {
           $url .= "?destination=" . $destination . "&signup=1";
@@ -160,16 +155,17 @@ class SignupForm extends FormBase
         $renderable = [
           '#theme' => 'login_template',
           '#EMAIL_TITLE' => $this->t("Sign into your account"),
-          '#EMAIL_PREVIEW_TEXT' => $this->t("Sign into your @project_name account", ['@project_name' => $project_name]),
+          '#EMAIL_PREVIEW_TEXT' => $this->t("Sign into your @project_name account", ['@project_name' => $iqGroupSettings['project_name']]),
           '#EMAIL_URL' => $url,
-          '#EMAIL_PROJECT_NAME' => $project_name
+          '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
+          '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
         ];
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
         $mail_subject = $this->t("Sign into your account");
         mb_internal_encoding("UTF-8");
         $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
         $result = mail($user->getEmail(), $mail_subject , $rendered,
-          "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
+          "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");
       }
       // If the user does not exist
       else {
@@ -203,7 +199,7 @@ class SignupForm extends FormBase
         }
         else {
           // @todo Set a destination if it is a signup form or not?
-          $destination = \Drupal\Core\Url::fromRoute('<front>')->toString();
+          $destination = \Drupal\Core\Url::fromUserInput($iqGroupSettings['redirection_after_signup'])->toString();
         }
         if (isset($destination) && $destination != NULL) {
           $url .= "?destination=" . $destination . "&signup=1";
@@ -214,7 +210,8 @@ class SignupForm extends FormBase
           '#EMAIL_PREVIEW_TEXT' => $this->t("Please confirm subscription"),
           '#USER_PREFERENCES' => [],
           '#EMAIL_URL' => $url,
-          '#EMAIL_PROJECT_NAME' => $project_name,
+          '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
+          '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
         ];
 
         // Make array of user preference ids available to template
@@ -227,7 +224,7 @@ class SignupForm extends FormBase
         $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
         $result = mail($user->getEmail(), $mail_subject , $rendered,
-          "From: ".$email_name ." <". $email_from .">". "\r\nReply-to: ". $email_reply_to . "\r\nContent-Type: text/html");
+          "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");
       }
       \Drupal::messenger()->addMessage($this->t('Thanks for signing up. You will get an email with more information to login.'));
     }

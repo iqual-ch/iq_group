@@ -166,6 +166,16 @@ class UserController extends ControllerBase {
     }
   }
 
+  /**
+   * Helper function assign group to a user.
+   *
+   * @param $group
+   *   The group that is being assigned to the user.
+   * @param $user
+   *   The user to whom the group is assigned to.
+   * @param $groupRoleId
+   *   The group role id that the user will have in the group.
+   */
   public static function addGroupRoleToUser($group,$user, $groupRoleId) {
     // Add the subscriber role to the user in general (id=5) group.
     $groupRole = GroupRole::load($groupRoleId);
@@ -182,6 +192,10 @@ class UserController extends ControllerBase {
       }
     }
   }
+
+  /**
+   * Helper function to get domain of the server.
+   */
   public static function getDomain() {
     if (!empty($_SERVER["HTTP_HOST"]) || getenv("VIRTUAL_HOSTS")) {
       $virtual_host = "";
@@ -197,5 +211,26 @@ class UserController extends ControllerBase {
       $domain = empty($virtual_host) ? $_SERVER["HTTP_HOST"] : $virtual_host;
     }
     return $domain;
+  }
+
+  /**
+   * Helper function to get the iq_group settings.
+   */
+  public static function getIqGroupSettings() {
+    $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
+    return [
+      'project_name' => $iqGroupSettingsConfig->get('project_name') != NULL ? $iqGroupSettingsConfig->get('project_name') : "",
+      'default_redirection' => $iqGroupSettingsConfig->get('default_redirection') != NULL ? $iqGroupSettingsConfig->get('default_redirection') : "",
+      'general_group_id' => $iqGroupSettingsConfig->get('general_group_id') != NULL ? $iqGroupSettingsConfig->get('general_group_id') : "",
+      'name' => $iqGroupSettingsConfig->get('name') != NULL ? $iqGroupSettingsConfig->get('name') : "Iqual",
+      'from' => $iqGroupSettingsConfig->get('from') != NULL ? $iqGroupSettingsConfig->get('from') : "support@iqual.ch",
+      'reply_to' => $iqGroupSettingsConfig->get('reply_to') != NULL ? $iqGroupSettingsConfig->get('reply_to') : "support@iqual.ch",
+      'login_intro' => $iqGroupSettingsConfig->get('login_intro') != NULL ? $iqGroupSettingsConfig->get('login_intro') : "",
+      'terms_and_conditions' => $iqGroupSettingsConfig->get('terms_and_conditions') != NULL ? $iqGroupSettingsConfig->get('terms_and_conditions') : "",
+      'redirection_after_register' => $iqGroupSettingsConfig->get('redirection_after_register') != NULL ? $iqGroupSettingsConfig->get('redirection_after_register') : "/de/user/register",
+      'redirection_after_account_delete' => $iqGroupSettingsConfig->get('redirection_after_account_delete') != NULL ? $iqGroupSettingsConfig->get('redirection_after_account_delete') : "",
+      'redirection_after_signup' => $iqGroupSettingsConfig->get('redirection_after_signup') != NULL ? $iqGroupSettingsConfig->get('redirection_after_signup') : "",
+      'project_address' => $iqGroupSettingsConfig->get('project_address') != NULL ? $iqGroupSettingsConfig->get('project_address') : "",
+    ];
   }
 }
