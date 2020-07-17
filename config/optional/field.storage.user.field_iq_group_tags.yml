@@ -1,0 +1,20 @@
+uuid: f259b7a8-359b-4062-9df4-08c22e3d07e7
+langcode: de
+status: true
+dependencies:
+  module:
+    - taxonomy
+    - user
+id: user.field_iq_group_tags
+field_name: field_iq_group_tags
+entity_type: user
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: -1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

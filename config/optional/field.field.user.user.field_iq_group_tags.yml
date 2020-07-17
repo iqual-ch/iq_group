@@ -1,0 +1,30 @@
+uuid: 00ba510e-e1ee-4b4f-8991-3e8d9ca53cb3
+langcode: de
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_iq_group_tags
+    - taxonomy.vocabulary.tags
+  module:
+    - user
+id: user.user.field_iq_group_tags
+field_name: field_iq_group_tags
+entity_type: user
+bundle: user
+label: Tags
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      tags: tags
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

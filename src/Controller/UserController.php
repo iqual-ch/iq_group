@@ -2,13 +2,16 @@
 
 namespace Drupal\iq_group\Controller;
 
+use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\group\Entity\Group;
 use Drupal\group\Entity\GroupRole;
 use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\IqGroupEvents;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -176,7 +179,7 @@ class UserController extends ControllerBase {
    * @param $groupRoleId
    *   The group role id that the user will have in the group.
    */
-  public static function addGroupRoleToUser($group,$user, $groupRoleId) {
+  public static function addGroupRoleToUser($group, $user, $groupRoleId) {
     // Add the subscriber role to the user in general (id=5) group.
     $groupRole = GroupRole::load($groupRoleId);
 
@@ -232,5 +235,72 @@ class UserController extends ControllerBase {
       'redirection_after_signup' => $iqGroupSettingsConfig->get('redirection_after_signup') != NULL ? $iqGroupSettingsConfig->get('redirection_after_signup') : "",
       'project_address' => $iqGroupSettingsConfig->get('project_address') != NULL ? $iqGroupSettingsConfig->get('project_address') : "",
     ];
+  }
+
+
+  /**
+   * Helper function to sign up a member and send him confirmation email.
+   *
+   * @param $user_data
+   *   The user data.
+   * @param $renderable
+   *   The email renderable array.
+   *
+   * @return \Drupal\user\UserInterface|null
+   *   The user entity.
+   */
+  public static function createMember($user_data, $renderable = [], $destination = NULL, $user_create = TRUE) {
+    $iqGroupSettings = UserController::getIqGroupSettings();
+    if ($user_create) {
+      $user = \Drupal\user\Entity\User::create($user_data);
+      $user->save();
+    }
+    else {
+      $user = User::load($user_data['id']);
+    }
+    $data = time();
+    $data .= $user->id();
+    $data .= $user->getEmail();
+    $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
+    $user->set('field_iq_group_user_token', $hash_token);
+    $user->save();
+    $url = 'https://' . UserController::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
+    if (isset($destination) && $destination != NULL) {
+      $url .= "?destination=" . $destination;
+      if ($user_create) {
+        $url .= "&signup=1";
+      }
+    }
+    if (empty($renderable)) {
+      // Default to signup template.
+      $renderable = [
+        '#theme' => 'signup_template',
+        '#EMAIL_TITLE' => t("Confirm subscription"),
+        '#EMAIL_PREVIEW_TEXT' => t("Please confirm subscription"),
+        '#USER_PREFERENCES' => [],
+        '#EMAIL_URL' => $url,
+        '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
+        '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
+      ];
+    }
+    else {
+      $renderable['#EMAIL_URL'] = $url;
+    }
+    // Make array of user preference ids available to template
+    if (!$user->get('field_iq_group_preferences')->isEmpty()) {
+      $renderable["#USER_PREFERENCES"] = array_filter(array_column($user->field_iq_group_preferences->getValue(), 'target_id'));
+    }
+
+    $mail_subject = $renderable['#EMAIL_TITLE'];
+    mb_internal_encoding("UTF-8");
+    $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
+    $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+    $result = mail($user->getEmail(), $mail_subject , $rendered,
+      "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");
+    if ($result !== true) {
+      \Drupal::logger('iq_group')->notice('Error while sending email');
+      return NULL;
+    }
+    return $user;
   }
 }

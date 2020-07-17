@@ -71,6 +71,7 @@ function iq_group_register_validation(&$form, FormStateInterface $form_state) {
  * Additional submit function after user register.
  */
 function iq_group_after_register(&$form, FormStateInterface $form_state) {
+  $iqGroupSettings = UserController::getIqGroupSettings();
   // email exists
   $mail = $form_state->getValue('mail');
   @$user = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties([
@@ -80,15 +81,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
   $user = reset($user);
 
   if ($user != FALSE) {
-    $iqGroupSettings = UserController::getIqGroupSettings();
     if ($form_state->getValue('pass') != NULL) {
-      if ($user->field_iq_group_user_token->value == NULL) {
-        $data = time();
-        $data .= $user->id();
-        $data .= $user->getEmail();
-        $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
-        $user->set('field_iq_group_user_token', $hash_token);
-      }
       // Add the role in general (id=5) group.
       $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
       if (!empty($group)) {
@@ -122,41 +115,19 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
       // @todo Set a destination if it is a signup form or not?
       //$destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
     }
-    $url = 'https://' . UserController::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
-    if (isset($destination) && $destination != NULL) {
-      $url .= "?destination=" . $destination;
-    }
-    \Drupal::logger('iq_group')->notice('This is the project address: '. nl2br($iqGroupSettings['project_address']));
     $renderable = [
       '#theme' => 'register_template',
       '#EMAIL_TITLE' => t("Confirm account registration"),
       '#EMAIL_PREVIEW_TEXT' => t("Confirm registration of @project_name account", ['@project_name' => $iqGroupSettings['project_name']]),
       '#USER_PREFERENCES' => [],
-      '#EMAIL_URL' => $url,
       '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
       '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
-
     ];
-
-    // Make array of user preference ids available to template
-    if (!$user->get('field_iq_group_preferences')->isEmpty()) {
-      $renderable["#USER_PREFERENCES"] = array_filter(array_column($user->field_iq_group_preferences->getValue(), 'target_id'));
-    }
-
-    $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-    $mail_subject = t("Confirm account registration");
-    mb_internal_encoding("UTF-8");
-    $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
-    // Send a registration email and set the pending activation flag.
-    $result = mail($user->getEmail(), $mail_subject , $rendered,
-      "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");
+    $user = UserController::createMember(['id' => $user->id()], $renderable, $destination, FALSE);
     $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
     $store->set($user->id().'_pending_activation', true);
     $form_state->setRedirectUrl(Url::fromUserInput($iqGroupSettings['redirection_after_register']));
-
   }
-
-
 }
 
 /**
@@ -373,17 +344,55 @@ function iq_group_theme($existing, $type, $theme, $path) {
  */
 function iq_group_user_presave(\Drupal\user\UserInterface $account) {
   if (!$account->isNew()) {
-    // $user = \Drupal\user\Entity\User::load($account->id());
+    $generalGroup = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
 
-    $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-
-    if (!empty($group) && $group->getMember($account)) {
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_UPDATE, new IqGroupEvent($account));
+    if (!empty($generalGroup) && $generalGroup->getMember($account)) {
+      $eventDispatcher = \Drupal::service('event_dispatcher');
+      $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_UPDATE, new IqGroupEvent($account));
     }
   }
 }
 
+/**
+ * Implemenets hook_ENTITY_TYPE_update().
+ */
+function iq_group_user_update(\Drupal\user\UserInterface $account) {
+  if (!$account->isNew()) {
+    $generalGroup = Group::load(\Drupal::config('iq_group.settings')
+      ->get('general_group_id'));
+    if (!empty($generalGroup) && $generalGroup->getMember($account)) {
+      // Get the selected preferences from the user.
+      $selected_preferences = [];
+      if ($account->hasField('field_iq_group_preferences')) {
+        $selected_preferences = array_filter(array_column($account->field_iq_group_preferences->getValue(), 'target_id'));
+      }
+      // When updating the user, check for the preferences and
+      // update groups accordingly.
+      $result = \Drupal::entityTypeManager()
+        ->getStorage('group')
+        ->loadMultiple();
+      /**
+       * @var  int $key
+       * @var  \Drupal\group\Entity\Group $group
+       */
+      foreach ($result as $key => $group) {
+        // If it is not the general group, check for updates.
+        if ($group->id() != \Drupal::config('iq_group.settings')
+            ->get('general_group_id')) {
+          if (in_array($group->id(), $selected_preferences)) {
+            /** @var \Drupal\group\Entity\GroupRoleInterface $generalGroupRole */
+            $generalGroupRole = reset($generalGroup->getMember($account)
+              ->getRoles());
+            UserController::addGroupRoleToUser($group, $account, $generalGroupRole->id());
+          }
+          else {
+            $group->removeMember($account);
+          }
+        }
+      }
+    }
+  }
+}
 /**
  * Implements hook_ENTITY_TYPE_predelete().
  */
