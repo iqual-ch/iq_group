@@ -31,3 +31,23 @@ iq_group.iq_group_settings:
     _permission: 'administer iq_group settings'
   options:
     _admin_route: TRUE
+
+iq_group.iq_group_import:
+  path: '/admin/config/system/iq_group_import'
+  defaults:
+    _form: '\Drupal\iq_group\Form\ImportForm'
+    _title: 'Iq Group Import'
+  requirements:
+    _permission: 'administer iq_group settings'
+  options:
+    _admin_route: TRUE
+
+iq_group.iq_group_members:
+  path: '/admin/members'
+  defaults:
+    _form: 'Drupal\iq_group\Form\OneTimeLoginLinkForm'
+    _title: 'Members'
+  requirements:
+    _permission: 'administer iq_group settings'
+  options:
+    _admin_route: TRUE

@@ -10,6 +10,7 @@
   ],
   "require": {
     "drupal/group": "*",
-    "iqual/iq_user_base": "*"
+    "iqual/iq_user_base": "*",
+    "league/csv": "*"
   }
 }

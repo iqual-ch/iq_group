@@ -1,0 +1,9 @@
+iq_group.iq_group_settings:
+  title: 'IQ Group Settings'
+  route_name: iq_group.iq_group_settings
+  base_route: iq_group.iq_group_settings
+
+iq_group.iq_group_import:
+  title: 'IQ Group Import'
+  route_name: iq_group.iq_group_import
+  base_route: iq_group.iq_group_settings

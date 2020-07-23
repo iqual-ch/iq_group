@@ -349,6 +349,14 @@ function iq_group_user_presave(\Drupal\user\UserInterface $account) {
     if (!empty($generalGroup) && $generalGroup->getMember($account)) {
       $eventDispatcher = \Drupal::service('event_dispatcher');
       $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_UPDATE, new IqGroupEvent($account));
+      // Check if the general group is in the preferences, if not add it.
+      $groups = $account->get('field_iq_group_preferences')->getValue();
+      $selected_preferences = array_filter(array_column($groups, 'target_id'));
+      if (!in_array($selected_preferences, $generalGroup->id())) {
+        $selected_preferences = array_merge($selected_preferences , [$generalGroup->id()]);
+      }
+      $selected_preferences = array_values(array_unique($selected_preferences));
+      $account->set('field_iq_group_preferences', $selected_preferences);
     }
   }
 }

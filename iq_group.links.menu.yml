@@ -4,3 +4,17 @@ iq_group.iq_group_settings:
   route_name: iq_group.iq_group_settings
   parent: system.admin_config_system
   weight: 10
+
+iq_group.iq_group_import:
+  title: 'Iq Group Import'
+  description: 'Import users from CSV'
+  route_name: iq_group.iq_group_import
+  parent: iq_group.iq_group_settings
+  weight: 10
+
+system.iq_group.admin_members:
+  title: 'Members'
+  description: 'Find and manage members.'
+  route_name: 'iq_group.iq_group_members'
+  parent: 'system.admin'
+  weight: 7

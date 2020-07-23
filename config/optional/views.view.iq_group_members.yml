@@ -1,13 +1,15 @@
 uuid: ba40dd00-f14d-4409-9d83-44dbc1bd9572
 langcode: de
-status: false
+status: true
 dependencies:
   config:
     - field.storage.group_content.group_roles
     - field.storage.user.field_iq_group_preferences
     - field.storage.user.field_iq_group_tags
+    - taxonomy.vocabulary.tags
   module:
     - group
+    - taxonomy
     - user
 _core:
   default_config_hash: wTJRNzsLVTenCALONNlVfgm_pBOlqucSPuVFLOD56ck
@@ -466,11 +468,11 @@ display:
             format_custom_false: Blocked
           entity_type: user
           entity_field: status
-        created:
-          id: created
-          table: group_content_field_data
+        created_1:
+          id: created_1
+          table: users_field_data
           field: created
-          relationship: group_content_id
+          relationship: none
           group_type: group
           admin_label: ''
           label: Joined
@@ -520,7 +522,7 @@ display:
             date_format: medium
             custom_date_format: ''
             timezone: ''
-          group_column: entity_id
+          group_column: value
           group_columns: {  }
           group_rows: true
           delta_limit: 0
@@ -530,14 +532,14 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-          entity_type: group_content
+          entity_type: user
           entity_field: created
           plugin_id: field
-        changed:
-          id: changed
-          table: group_content_field_data
+        changed_1:
+          id: changed_1
+          table: users_field_data
           field: changed
-          relationship: group_content_id
+          relationship: none
           group_type: group
           admin_label: ''
           label: Updated
@@ -597,7 +599,7 @@ display:
           multi_type: separator
           separator: ', '
           field_api_classes: false
-          entity_type: group_content
+          entity_type: user
           entity_field: changed
           plugin_id: field
         access:
@@ -1090,6 +1092,60 @@ display:
             group_items: {  }
           plugin_id: numeric
           entity_type: user
+        field_iq_group_tags_target_id:
+          id: field_iq_group_tags_target_id
+          table: user__field_iq_group_tags
+          field: field_iq_group_tags_target_id
+          relationship: none
+          group_type: group
+          admin_label: ''
+          operator: or
+          value: {  }
+          group: 1
+          exposed: true
+          expose:
+            operator_id: field_iq_group_tags_target_id_op
+            label: Tags
+            description: ''
+            use_operator: false
+            operator: field_iq_group_tags_target_id_op
+            operator_limit_selection: false
+            operator_list: {  }
+            identifier: field_iq_group_tags_target_id
+            required: false
+            remember: false
+            multiple: false
+            remember_roles:
+              authenticated: authenticated
+              anonymous: '0'
+              iqbm_author: '0'
+              iqbm_editor: '0'
+              designer: '0'
+              publisher: '0'
+              mdr_author: '0'
+              mdr_editor: '0'
+              user_admin: '0'
+              administrator: '0'
+            reduce: false
+          is_grouped: false
+          group_info:
+            label: ''
+            description: ''
+            identifier: ''
+            optional: true
+            widget: select
+            multiple: false
+            remember: false
+            default_group: All
+            default_group_multiple: {  }
+            group_items: {  }
+          reduce_duplicates: false
+          type: textfield
+          limit: true
+          vid: tags
+          hierarchy: false
+          error_message: true
+          plugin_id: taxonomy_index_tid
       sorts:
         created:
           id: created
@@ -1181,6 +1237,7 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
+        - user
         - user.permissions
       max-age: 0
       tags:
@@ -1196,12 +1253,12 @@ display:
       path: admin/members
       show_admin_links: false
       menu:
-        type: none
-        title: List
+        type: tab
+        title: Members
         description: 'Find and manage people interacting with your site.'
         expanded: false
-        parent: ''
-        weight: -10
+        parent: system.admin_config
+        weight: 9
         context: '0'
         menu_name: admin
       tab_options:
@@ -1219,6 +1276,7 @@ display:
         - 'languages:language_interface'
         - url
         - url.query_args
+        - user
         - user.permissions
       max-age: 0
       tags:
