@@ -38,7 +38,6 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
     $context['sandbox'] = ['set' => 'now it is set'];
     $context['sandbox']['progress'] = 0;
     $context['results'] = [];
-    \Drupal::messenger()->addMessage($context['results']['log_errors']);
     $context['results']['log_error'] = '';
     $context['results']['cnt_import'] = 0;
     $context['results']['cnt_update'] = 0;
