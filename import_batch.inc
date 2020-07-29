@@ -9,14 +9,7 @@ use League\Csv\Reader;
 function csv_import($import_file_url, $i, $preference_names, $current_user, $options, $existing_terms, &$context)
 {
   $reader = Reader::createFromPath($import_file_url, 'r');
-  $delimiter = ',';
-  if ($options['delimiter'] == 'semi_colon') {
-    $delimiter = ';';
-  }
-  else if ($options['delimiter'] == 'tab') {
-    $delimiter = '\t';
-  }
-  $reader->setDelimiter($delimiter);
+  $reader->setDelimiter($options['delimiter']);
   $reader->setHeaderOffset(0);
   // From import form, when chunking the data.
   // Get user records.

@@ -124,7 +124,6 @@ class UserEditForm extends FormBase
           ->getValue();
         $default_branches = [];
         foreach ($selected_branches as $key => $value) {
-          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
             $default_branches = array_merge($default_branches, [$value['target_id']]);
         }
         if ($currentPath == '/user/edit') {

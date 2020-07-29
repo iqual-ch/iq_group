@@ -54,11 +54,18 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
       else if ($form_state->getValue($key) && $element['#field_id'] == 'preferences') {
         $user_data['field_iq_group_preferences'] = $element['#field_value'];
       }
+      // Set the branches through the industry content type.
+      else if ($form_state->getValue($key) && $element['#field_id'] == 'branches') {
+        $industry_id = $form_state->getValue($key);
+        $industry = \Drupal::entityTypeManager()->getStorage('node')->load($industry_id);
+        $branch = $industry->get('field_iq_group_branches')->getValue();
+        $user_data['field_iq_group_branches'] = $branch;
+      }
       else if (isset($element['#field_id']) && !empty($element['#field_id'])) {
         $user_data['field_iq_user_base_address'][$element['#field_id']] = $form_state->getValue($key);
       }
     }
-    // Set the country code to Switzerland.
+    // Set the country code to Switzerland as it is required.
     $user_data['field_iq_user_base_address']['country_code'] = 'CH';
 
     // If user exists, attribute the submission to the user.
@@ -68,6 +75,15 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
     // If the user does not exists and the user checked the newsletter,
     // Create the user and attribute the submission to the user.
     else if (!empty($user_data['field_iq_group_preferences'])) {
+      // Check if the user is on a branch page.
+      $node = \Drupal::routeMatch()->getParameter('node');
+      if ($node instanceof \Drupal\node\NodeInterface) {
+        // You can get nid and anything else you need from the node object.
+        if ($node->bundle() == 'sqs_industry') {
+          $branch = $node->get('field_iq_group_branches')->getValue();
+          $user_data['field_iq_group_branches'] = $branch;
+        }
+      }
       $user = UserController::createMember($user_data);
       $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
       $store->set($user->id().'_pending_activation', true);
