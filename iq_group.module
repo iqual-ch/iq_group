@@ -38,6 +38,11 @@ function iq_group_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormSt
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+  // Tags field should be hidden for regular users. For admins it should be visible.
+  $loggedInUser = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+  if (!$loggedInUser->hasPermission('administer users')) {
+    $form['field_iq_group_tags']['#access'] = FALSE;
+  }
   $user = \Drupal::currentUser()->getAccount();
   // If user is subscriber, redirect him to the user edit form.
   $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
@@ -192,6 +197,11 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       '#required' => true,
       '#weight' => 10,
     ];
+    // Tags field should be hidden for regular users. For admins it should be visible.
+    $loggedInUser = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    if (!$loggedInUser->hasPermission('administer users')) {
+      $form['field_iq_group_tags']['#access'] = FALSE;
+    }
     // The submit callback should not be here. If everything is okay,
     // remove the comment on the next line.
     // $form['actions']['#submit'][] = '_node_field_group_add_custom_callback_group';
