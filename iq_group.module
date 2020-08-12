@@ -148,7 +148,7 @@ function iq_group_user_login(\Drupal\user\UserInterface $account) {
   $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
   $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
   $groupRoles = array_keys($groupRoles);
-  if (in_array('subscription-lead', $groupRoles)) {
+  if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
     // redirect to destination if there is 1
     if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
       $destination = $_GET['destination'];
@@ -362,7 +362,7 @@ function iq_group_user_presave(\Drupal\user\UserInterface $account) {
       // Check if the general group is in the preferences, if not add it.
       $groups = $account->get('field_iq_group_preferences')->getValue();
       $selected_preferences = array_filter(array_column($groups, 'target_id'));
-      if (!in_array($selected_preferences, $generalGroup->id())) {
+      if (!in_array($generalGroup->id(), $selected_preferences)) {
         $selected_preferences = array_merge($selected_preferences , [$generalGroup->id()]);
       }
       $selected_preferences = array_values(array_unique($selected_preferences));
