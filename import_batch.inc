@@ -61,6 +61,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
 
     if (validateUser($user_data, $field_keys, $offset, $context)) {
 
+
       \Drupal::moduleHandler()
         ->invokeAll('iq_group_before_import', [&$user_data]);
       // import user.
@@ -166,8 +167,10 @@ function validateUser(&$user_data, $field_keys, $offset, &$context) {
   $required_fields = ['mail'];
   $valid = true;
   if (strpos($user_data['mail'], '@') < 1) {
-    if (empty($context['results']['log_error']['invalid_email']))
+    if (empty($context['results']['log_error']['invalid_email']) && !isset($context['results']['log_error']['invalid_email']['message'])) {
+      $context['results']['log_error'] = [];
       $context['results']['log_error']['invalid_email']['message'] = t('Invalid email at rows: ');
+    }
     $context['results']['log_error']['invalid_email']['rows'][] = (int)$offset+1;
     $context['results']['cnt_error']++;
     return false;

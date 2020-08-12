@@ -80,11 +80,10 @@ msgid "Preferences"
 msgstr "Präferenzen"
 
 msgid "Sign up"
-msgstr "Sign up"
+msgstr "Jetzt anmelden"
 
 msgid "Sign into your account"
 msgstr "Melden Sie sich an"
-
 
 msgid "Sign into your @project_name account"
 msgstr "Melden Sie sich in Ihrem @project_name Benutzerkonto an"

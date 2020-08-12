@@ -182,10 +182,16 @@
                             <td data-slot-container="1" style="text-align: left;font-family: Arial, sans-serif;border-collapse: collapse;padding: 0 0; color: #515151;" class="mobile-center body-padding w320 ui-sortable">
                                 <br>
                                 <div data-slot="text">
-                                    <h1>Konto löschen {{EMAIL_PROJECT_NAME}}</h1>
-                                    Sie können Ihr Konto mit folgendem Link löschen:<br/>{{ EMAIL_URL }}<br><br>
-                                    Besten Dank<br>
-                                    Ihr {{EMAIL_PROJECT_NAME}} Team
+                                    <h1>
+                                        {% trans %}
+                                            Delete account at {{EMAIL_PROJECT_NAME}}
+                                        {% endtrans %}
+                                    </h1>
+                                    {{ 'You can delete your account with the following link:'|trans }}<br/>{{ EMAIL_URL }}<br><br>
+                                    {{ 'Thank you very much,'|trans }}<br>
+                                    {% trans %}
+                                        Your team from {{EMAIL_PROJECT_NAME}}
+                                    {% endtrans %}
                                 </div>
                             </td>
                         </tr>

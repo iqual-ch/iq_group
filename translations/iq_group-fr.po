@@ -1,0 +1,2 @@
+msgid "Sign up"
+msgstr "Inscrivez-vous"
