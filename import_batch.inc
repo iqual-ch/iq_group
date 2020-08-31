@@ -6,7 +6,7 @@ use Drupal\group\Entity\Group;
 use Drupal\user\Entity\User;
 use League\Csv\Reader;
 
-function csv_import($import_file_url, $i, $preference_names, $current_user, $options, $existing_terms, &$context)
+function csv_import($import_file_url, $i, $preference_names, $current_user, $options, $existing_terms, $product_ids, $branch_ids, &$context)
 {
   $reader = Reader::createFromPath($import_file_url, 'r');
   $reader->setDelimiter($options['delimiter']);
@@ -15,7 +15,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
   // Get user records.
   $stmt = (new \League\Csv\Statement())
     ->offset($i)
-    ->limit(20);
+    ->limit(10);
   $records = $stmt->process($reader);
   $j = 1;
 
@@ -24,7 +24,10 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
     'given_name' => 'field_iq_user_base_address',
     'family_name' => 'field_iq_user_base_address',
     'preferences' => 'field_iq_group_preferences',
+    'products' => 'field_iq_group_products',
+    'branches' => 'field_iq_group_branches',
     'organization' => 'field_iq_user_base_address',
+    'postal_code' => 'field_iq_user_base_address',
     'mail' => 'mail',
   ];
   if (empty($context['results'])) {
@@ -39,7 +42,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
     $context['results']['start'] = microtime(TRUE);
   }
 
-  // Go through the 20 records.
+  // Go through the 10 records.
   foreach ($records as $offset => $user_data) {
     // Get the field keys only from the 1st user (they are the same for every user).
     if ($j == 1) {
@@ -61,7 +64,6 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
 
     if (validateUser($user_data, $field_keys, $offset, $context)) {
 
-
       \Drupal::moduleHandler()
         ->invokeAll('iq_group_before_import', [&$user_data]);
       // import user.
@@ -72,6 +74,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
           'mail' => $user_data['mail']
         ]);
 
+      $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
       // Get the existing user or create a new user.
       if (!empty($checkingUser)) {
         $user = reset($checkingUser);
@@ -84,12 +87,13 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
           'name' => $user_data['mail'],
           'status' => 1,
         ]);
+        $store->set(crc32($user_data['mail']) . '_pending_finalization', true);
+        $user->save();
         $data = time();
         $data .= $user->id();
         $data .= $user->getEmail();
         $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
         $user->set('field_iq_group_user_token', $hash_token);
-        $user->save();
         // Load General group (id=5) and get the roles for the user.
         $generalGroup = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
         $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
@@ -104,6 +108,12 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
       $tags = explode(',', $user_data['tags']);
       override_user_tags($tags, $user, $options['tag_option'], $existing_terms);
       set_user_preferences($user_data, $user, $options['preference_option'], $preference_names);
+      if ($user->hasField('field_iq_group_products')) {
+        set_user_products($user_data, $user, $options['preference_option'], $product_ids);
+      }
+      if ($user->hasField('field_iq_group_branches')) {
+        set_user_branches($user_data, $user, $options['preference_option'], $branch_ids);
+      }
 
       // Go through each of the fields and map them to the appropriate keys.
       $address_info = [];
@@ -134,6 +144,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         $address_info['country_code'] = 'CH';
         $user->set('field_iq_user_base_address', $address_info);
       }
+      $store->delete(crc32($user_data['mail']) . '_pending_finalization');
       $user->save();
       //update_user_groups($user);
       \Drupal::moduleHandler()->invokeAll('iq_group_after_import', [&$user]);
@@ -259,6 +270,67 @@ function set_user_preferences(&$user_data, &$user, $option, $preference_names) {
   }
   $user_data['preferences'] = $ids;
 }
+
+function set_user_products(&$user_data, &$user, $option, $product_ids) {
+  $ids = [];
+  $user_data['products'] = explode(',', $user_data['products']);
+  foreach ($user_data['products'] as $product) {
+    if (in_array(trim($product), $product_ids)) {
+      $ids[] = ['target_id' => (string)array_search(trim($product), $product_ids)];
+    }
+  }
+  // Set preferences based on the preference override option.
+  if ($option == 'override_preferences') {
+    $user_data['products'] = $ids;
+  }
+  else {
+    if ($option == 'add_preferences') {
+      $existing_products = $user->get('field_iq_group_products')->getValue();
+      $ids = array_merge($existing_products, $ids);
+    }
+    else {
+      $existing_products = $user->get('field_iq_group_products')->getValue();
+      $existing_products = array_filter(array_column($existing_products, 'target_id'));
+      $ids = array_filter(array_column($ids, 'target_id'));
+      foreach ($ids as $delete_id) {
+        unset($existing_products[array_search($delete_id, $existing_products)]);
+      }
+      $ids = $existing_products;
+    }
+  }
+  $user_data['products'] = $ids;
+}
+
+function set_user_branches(&$user_data, &$user, $option, $branch_ids) {
+  $ids = [];
+  $user_data['branches'] = explode(',', $user_data['branches']);
+  foreach ($user_data['branches'] as $branch) {
+    if (in_array(trim($branch), $branch_ids)) {
+      $ids[] = ['target_id' => (string)array_search(trim($branch), $branch_ids)];
+    }
+  }
+  // Set preferences based on the preference override option.
+  if ($option == 'override_preferences') {
+    $user_data['branches'] = $ids;
+  }
+  else {
+    if ($option == 'add_preferences') {
+      $existing_branches = $user->get('field_iq_group_branches')->getValue();
+      $ids = array_merge($existing_branches, $ids);
+    }
+    else {
+      $existing_branches = $user->get('field_iq_group_branches')->getValue();
+      $existing_branches = array_filter(array_column($existing_branches, 'target_id'));
+      $ids = array_filter(array_column($ids, 'target_id'));
+      foreach ($ids as $delete_id) {
+        unset($existing_branches[array_search($delete_id, $existing_branches)]);
+      }
+      $ids = $existing_branches;
+    }
+  }
+  $user_data['branches'] = $ids;
+}
+
 
 function finished_import($success, $results, $operations) {
   $msg = '<p>Finished import, processed ' . ($results['cnt_import'] + $results['cnt_error'] + $results['cnt_update']) . ' records<p>';

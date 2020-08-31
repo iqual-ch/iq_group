@@ -25,6 +25,24 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  */
 function iq_group_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
   $form['account']['name']['#type'] = 'hidden';
+  if (isset($form['field_sqs_ax_id'])) {
+    $form['field_sqs_ax_id']['#access'] = FALSE;
+  }
+  if (isset($form['field_sqs_company_size'])) {
+    $form['field_sqs_company_size']['#access'] = FALSE;
+  }
+  if (isset($form['field_sqs_scope'])) {
+    $form['field_sqs_scope']['#access'] = FALSE;
+  }
+  if (isset($form['field_iq_user_base_position'])) {
+    $form['field_iq_user_base_position']['#access'] = FALSE;
+  }
+  if (isset($form['field_sqs_sub_branch'])) {
+    $form['field_sqs_sub_branch']['#access'] = FALSE;
+  }
+  if (isset($form['field_iq_group_products'])) {
+    $form['field_iq_group_products']['#access'] = FALSE;
+  }
   $form['account']['name']['#required'] = FALSE;
   $form['actions']['submit']['#submit'][] = 'iq_group_after_register';
   $form['#validate'][] = 'iq_group_register_validation';
@@ -38,10 +56,25 @@ function iq_group_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormSt
  * Implements hook_form_BASE_FORM_ID_alter().
  */
 function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
-  // Tags field should be hidden for regular users. For admins it should be visible.
+  // Some fields should be hidden for regular users. For admins it should be visible.
   $loggedInUser = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
   if (!$loggedInUser->hasPermission('administer users')) {
     $form['field_iq_group_tags']['#access'] = FALSE;
+    if (isset($form['field_sqs_ax_id'])) {
+      $form['field_sqs_ax_id']['#access'] = FALSE;
+    }
+    if (isset($form['field_sqs_company_size'])) {
+      $form['field_sqs_company_size']['#access'] = FALSE;
+    }
+    if (isset($form['field_sqs_scope'])) {
+      $form['field_sqs_scope']['#access'] = FALSE;
+    }
+    if (isset($form['field_sqs_sub_branch'])) {
+      $form['field_sqs_sub_branch']['#access'] = FALSE;
+    }
+    if (isset($form['field_iq_group_products'])) {
+      $form['field_iq_group_products']['#access'] = FALSE;
+    }
   }
   $user = \Drupal::currentUser()->getAccount();
   // If user is subscriber, redirect him to the user edit form.
@@ -112,7 +145,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
       }
     }
     \Drupal::messenger()->deleteByType(\Drupal\Core\Messenger\MessengerInterface::TYPE_STATUS);
-    \Drupal::messenger()->addMessage(t('Thank you for the registration. You will get an email with the login link.'));
+    \Drupal::messenger()->addMessage(t('Thank you very much for the registration. You will shortly receive an e-mail from us with a confirmation link.'));
     if ($form_state->getValue('destination') != "")  {
       $destination = $form_state->getValue('destination');
     }
@@ -186,7 +219,7 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
   }
   if ($form_id == 'user_form' || $form_id == 'user_register_form' && !empty($form['user_picture'])) {
-    $form['user_picture']['widget'][0]['#description'] = t('Available types: ') . str_replace(' ', ', ', trim(reset($form['user_picture']['widget'][0]['#upload_validators']['file_validate_extensions'])));
+    $form['user_picture']['widget'][0]['#description'] = t('Available file types: ') . str_replace(' ', ', ', trim(reset($form['user_picture']['widget'][0]['#upload_validators']['file_validate_extensions'])));
   }
   if ($form_id == 'user_register_form') {
     $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ? \Drupal::config('iq_group.settings')->get('terms_and_conditions') : "https://www.sqs.ch/de/datenschutzbestimmungen";
@@ -230,7 +263,7 @@ function iq_group_form_user_login_form_alter(&$form, FormStateInterface $form_st
   }
   $form['forgot_password'] = [
     '#type' => 'markup',
-    '#markup' => '<a href="/user/password">'. t('Forgot password') . '</a> / ',
+    '#markup' => '<a href="/user/password">'. t('Forgotten password') . '</a> / ',
     '#weight' => 100
   ];
   $form['register_link'] = [
@@ -357,8 +390,11 @@ function iq_group_user_presave(\Drupal\user\UserInterface $account) {
     $generalGroup = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
 
     if (!empty($generalGroup) && $generalGroup->getMember($account)) {
-      $eventDispatcher = \Drupal::service('event_dispatcher');
-      $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_UPDATE, new IqGroupEvent($account));
+      $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
+      if (empty($store->get(crc32($account->getEmail()) . '_pending_finalization'))) {
+        $eventDispatcher = \Drupal::service('event_dispatcher');
+        $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_UPDATE, new IqGroupEvent($account));
+      }
       // Check if the general group is in the preferences, if not add it.
       $groups = $account->get('field_iq_group_preferences')->getValue();
       $selected_preferences = array_filter(array_column($groups, 'target_id'));
@@ -460,7 +496,7 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
   $renderable = [
     '#theme' => 'reset_password_template',
     '#EMAIL_TITLE' => t("Confirm password reset"),
-    '#EMAIL_PREVIEW_TEXT' => t("Confirm password reset for @project_name account", ['@project_name' => $iqGroupSettings['project_name']]),
+    '#EMAIL_PREVIEW_TEXT' => t("Confirm the password reset of your @project_name account", ['@project_name' => $iqGroupSettings['project_name']]),
     '#USER_PREFERENCES' => [],
     '#EMAIL_URL' => user_pass_reset_url($account),
     '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
@@ -481,7 +517,7 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
     "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");
   if (!empty($result)) {
     \Drupal::logger('user')->notice('Password reset instructions mailed to %name at %email.', ['%name' => $account->getUsername(), '%email' => $account->getEmail()]);
-    \Drupal::messenger()->addStatus(t('Further instructions have been sent to your email address.'));
+    \Drupal::messenger()->addStatus(t('Further instructions have been sent to your e-mail address.'));
   }
   $form_state->setRedirect('user.page');
 }

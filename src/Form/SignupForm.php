@@ -40,7 +40,7 @@ class SignupForm extends FormBase
         '#type' => 'hidden',
         '#title' => $this->t('Username'),
         '#maxlength' => USERNAME_MAX_LENGTH,
-        '#description' => $this->t("Several special characters are allowed, including space, period (.), hyphen (-), apostrophe ('), underscore (_), and the @ sign."),
+        '#description' => $this->t("Some special characters are allowed, such as space, dot (.), hyphen (-), apostrophe ('), underscore(_) and the @ character."),
         '#required' => FALSE,
         '#attributes' => [
           'class' => ['username'],
@@ -195,7 +195,7 @@ class SignupForm extends FormBase
         }
         $user = UserController::createMember($user_data, [], $destination);
       }
-      \Drupal::messenger()->addMessage($this->t('Thanks for signing up. You will get an email with more information to login.'));
+      \Drupal::messenger()->addMessage($this->t('Thanks for signing up. You will receive an e-mail with further information about the registration.'));
     }
     else {
       $user = User::load(\Drupal::currentUser()->id());

@@ -1,0 +1,284 @@
+msgid "Thank you very much for your interest. You will shortly receive an e-mail with a link to the desired whitepaper."
+msgstr "Grazie per l’interesse dimostrato. A breve riceverà un’e-mail con un link per accedere al white paper desiderato."
+
+msgid "Enter your username or email address"
+msgstr "Inserisci il tuo nome utente o indirizzo email"
+
+msgid "Invalid Email Address"
+msgstr "Indirizzo e-mail non valido"
+
+msgid "Confirm password reset for @project_name account"
+msgstr "Confermi la reimpostazione della password del suo account utente @project_name."
+
+msgid "Confirm the password reset of your @project_name account"
+msgstr "Confermi la reimpostazione della password del suo account utente @project_name."
+
+msgid "Member area"
+msgstr "Member area"
+
+msgid "This link is invalid or has expired."
+msgstr "Link non valido o scaduto."
+
+msgid "The email address %value is already taken."
+msgstr "L’indirizzo e-mail %value è già stato assegnato."
+
+msgid "Thank you very much for the registration. You will shortly receive an e-mail from us with a confirmation link."
+msgstr "Grazie per la sua registrazione. A breve le invieremo un’e-mail con un link di conferma."
+
+msgid "Your account has been blocked."
+msgstr "Il suo account è stato bloccato."
+
+msgid "I confirm that I would like to delete my account."
+msgstr "Confermo che desidero eliminare il mio account."
+
+msgid "Account deletion"
+msgstr "Cancellazione dell'account"
+
+msgid "Available file types: "
+msgstr "Tipi di file consentiti: "
+
+msgid "Welcome"
+msgstr "Benvenuto"
+
+msgid "Forgot password"
+msgstr "Password dimenticata"
+
+msgid "Forgotten password"
+msgstr "Password dimenticata"
+
+msgid "Create an account"
+msgstr "Creare un account"
+
+msgid "Reset password"
+msgstr "Reimpostare la password"
+
+msgid "New password for @project_name account"
+msgstr "Nuova password per l'account @project_name"
+
+msgid "Password reset instructions mailed to %name at %email."
+msgstr "Abbiamo inviato una nuova password per %name all’indirizzo %e-mail."
+
+msgid "Further instructions have been sent to your email address."
+msgstr "Ulteriori istruzioni sono state inviate al suo indirizzo e-mail."
+
+msgid "Delete account"
+msgstr "Eliminare l'account"
+
+msgid "Delete account @project_name"
+msgstr "Eliminare l'account @project_name"
+
+msgid "Confirm account deletion"
+msgstr "Conferma l'eliminazione dell'account"
+
+msgid "Further instructions to delete your account have been sent to your email address."
+msgstr "Ulteriori istruzioni per eliminare il tuo account sono state inviate al tuo indirizzo email."
+
+msgid "Enter your email"
+msgstr "Indirizzo e-mail"
+
+msgid "Submit"
+msgstr "Inviare"
+
+msgid "Invalid User!"
+msgstr "Indirizzo e-mail non valido"
+
+msgid "Password reset"
+msgstr "Reimpostare la password"
+
+msgid "My account"
+msgstr "Il mio account"
+
+msgid "Email address"
+msgstr "Indirizzo e-mail"
+
+msgid "E-mail address"
+msgstr "Indirizzo e-mail"
+
+msgid "Username"
+msgstr "Nome utente"
+
+msgid "Several special characters are allowed, including space, period (.), hyphen (-), apostrophe ('), underscore (_), and the @ sign."
+msgstr "Sono consentiti alcuni caratteri speciali, ad es. spazi, punti (.), trattini alti (-), apostrofi ('), trattini bassi (_) e chiocciole (@)."
+
+msgid "I have read the <a href=\"@terms_and_conditions\" target=\"_blank\">terms and conditions</a> and data protection regulations and I agree."
+msgstr "Accetto le <a href=\"@terms_and_conditions\" target=\"_blank\">disposizioni sulla protezione dei dati </a>."
+
+msgid "Login"
+msgstr "Login"
+
+msgid "All rights reserved."
+msgstr "Tutti i diritti riservati."
+
+msgid "Preferences"
+msgstr "Preferenze"
+
+msgid "Sign up"
+msgstr "Iscrizione"
+
+msgid "Sign into your account"
+msgstr "Effettui l’accesso"
+
+msgid "Sign into your @project_name account"
+msgstr "Effettui l’accesso al suo account @project_name"
+
+msgid "Thanks for signing up. You will receive an e-mail with further information about the registration."
+msgstr "Grazie per esserti registrato. Riceverai un'e-mail con ulteriori informazioni sulla registrazione."
+
+msgid "Confirm subscription"
+msgstr "Confermare l’abbonamento"
+
+msgid "Please confirm subscription"
+msgstr "Si prega di confermare l’abbonamento"
+
+msgid "Branches"
+msgstr "Settori"
+
+msgid "Language settings"
+msgstr "Impostazioni lingua"
+
+msgid "Site language"
+msgstr "Lingua del sito internet"
+
+msgid "This account's preferred language for emails and site presentation."
+msgstr "La lingua preferita dell’account utente per le e-mail e la visualizzazione del sito internet."
+
+msgid "When you create a password, you are automatically creating a login. You can then change your preferences for the newsletter directly in the user account."
+msgstr "Inserendo una password crea in automatico un login. In seguito può modificare le sue preferenze per la newsletter direttamente nell’account utente."
+
+msgid "Password"
+msgstr "Password"
+
+msgid "Confirm password"
+msgstr "Confermare la password"
+
+msgid "<h1>Login to create a @project_name member area</h1>"
+msgstr "<h1>Creare un login per la Member area di @project_name</h1>"
+
+msgid "Edit profile"
+msgstr "Modificare il profilo"
+
+msgid "Save"
+msgstr "Salvare"
+
+msgid "The specified passwords do not match."
+msgstr "Le password inserite non coincidono."
+
+msgid "The submitted passwords do not match."
+msgstr "Le password inserite non coincidono."
+
+msgid "Your profile has been saved. You now have access to :project_name member area."
+msgstr "Il suo account utente è stato memorizzato. Adesso può accedere alla sezione «Member area» di :project_name."
+
+msgid "Confirm account registration"
+msgstr "Confermi la registrazione del suo account utente"
+
+msgid "Confirm registration of @project_name account"
+msgstr "Confermi la registrazione del suo account utente @project_name"
+
+msgid "I have read the <a href=\"@terms_and_conditions\" target=\"_blank\">terms and conditions</a> and data protection regulations and I agree."
+msgstr "Accetto le <a href=\"@terms_and_conditions\" target=\"_blank\">disposizioni SQS sulla protezione dei dati </a>."
+
+msgid "The username %name has not been activated or is blocked."
+msgstr "Il nome utente %name non è stato attivato o è bloccato."
+
+msgid "Whitepapers"
+msgstr "White paper"
+
+msgid "Select all"
+msgstr "Selezionare tutti"
+
+msgid "Required if you want to change your e-mail address or password below. Reset your password."
+msgstr "Necessario se desidera modificare qui sotto il suo indirizzo e-mail o la sua password. Reimpostare la password."
+
+msgid "Passwords match:"
+msgstr "Le password corrispondono:"
+
+msgid "Address"
+msgstr "Indirizzo"
+
+msgid "Country"
+msgstr "Paese"
+
+msgid "This language is also used as the primary language for user account profile information."
+msgstr "Questa lingua viene utilizzata anche come lingua principale per le informazioni del profilo dell’account utente."
+
+msgid "This account's preferred language for e-mails."
+msgstr "Lingua preferita di questo account utente per la posta elettronica."
+
+msgid "Your current password is missing or incorrect; it's required to change the %name."
+msgstr "Password attuale mancante o scorretta. Campo necessario per modificare %name."
+
+msgid "%name is not recognized as a username or an email address."
+msgstr "%name non viene riconosciuto come nome utente o come indirizzo e-mail."
+
+msgid "Login to SQS member area"
+msgstr "Login alla sezione «Member area SQS»"
+
+msgid "Logout"
+msgstr "Disdire"
+
+msgid "Would you like to be informed in future about SQS news/activities and customer portraits?"
+msgstr "Vuole ricevere informazioni sulle novità/attività di SQS e sulle storie dei nostri clienti?"
+
+msgid "If yes, we will inform you about new certifications, audit offers, trainings, seminars and events, by and with us, every 2-3 months."
+msgstr "In caso di risposta affermativa, a intervalli di circa 2-3 mesi le comunicheremo eventuali novità in termini di certificazioni, offerte di audit, corsi di formazione, seminari ed eventi organizzati da e con noi."
+
+msgid "Newsletter Archives"
+msgstr "Archivio newsletter"
+
+msgid "GLOBAL Flash Archive"
+msgstr "Archivio GLOBAL Flash"
+
+msgid "The username %value is already taken."
+msgstr "Il nome utente %value è già stato assegnato."
+
+msgid "Enter the password for the new account in both fields."
+msgstr "Inserisca la password del nuovo account in entrambi i campi."
+
+msgid "Account settings"
+msgstr "Impostazioni account"
+
+msgid "Profile picture"
+msgstr "Foto profilo"
+
+msgid "Instructions for resetting your password will be sent to the e-mail address you have provided in your account."
+msgstr "Le istruzioni per reimpostare la password verranno inviate all’indirizzo e-mail da lei fornito nel suo account utente."
+
+msgid "User settings"
+msgstr "Impostazioni utente"
+
+msgid "Here you can choose your newsletter preferences."
+msgstr "Qui può selezionare le preferenze per la newsletter."
+
+msgid "Only if a new password is entered in both fields will it be changed."
+msgstr "Solo inserendo in entrambi i campi una nuova password sarà possibile modificare la vecchia password."
+
+msgid "User profile"
+msgstr "Profilo utente"
+
+msgid "Settings"
+msgstr "Impostazioni"
+
+msgid "First name"
+msgstr "Nome"
+
+msgid "Last name"
+msgstr "Cognome"
+
+msgid "Whitepaper download"
+msgstr "Scaricare il white paper"
+
+msgid "Invalid e-mail address"
+msgstr "Indirizzo e-mail non valido"
+
+msgid 'I accept the <a href="@terms_and_conditions" target="_blank">SQS data protection regulations</a>.'
+msgstr 'Accetto le <a href=\"@terms_and_conditions\" target=\"_blank\">disposizioni SQS sulla protezione dei dati </a>.'
+
+msgid 'Required if you want to change the e-mail or password below. <a href=":request_new_url" title="Send password reset instructions via email.">Reset your password</a>.'
+msgstr 'Erforderlich, falls Sie Ihre E-Mailadresse oder Ihr Passwort unten ändern wollen. Ihr Passwort zurücksetzen.'
+
+msgid "Website language"
+msgstr "Lingua del sito internet"
+
+msgid "Please enter your e-mail address here."
+msgstr "Inserisca qui il suo indirizzo e-mail."

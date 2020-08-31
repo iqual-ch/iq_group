@@ -1,0 +1,30 @@
+uuid: 781e6953-45fd-4de4-924a-be2d399e247b
+langcode: de
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_iq_group_products
+    - taxonomy.vocabulary.iq_group_products
+  module:
+    - user
+id: user.user.field_iq_group_products
+field_name: field_iq_group_products
+entity_type: user
+bundle: user
+label: Products
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      iq_group_products: iq_group_products
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

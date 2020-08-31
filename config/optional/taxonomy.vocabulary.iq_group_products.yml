@@ -1,0 +1,8 @@
+uuid: e946d347-fc44-482e-b6b7-92af80047031
+langcode: de
+status: true
+dependencies: {  }
+name: Product
+vid: iq_group_products
+description: ''
+weight: 0

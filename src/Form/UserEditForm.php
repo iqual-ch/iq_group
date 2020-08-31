@@ -66,7 +66,7 @@ class UserEditForm extends FormBase
         '#type' => 'hidden',
         '#title' => $this->t('Username'),
         '#maxlength' => USERNAME_MAX_LENGTH,
-        '#description' => $this->t("Several special characters are allowed, including space, period (.), hyphen (-), apostrophe ('), underscore (_), and the @ sign."),
+        '#description' => $this->t("Some special characters are allowed, such as space, dot (.), hyphen (-), apostrophe ('), underscore(_) and the @ character."),
         '#required' => FALSE,
         '#default_value' => $default_name,
         '#attributes' => [
@@ -154,10 +154,10 @@ class UserEditForm extends FormBase
 
         $form['language']['preferred_langcode'] = [
           '#type' => 'language_select',
-          '#title' => $this->t('Site language'),
+          '#title' => $this->t('Website language'),
           '#languages' => LanguageInterface::STATE_CONFIGURABLE,
           '#default_value' => $user_preferred_langcode,
-          '#description' => $user_language_added ? $this->t("This account's preferred language for emails and site presentation.") : $this->t("This account's preferred language for emails."),
+          '#description' => $user_language_added ? $this->t("The preferred language of this user account for e-mails and the presentation of the website.") : $this->t("This account's preferred language for emails."),
           // This is used to explain that user preferred language and entity
           // language are synchronized. It can be removed if a different behavior is
           // desired.
@@ -168,7 +168,7 @@ class UserEditForm extends FormBase
 
       $form['password_text'] = [
         '#type' => 'markup',
-        '#markup' => t('When you create a password, you are automatically creating a login. You can then choose your preferences for the newsletter.'),
+        '#markup' => t('When you create a password, you are automatically creating a login. You can then change your preferences for the newsletter directly in the user account.'),
         '#weight' => 60,
       ];
       $form['password'] = [
@@ -190,7 +190,7 @@ class UserEditForm extends FormBase
       if (in_array('subscription-subscriber', $groupRoles)) {
         $form['member_area_title'] = [
           '#type' => 'markup',
-          '#markup' => t('<h1>Login to create an @project_name Member Area</h1>', ['@project_name' => \Drupal::config('iq_group.settings')->get('project_name')]),
+          '#markup' => t('<h1>Login to create a @project_name member area</h1>', ['@project_name' => \Drupal::config('iq_group.settings')->get('project_name')]),
           '#weight' => 50,
         ];
       }
@@ -229,7 +229,7 @@ class UserEditForm extends FormBase
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
     if ($form_state->getValue('password') != $form_state->getValue('password_confirm')) {
-      $form_state->setError($form['password'], t('The specified passwords do not match.'));
+      $form_state->setError($form['password'], t('The submitted passwords do not match.'));
     }
   }
 
@@ -273,7 +273,7 @@ class UserEditForm extends FormBase
       $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
     }
 
-    \Drupal::messenger()->addMessage(t('Your profile has been saved. Now you have access to :project_name Member Area.', [':project_name' => \Drupal::config('iq_group.settings')->get('project_name')]));
+    \Drupal::messenger()->addMessage(t('Your profile has been saved. You now have access to :project_name member area.', [':project_name' => \Drupal::config('iq_group.settings')->get('project_name')]));
     $user->save();
     $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
     // Redirect after saving

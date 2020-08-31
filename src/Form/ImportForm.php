@@ -54,7 +54,7 @@ class ImportForm extends FormBase
       '#description' => $this->t('Choose what to do with the tags'),
       '#options' => [
         'override_tags' => $this->t('Override tags'),
-        'add_tags' => $this->t('Add tags'),
+        'add_tags' => $this->t('Append tags'),
         'remove_tags' => $this->t('Remove tags')
       ],
       '#default_value' => 'override_tags',
@@ -62,12 +62,12 @@ class ImportForm extends FormBase
     ];
     $form['override_preferences'] = [
       '#type' => 'select',
-      '#title' => $this->t('Override preferences'),
-      '#description' => $this->t('Choose what to do with the preferences'),
+      '#title' => $this->t('Override user settings'),
+      '#description' => $this->t('Choose what to do with the user preferences, branches and products'),
       '#options' => [
-        'override_preferences' => $this->t('Override preferences'),
-        'add_preferences' => $this->t('Add preferences'),
-        'remove_preferences' => $this->t('Remove preferences')
+        'override_preferences' => $this->t('Override user settings'),
+        'add_preferences' => $this->t('Append user settings'),
+        'remove_preferences' => $this->t('Remove user settings')
       ],
       '#default_value' => 'override_preferences',
       '#required'=> TRUE
@@ -133,6 +133,34 @@ class ImportForm extends FormBase
         $preference_names[$group->id()] = $group->label();
     }
 
+    // Get Product IDs.
+    $product_ids = [];
+    $result = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->loadByProperties(['vid' => 'iq_group_products']);
+
+    /**
+     * @var  int $key
+     * @var  \Drupal\taxonomy\Entity\Term $product
+     */
+    foreach ($result as $key => $product) {
+      $product_ids[$product->id()] = $product->field_iq_group_product_id->value;
+    }
+
+    // Get branches IDs.
+    $branch_ids = [];
+    $result = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->loadByProperties(['vid' => 'iq_group_branches']);
+
+    /**
+     * @var  int $key
+     * @var  \Drupal\taxonomy\Entity\Term $branch
+     */
+    foreach ($result as $key => $branch) {
+      $branch_ids[$branch->id()] = $branch->getName();
+    }
+
     // Get options for the tags and user override.
     $options = [
       'tag_option' => $form_state->getValue('override_tags'),
@@ -153,8 +181,8 @@ class ImportForm extends FormBase
     // Batch operations.
     $operations = [];
 
-    for($i = 0; $i < $reader->count(); $i+=20) {
-      $operations[] = ['csv_import', [$import_file_url, $i, $preference_names, \Drupal::currentUser()->id(), $options, $existing_terms]];
+    for($i = 0; $i < $reader->count(); $i+=10) {
+      $operations[] = ['csv_import', [$import_file_url, $i, $preference_names, \Drupal::currentUser()->id(), $options, $existing_terms, $product_ids, $branch_ids]];
     }
 
     $batch = array(

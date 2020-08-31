@@ -1,7 +1,7 @@
 iq_group.reset_password:
   path: '/auth/{user_id}/{token}'
   defaults:
-    _title: 'Password reset'
+    _title: 'Reset password'
     _controller: '\Drupal\iq_group\Controller\UserController::resetPassword'
   requirements:
     _access: 'TRUE'

@@ -1,4 +1,28 @@
-msgid "Thank you for the registration. You will get an email with the login link."
+msgid "Thank you very much for your interest. You will shortly receive an e-mail with a link to the desired whitepaper."
+msgstr "Besten Dank für Ihr Interesse. Sie erhalten in Kürze eine E-Mail mit einem Link zum gewünschten Whitepaper."
+
+msgid "Enter your username or email address"
+msgstr "Geben Sie hier Ihre E-Mail-Adresse an."
+
+msgid "Invalid Email Address"
+msgstr "Ungültige E-Mail-Adresse"
+
+msgid "Confirm password reset for @project_name account"
+msgstr "Bestätigen Sie die Zurücksetzung Ihres Passworts zu Ihrem @project_name-Benutzerkonto"
+
+msgid "Confirm the password reset of your @project_name account"
+msgstr "Bestätigen Sie die Zurücksetzung Ihres Passworts zu Ihrem @project_name-Benutzerkonto"
+
+msgid "Member area"
+msgstr "Member area"
+
+msgid "This link is invalid or has expired."
+msgstr "Dieser Link ist ungültig oder abgelaufen."
+
+msgid "The email address %value is already taken."
+msgstr "Die E-Mail-Adresse %value ist bereits vergeben."
+
+msgid "Thank you very much for the registration. You will shortly receive an e-mail from us with a confirmation link."
 msgstr "Besten Dank für die Registrierung. Sie erhalten in Kürze von uns eine E-Mail mit einem Bestätigungslink."
 
 msgid "Your account has been blocked."
@@ -10,7 +34,7 @@ msgstr "Ich bestätige, dass ich mein Benutzerkonto löschen möchte."
 msgid "Account deletion"
 msgstr "Benutzerkonto löschen"
 
-msgid "Available types: "
+msgid "Available file types: "
 msgstr "Erlaubte Dateitypen: "
 
 msgid "I have read the <a href=\"@terms_and_conditions\" target=\"_blank\">terms and conditions</a> and data protection regulations and I agree."
@@ -20,6 +44,9 @@ msgid "Welcome"
 msgstr "Willkommen"
 
 msgid "Forgot password"
+msgstr "Passwort vergessen"
+
+msgid "Forgotten password"
 msgstr "Passwort vergessen"
 
 msgid "Create an account"
@@ -61,7 +88,13 @@ msgstr "Ungültige E-mail-Adresse"
 msgid "Password reset"
 msgstr "Passwort zurücksetzen"
 
+msgid "My account"
+msgstr "Mein Konto"
+
 msgid "Email address"
+msgstr "E-Mail-Adresse"
+
+msgid "E-mail address"
 msgstr "E-Mail-Adresse"
 
 msgid "Username"
@@ -76,6 +109,9 @@ msgstr "Ich akzeptiere die <a href=\"@terms_and_conditions\" target=\"_blank\">D
 msgid "Login"
 msgstr "Login"
 
+msgid "All rights reserved."
+msgstr "Alle Rechte vorbehalten."
+
 msgid "Preferences"
 msgstr "Präferenzen"
 
@@ -88,7 +124,7 @@ msgstr "Melden Sie sich an"
 msgid "Sign into your @project_name account"
 msgstr "Melden Sie sich in Ihrem @project_name Benutzerkonto an"
 
-msgid "Thanks for signing up. You will get an email with more information to login."
+msgid "Thanks for signing up. You will receive an e-mail with further information about the registration."
 msgstr "Danke für die Anmeldung. Sie erhalten eine E-Mail mit weiteren Informationen zum anmelden."
 
 msgid "Confirm subscription"
@@ -109,7 +145,7 @@ msgstr "Sprache der Website"
 msgid "This account's preferred language for emails and site presentation."
 msgstr "Die bevorzugte Sprache dieses Benutzerkontos für E-Mails und die Darstellung der Website."
 
-msgid "When you create a password, you are automatically creating a login. You can then choose your preferences for the newsletter."
+msgid "When you create a password, you are automatically creating a login. You can then change your preferences for the newsletter directly in the user account."
 msgstr "Wenn Sie ein Passwort setzen, erstellen Sie automatisch ein Login. Sie können anschliessend Ihre Newsletter Präferenzen direkt im Benutzerkonto ändern."
 
 msgid "Password"
@@ -118,7 +154,7 @@ msgstr "Passwort"
 msgid "Confirm password"
 msgstr "Passwort bestätigen"
 
-msgid "<h1>Login to create an @project_name Member Area</h1>"
+msgid "<h1>Login to create a @project_name member area</h1>"
 msgstr "<h1>Login für @project_name Member Area erstellen</h1>"
 
 msgid "Edit profile"
@@ -130,11 +166,11 @@ msgstr "Speichern"
 msgid "The specified passwords do not match."
 msgstr "Die eingegebenen Passwörter stimmen nicht überein."
 
-msgid "Your profile has been saved. Now you have access to :project_name Member Area."
-msgstr "Ihr Benutzeraccount wurde gespeichert. Sie haben nun Zugriff auf die :project_name Member Area."
+msgid "The submitted passwords do not match."
+msgstr "Die eingegebenen Passwörter stimmen nicht überein."
 
-msgid "Thank you for the registration. You will get an email with the login link."
-msgstr "Besten Dank für die Registrierung. Sie erhalten in Kürze von uns eine E-Mail mit einem Bestätigungslink."
+msgid "Your profile has been saved. You now have access to :project_name member area."
+msgstr "Ihr Benutzeraccount wurde gespeichert. Sie haben nun Zugriff auf die :project_name Member Area."
 
 msgid "Confirm account registration"
 msgstr "Bestätigen Sie die Registrierung Ihres Benutzerkontos"
@@ -142,8 +178,110 @@ msgstr "Bestätigen Sie die Registrierung Ihres Benutzerkontos"
 msgid "Confirm registration of @project_name account"
 msgstr "Bestätigen Sie die Registrierung Ihres @project_name Benutzerkontos"
 
-msgid "Confirm account registration"
-msgstr "Bestätigen Sie die Registrierung Ihres Benutzerkontos"
-
 msgid "I have read the <a href=\"@terms_and_conditions\" target=\"_blank\">terms and conditions</a> and data protection regulations and I agree."
 msgstr "Ich akzeptiere die <a href=\"@terms_and_conditions\" target=\"_blank\">SQS-Datenschutzbestimmungen</a>."
+
+msgid "The username %name has not been activated or is blocked."
+msgstr "Der Benutzername %name wurde nicht aktiviert oder ist gesperrt."
+
+msgid "Whitepapers"
+msgstr "Whitepapers"
+
+msgid "Select all"
+msgstr "Alle auswählen"
+
+msgid "Required if you want to change your e-mail address or password below. Reset your password."
+msgstr "Erforderlich, falls Sie Ihre E-Mailadresse oder Ihr Passwort unten ändern wollen. Ihr Passwort zurücksetzen."
+
+msgid "Passwords match:"
+msgstr "Passwörter stimmen überein:"
+
+msgid "Address"
+msgstr "Adresse"
+
+msgid "Country"
+msgstr "Land"
+
+msgid "This language is also used as the primary language for user account profile information."
+msgstr "Diese Sprache wird gleichzeitig als primäre Sprache für Profilinformationen des Benutzerkontos verwendet."
+
+msgid "This account's preferred language for e-mails."
+msgstr "Die bevorzugte Sprache dieses Benutzerkontos für E-Mails."
+
+msgid "Your current password is missing or incorrect; it's required to change the %name."
+msgstr "Das aktuelle Passwort fehlt oder ist falsch. Dieses ist erforderlich, um %name zu ändern."
+
+msgid "%name is not recognized as a username or an email address."
+msgstr "%name wird nicht als Benutzername oder E-Mail-Adresse erkannt."
+
+msgid "Login to SQS member area"
+msgstr "Anmeldung zur SQS-Member area"
+
+msgid "Logout"
+msgstr "Abmelden"
+
+msgid "Would you like to be informed in future about SQS news/activities and customer portraits?"
+msgstr "Möchten Sie zukünftig über SQS-News/-Aktivitäten und Kundenportraits informiert werden?"
+
+msgid "If yes, we will inform you about new certifications, audit offers, trainings, seminars and events, by and with us, every 2-3 months."
+msgstr "Wenn ja, werden Sie von uns ca. alle 2-3 Monate über neue Zertifizierungen, Audit-Angebote, Schulungen, Seminare und Events, von und mit uns, informiert."
+
+msgid "Newsletter Archives"
+msgstr "Newsletter-Archiv"
+
+msgid "GLOBAL Flash Archive"
+msgstr "GLOBAL Flash-Archiv"
+
+msgid "The username %value is already taken."
+msgstr "Der Username %value ist bereits vergeben."
+
+msgid "Enter the password for the new account in both fields."
+msgstr "Geben Sie das Passwort für das neue Konto in beide Felder ein."
+
+msgid "Account settings"
+msgstr "Kontoeinstellungen"
+
+msgid "Profile picture"
+msgstr "Profilbild"
+
+msgid "Instructions for resetting your password will be sent to the e-mail address you have provided in your account."
+msgstr "Anweisungen zum Zurücksetzen Ihres Passworts werden an die E-Mail-Adresse gesendet, die Sie in Ihrem Benutzerkonto hinterlegt haben."
+
+msgid "User settings"
+msgstr "Benutzereinstellungen"
+
+msgid "Here you can choose your newsletter preferences."
+msgstr "Hier können Sie Ihre Newsletter-Präferenzen auswählen."
+
+msgid "Only if a new password is entered in both fields will it be changed."
+msgstr "Nur wenn in beiden Feldern ein neues Passwort eingegeben wird, wird es geändert."
+
+msgid "User profile"
+msgstr "Benutzerprofil"
+
+msgid "Settings"
+msgstr "Einstellungen"
+
+msgid "First name"
+msgstr "Vorname"
+
+msgid "Last name"
+msgstr "Nachname"
+
+msgid "Whitepaper download"
+msgstr "Whitepaper herunterladen"
+
+msgid "Invalid e-mail address"
+msgstr "Ungültige E-Mail-Adresse"
+
+msgid 'I accept the <a href="@terms_and_conditions" target="_blank">SQS data protection regulations</a>.'
+msgstr 'Ich akzeptiere die <a href=\"@terms_and_conditions\" target=\"_blank\">SQS-Datenschutzbestimmungen</a>.'
+
+msgid 'Required if you want to change the e-mail or password below. <a href=":request_new_url" title="Send password reset instructions via email.">Reset your password</a>.'
+msgstr 'Erforderlich, falls Sie Ihre E-Mailadresse oder Ihr Passwort unten ändern wollen. Ihr Passwort zurücksetzen.'
+
+msgid "Website language"
+msgstr "Sprache der Website"
+
+msgid "Please enter your e-mail address here."
+msgstr "Geben Sie hier Ihre E-Mail-Adresse an."

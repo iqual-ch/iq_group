@@ -68,6 +68,48 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
     // Set the country code to Switzerland as it is required.
     $user_data['field_iq_user_base_address']['country_code'] = 'CH';
 
+    // If the logged in user and the webform submission match.
+    if (!empty($user) && $userExists && \Drupal::currentUser()->getEmail() == $email) {
+      // Check if the user is on a branch/product page or a entity.
+      $node = \Drupal::routeMatch()->getParameter('node');
+      if ($node instanceof \Drupal\node\NodeInterface) {
+
+        if ($node->hasField('field_iq_group_branches')) {
+          // Add the branches from the entity to the user's.
+          $default_branches = [];
+
+          // User branches.
+          $selected_branches = $user->get('field_iq_group_branches')->getValue();
+          foreach ($selected_branches as $key => $value) {
+            $default_branches = array_merge($default_branches, [$value['target_id']]);
+          }
+          // Entity branches.
+          $entity_branches = $node->get('field_iq_group_branches')->getValue();
+          foreach ($entity_branches as $key => $value) {
+            $default_branches = array_merge($default_branches, [$value['target_id']]);
+          }
+          $user->set('field_iq_group_branches', $default_branches);
+        }
+
+        if ($node->hasField('field_iq_group_products')) {
+          // User products.
+          $default_products = [];
+          $selected_products = $user->get('field_iq_group_products')->getValue();
+          foreach ($selected_products as $key => $value) {
+            $default_products = array_merge($default_products, [$value['target_id']]);
+          }
+
+          // Entity products.
+          $entity_products = $node->get('field_iq_group_products')->getValue();
+          foreach ($entity_products as $key => $value) {
+            $default_products = array_merge($default_products, [$value['target_id']]);
+          }
+          $user->set('field_iq_group_products', $default_products);
+        }
+        $user->save();
+      }
+
+    }
     // If user exists, attribute the submission to the user.
     if (!empty($user) && $userExists) {
         $webform_submission->setOwnerId($user->id())->save();
@@ -79,9 +121,13 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
       $node = \Drupal::routeMatch()->getParameter('node');
       if ($node instanceof \Drupal\node\NodeInterface) {
         // You can get nid and anything else you need from the node object.
-        if ($node->bundle() == 'sqs_industry') {
+        if ($node->hasField('field_iq_group_branches')) {
           $branch = $node->get('field_iq_group_branches')->getValue();
           $user_data['field_iq_group_branches'] = $branch;
+        }
+        if ($node->hasField('field_iq_group_products')) {
+          $product = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['name' => $node->getTitle(), 'vid' => 'iq_group_products']);
+          $user_data['field_iq_group_products'] = $product;
         }
       }
       $user = UserController::createMember($user_data);

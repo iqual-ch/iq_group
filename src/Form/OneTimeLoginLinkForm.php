@@ -28,7 +28,7 @@ class OneTimeLoginLinkForm extends FormBase {
     $form['user_email_name'] = [
       '#type' => 'textfield',
       '#required' => TRUE,
-      '#title' => $this->t('Enter your email'),
+      '#title' => $this->t('E-mail address'),
     ];
 
     $form['actions']['submit'] = [
