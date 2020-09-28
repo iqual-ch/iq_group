@@ -64,7 +64,7 @@ msgstr "Nouveau mot de passe pour le compte @project_name"
 msgid "Password reset instructions mailed to %name at %email."
 msgstr "Un nouveau mot de passe pour %name a été envoyé à l'adresse e-mail %email."
 
-msgid "Further instructions have been sent to your email address."
+msgid "Further instructions have been sent to your e-mail address."
 msgstr "De plus amples instructions ont été envoyées à votre adresse e-mail."
 
 msgid "Delete account"
@@ -98,6 +98,9 @@ msgid "Username"
 msgstr "Nom d'utilisateur"
 
 msgid "Several special characters are allowed, including space, period (.), hyphen (-), apostrophe ('), underscore (_), and the @ sign."
+msgstr "Certains caractères spéciaux sont autorisés, par ex. l'espace, le point (.), le tiret (-), l'apostrophe ('), le trait de soulignement (_) et le signe @."
+
+msgid "Some special characters are allowed, such as space, dot (.), hyphen (-), apostrophe ('), underscore(_) and the @ character."
 msgstr "Certains caractères spéciaux sont autorisés, par ex. l'espace, le point (.), le tiret (-), l'apostrophe ('), le trait de soulignement (_) et le signe @."
 
 msgid "I have read the <a href=\"@terms_and_conditions\" target=\"_blank\">terms and conditions</a> and data protection regulations and I agree."
@@ -144,6 +147,9 @@ msgstr "Mot de passe"
 
 msgid "Confirm password"
 msgstr "Confirmer le mot de passe"
+
+msgid "Confirm password reset"
+msgstr "Veuillez confirmer la réinitialisation"
 
 msgid "Edit profile"
 msgstr "Modifier le profil"
@@ -211,6 +217,9 @@ msgstr "%name n'est pas reconnu comme nom d'utilisateur ou adresse e-mail."
 msgid "Enter your username or email address"
 msgstr "Entrez ici votre adresse e-mail."
 
+msgid "Username or email address."
+msgstr "Entrez ici votre adresse e-mail."
+
 msgid "Please enter your e-mail address here."
 msgstr "Entrez ici votre adresse e-mail."
 
@@ -262,6 +271,9 @@ msgstr "Paramètres de l'utilisateur"
 msgid "Here you can choose your newsletter preferences."
 msgstr "Vous pouvez choisir ici vos préférences pour la newsletter."
 
+msgid "Thank you very much for registration to the newsletter."
+msgstr "Merci beaucoup pour votre inscription à la newsletter."
+
 msgid "Only if a new password is entered in both fields will it be changed."
 msgstr "Ce n'est qu'en introduisant un nouveau mot de passe dans les deux champs que la modification sera effectuée."
 
@@ -282,3 +294,105 @@ msgstr "Télécharger le livre blanc"
 
 msgid 'Required if you want to change the e-mail or password below. <a href=":request_new_url" title="Send password reset instructions via email.">Reset your password</a>.'
 msgstr 'Nécessaire si vous souhaitez modifier votre adresse mail ou votre mot de passe ci-dessous. Réinitialiser votre mot de passe.'
+
+msgid "Login to SQS member area"
+msgstr "Inscription à l'espace membre SQS."
+
+msgid 'Unrecognized username or password. <a href=":password">Forgot your password?</a>'
+msgstr 'Nom d\'utilisateur ou mot de passe non reconnu. <a href=":password">Avez-vous oublié votre mot de passe ?</a>'
+
+msgid "You registered an SQS account to access the SQS Member Area."
+msgstr "Vous avez enregistré un compte utilisateur SQS pour avoir accès à l'espace membre SQS."
+
+msgid "We will keep you informed approx. every 2-3 months about new certifications, audit offers, trainings, seminars and events by and with us."
+msgstr "Nous vous informerons tous les 2-3 mois des nouvelles certifications, offres d'audit, formations, séminaires et événements organisés."
+
+msgid "Of course, you can unsubscribe from any newsletter at any time, should you no longer wish to receive notifications."
+msgstr "Bien entendu, vous pouvez vous désabonner à tout moment dans chaque newsletter au cas où vous ne souhaitez plus recevoir de notification."
+
+msgid "Please confirm your registration using the following link."
+msgstr "Veuillez achever l'inscription en cliquant sur le lien que voici."
+
+msgid "Confirm registration"
+msgstr "Confirmer l'inscription"
+
+msgid "We will keep you informed approx. every 2-3 months about new certifications, audit offers, trainings, seminars and events by and with us."
+msgstr "Nous vous informerons tous les 2-3 mois des nouvelles certifications, offres d'audit, formations, séminaires et événements organisés."
+
+msgid "We will inform you, twice a year with a newsletter, that the current issue of GLOBAL Flash is available on our homepage."
+msgstr "Vous recevrez deux fois par an une newsletter vous informant que la dernière édition du GLOBAL Flash est disponible sur notre site web."
+
+msgid "We will send you messages according to your interests and preferences."
+msgstr "Nous vous enverrons des notifications adaptées à vos centres d'intérêts et préférences choisies."
+
+msgid "We look forward to welcoming you soon in our newsletter."
+msgstr "Nous nous réjouissons de pouvoir prochainement vous envoyer notre newsletter."
+
+msgid "Yes, for SQS Newsletter"
+msgstr "Oui, pour la newsletter SQS"
+
+msgid "Yes, for SQS GLOBAL Flash"
+msgstr "Oui, pour la SQS GLOBAL Flash"
+
+msgid "Yes, for SQS messages"
+msgstr "Oui, pour la SQS messages"
+
+msgid "Swiss Association for Quality and Management Systems (SQS)"
+msgstr "Association Suisse pour les Systèmes de Qualité et de Management (SQS)"
+
+msgid "Bernstrasse 103, 3052 Zollikofen, Switzerland"
+msgstr "Bernstrasse 103, 3052 Zollikofen, Suisse"
+
+msgid "A request to cancel your account has been made ."
+msgstr "Une demande de suppression de votre compte utilisateur a été effectuée."
+
+msgid "A request to cancel your account has been made."
+msgstr "Une demande de suppression de votre compte utilisateur a été effectuée."
+
+msgid "The cancellation of your account is not reversible. The provided link expires in one day and nothing will happen if it is not used."
+msgstr "La suppression de votre compte utilisateur ne peut être annulée et est définitive. Le lien suivant est valable pendant un jour et expire automatiquement si vous ne l'utilisez pas."
+
+msgid "You may now cancel your account by clicking the following link."
+msgstr "Vous pouvez à présent effacer votre compte utilisateur SQS en cliquant sur le lien que voici."
+
+msgid "You can edit your profile and change your preferences in the SQS Member Area."
+msgstr "Vous pouvez adapter votre profil ainsi que vos préférences dans l'espace membre SQS."
+
+msgid "Use the following link to log into your SQS account in order to access the SQS Member Area."
+msgstr "Utilisez le lien suivant pour vous connecter à votre compte SQS afin d'accéder à l'Espace membre SQS."
+
+msgid "A request to reset the password for your account has been made."
+msgstr "Une demande de réinitialisation du mot de passe de votre compte utilisateur a été effectuée."
+
+msgid "The provided link can only be used once to log in and will lead you to a page where you can set your password. It expires after one day and nothing will happen if it's not used."
+msgstr "Le lien suivant ne peut être utilisé qu'une seule fois et conduit à une page qui vous permet de définir un nouveau mot de passe. Le lien est valable pendant un jour et expire automatiquement si vous ne l'utilisez pas."
+
+msgid "You can reset the password for your account by clicking the following link."
+msgstr "Vous pouvez modifier le mot de passe de votre compte utilisateur en cliquant sur le lien suivant."
+
+msgid "Thank you for you interest in our whitepaper."
+msgstr "Merci beaucoup pour l'intérêt porté à notre livre blanc."
+
+msgid "Use the following link to download the whitepaper."
+msgstr "Utilisez le lien suivant pour télécharger le livre blanc."
+
+msgid "We will send you messages according to your interests and preferences."
+msgstr "Nous vous enverrons des messages en fonction de vos intérêts et préférences."
+
+msgid "Download Whitepaper"
+msgstr "Télécharger le livre blanc"
+
+msgid "Your account is now protected with password. You can login."
+msgstr "Votre compte est protégé par mot de passe. S'identifier."
+
+msgid "A request to reset the password for your account has been made."
+msgstr "È stata inoltrata una richiesta per reimpostare la password del suo account utente."
+
+msgid "We have sent you an email."
+msgstr "Merci beaucoup pour votre intérêt. Vous recevrez prochainement un e-mail contenant un lien vers le livre blanc souhaité."
+
+msgid "Download your @project_name whitepaper now"
+msgstr "Téléchargez votre livre blanc @project_name maintenant"
+
+msgid "Schweizerische Vereinigung für Qualitäts- und Management-Systeme (SQS)"
+msgstr "Association Suisse pour les Systèmes de Qualité et de Management (SQS)"

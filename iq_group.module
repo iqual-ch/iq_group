@@ -254,16 +254,17 @@ function iq_group_form_user_login_form_alter(&$form, FormStateInterface $form_st
   $iqGroupSettings = UserController::getIqGroupSettings();
   $form['title'] = [
     '#type' => 'markup',
-    '#markup' => "<h1>". $iqGroupSettings['login_intro'] ."</h1>",
+    '#markup' => "<h1>". t($iqGroupSettings['login_intro']) ."</h1>",
     '#weight' => -100
   ];
-  $destination = '/user/register';
+  $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
+  $destination = '/' . $language . '/user/register';
   if (!empty($_GET['destination'])) {
     $destination.='?destination=' . $_GET['destination'];
   }
   $form['forgot_password'] = [
     '#type' => 'markup',
-    '#markup' => '<a href="/user/password">'. t('Forgotten password') . '</a> / ',
+    '#markup' => '<a href="/' . $language . '/user/password">'. t('Forgotten password') . '</a> / ',
     '#weight' => 100
   ];
   $form['register_link'] = [

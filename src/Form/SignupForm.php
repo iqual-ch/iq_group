@@ -56,15 +56,16 @@ class SignupForm extends FormBase
         '#weight' => 100,
         '#required' => true,
       ];
+      $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
       $destination = \Drupal::service('path.current')->getPath();
       $form['register_link'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="/user/register?destination=' . $destination . '">' . t('Create an account') . '</a> / ',
+        '#markup' => '<a href="/' . $language . '/user/register?destination=' . $destination . '">' . t('Create an account') . '</a> / ',
         '#weight' => 101
       ];
       $form['login_link'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="/user/login?destination=' . $destination . '">' . t('Login') . '</a>',
+        '#markup' => '<a href="/' . $language . '/user/login?destination=' . $destination . '">' . t('Login') . '</a>',
         '#weight' => 101
       ];
 

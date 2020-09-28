@@ -207,9 +207,10 @@ class UserEditForm extends FormBase
           unset($form['password']);
           unset($form['password_confirm']);
           unset($form['password_text']);
+          $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
           $form['full_profile_edit'] = [
             '#type' => 'markup',
-            '#markup' => '</br><a href="/user/' . $user_id . '/edit">' . t('Edit profile') . '</a>',
+            '#markup' => '</br><a href="/' . $language . '/user/' . $user_id . '/edit">' . t('Edit profile') . '</a>',
             '#weight' => 70,
           ];
         }

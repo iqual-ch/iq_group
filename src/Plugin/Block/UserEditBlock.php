@@ -22,9 +22,10 @@ class UserEditBlock extends BlockBase {
     $currentPath =  \Drupal::service('path.current')->getPath();
     $user_id = \Drupal::currentUser()->id();
     if ($currentPath == '/user/'. $user_id) {
+      $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
       $form['full_profile_edit'] = [
         '#type' => 'markup',
-        '#markup' => '<div class="iqbm-button iqbm-text btn btn-cta"><a href="/user/' . $user_id . '/edit">' . t('Edit profile') . '</a></div>'
+        '#markup' => '<div class="iqbm-button iqbm-text btn btn-cta"><a href="/' . $language . '/user/' . $user_id . '/edit">' . t('Edit profile') . '</a></div>'
       ];
       return $form;
     }

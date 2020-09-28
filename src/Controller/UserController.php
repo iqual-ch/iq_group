@@ -135,7 +135,7 @@ class UserController extends ControllerBase {
         if ($destination != "") {
           $resetURL .= "?destination=" . $destination;
         }
-        \Drupal::messenger()->addMessage('Ihr Konto ist Passwortgeschützt. Melden Sie sich an.');
+        \Drupal::messenger()->addMessage(t('Your account is now protected with password. You can login.'));
         //return new RedirectResponse($resetURL);
          $response = new RedirectResponse($resetURL, 302);
          $response->send();
@@ -212,6 +212,8 @@ class UserController extends ControllerBase {
         }
       }
       $domain = empty($virtual_host) ? $_SERVER["HTTP_HOST"] : $virtual_host;
+      $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
+      $domain .= '/' . $language;
     }
     return $domain;
   }
@@ -230,7 +232,7 @@ class UserController extends ControllerBase {
       'reply_to' => $iqGroupSettingsConfig->get('reply_to') != NULL ? $iqGroupSettingsConfig->get('reply_to') : "support@iqual.ch",
       'login_intro' => $iqGroupSettingsConfig->get('login_intro') != NULL ? $iqGroupSettingsConfig->get('login_intro') : "",
       'terms_and_conditions' => $iqGroupSettingsConfig->get('terms_and_conditions') != NULL ? $iqGroupSettingsConfig->get('terms_and_conditions') : "",
-      'redirection_after_register' => $iqGroupSettingsConfig->get('redirection_after_register') != NULL ? $iqGroupSettingsConfig->get('redirection_after_register') : "/de/user/register",
+      'redirection_after_register' => $iqGroupSettingsConfig->get('redirection_after_register') != NULL ? $iqGroupSettingsConfig->get('redirection_after_register') : "/user/register",
       'redirection_after_account_delete' => $iqGroupSettingsConfig->get('redirection_after_account_delete') != NULL ? $iqGroupSettingsConfig->get('redirection_after_account_delete') : "",
       'redirection_after_signup' => $iqGroupSettingsConfig->get('redirection_after_signup') != NULL ? $iqGroupSettingsConfig->get('redirection_after_signup') : "",
       'project_address' => $iqGroupSettingsConfig->get('project_address') != NULL ? $iqGroupSettingsConfig->get('project_address') : "",
