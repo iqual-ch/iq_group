@@ -11,6 +11,7 @@
   "require": {
     "drupal/group": "*",
     "iqual/iq_user_base": "*",
-    "league/csv": "*"
+    "league/csv": "*",
+    "drupal/login_emailusername": "*"
   }
 }
