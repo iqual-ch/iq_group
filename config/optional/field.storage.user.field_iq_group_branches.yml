@@ -1,18 +1,18 @@
-uuid: 91088b3c-7bc1-4813-9978-7ae55b4c7b9f
+uuid: 538a2604-e9ca-4b14-9fc4-576ebf54d2e7
 langcode: de
 status: true
 dependencies:
   module:
-    - group
+    - taxonomy
     - user
 _core:
-  default_config_hash: SpzDX-5gwEpPURtv2G8h4pC3UDAjl7NyoK0KXpYuiew
-id: user.field_iq_group_preferences
-field_name: field_iq_group_preferences
+  default_config_hash: Ma_MzZ_uckQaFjxXa2gchhOzFvhs8dFHAHkqrNnX_N8
+id: user.field_iq_group_branches
+field_name: field_iq_group_branches
 entity_type: user
 type: entity_reference
 settings:
-  target_type: group
+  target_type: taxonomy_term
 module: core
 locked: false
 cardinality: -1

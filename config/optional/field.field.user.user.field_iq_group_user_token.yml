@@ -1,10 +1,13 @@
-langcode: en
+uuid: 53f9c7f3-b0cf-4144-b829-88da839ffb86
+langcode: de
 status: true
 dependencies:
   config:
     - field.storage.user.field_iq_group_user_token
   module:
     - user
+_core:
+  default_config_hash: kqdsVjsQeWgV8HmUKzrQRexwqPi-zKBJzrSneD9IKbM
 id: user.user.field_iq_group_user_token
 field_name: field_iq_group_user_token
 entity_type: user

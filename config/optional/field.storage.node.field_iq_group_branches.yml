@@ -1,19 +1,19 @@
-uuid: c4493b10-1c94-4f4f-a913-595d0120f01e
+uuid: cecf64df-bc72-4819-b3c7-5f072e657dfa
 langcode: de
 status: true
 dependencies:
   module:
-    - group
     - node
-id: node.field_iq_group_node_group
-field_name: field_iq_group_node_group
+    - taxonomy
+id: node.field_iq_group_branches
+field_name: field_iq_group_branches
 entity_type: node
 type: entity_reference
 settings:
-  target_type: group
+  target_type: taxonomy_term
 module: core
 locked: false
-cardinality: -1
+cardinality: 1
 translatable: true
 indexes: {  }
 persist_with_no_fields: false

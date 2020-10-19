@@ -1,0 +1,16 @@
+uuid: 36e5026a-d84d-4517-ad32-822cbad59bf4
+langcode: de
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.iq_group_products
+  module:
+    - content_translation
+third_party_settings:
+  content_translation:
+    enabled: true
+id: taxonomy_term.iq_group_products
+target_entity_type_id: taxonomy_term
+target_bundle: iq_group_products
+default_langcode: site_default
+language_alterable: false

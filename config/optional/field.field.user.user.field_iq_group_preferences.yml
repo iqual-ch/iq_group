@@ -1,4 +1,5 @@
-langcode: en
+uuid: ea35afc8-1b2f-40ce-bb5b-22aac60cfc00
+langcode: de
 status: true
 dependencies:
   config:
@@ -6,11 +7,13 @@ dependencies:
     - group.type.subscription
   module:
     - user
+_core:
+  default_config_hash: dtrT7xwQ5reSiNlJ5ZJxY36QD6BnXInhjN-BHdWxo_I
 id: user.user.field_iq_group_preferences
 field_name: field_iq_group_preferences
 entity_type: user
 bundle: user
-label: Preferences
+label: Präferenzen
 description: ''
 required: false
 translatable: false

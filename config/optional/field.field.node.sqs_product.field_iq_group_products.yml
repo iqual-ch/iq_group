@@ -1,0 +1,29 @@
+uuid: a412c102-7b42-477a-b351-51e862c7ee50
+langcode: de
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_iq_group_products
+    - node.type.sqs_product
+    - taxonomy.vocabulary.iq_group_products
+id: node.sqs_product.field_iq_group_products
+field_name: field_iq_group_products
+entity_type: node
+bundle: sqs_product
+label: Products
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      iq_group_products: iq_group_products
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

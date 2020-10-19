@@ -1,0 +1,24 @@
+uuid: 0fb654b1-f26e-4469-877d-61b5108c9a69
+langcode: de
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_iq_group_mautic_id
+  module:
+    - user
+id: user.user.field_iq_group_mautic_id
+field_name: field_iq_group_mautic_id
+entity_type: user
+bundle: user
+label: 'Mautic ID'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

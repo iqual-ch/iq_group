@@ -1,18 +1,18 @@
-uuid: 91088b3c-7bc1-4813-9978-7ae55b4c7b9f
+uuid: 50875cd8-569b-4789-921d-779e32cbd448
 langcode: de
 status: true
 dependencies:
   module:
-    - group
+    - node
     - user
 _core:
-  default_config_hash: SpzDX-5gwEpPURtv2G8h4pC3UDAjl7NyoK0KXpYuiew
-id: user.field_iq_group_preferences
-field_name: field_iq_group_preferences
+  default_config_hash: JJ-hmwrgI_-oVtMVKiPR3CIWOq2U5df28U3DbQkM9Tc
+id: user.field_iq_group_downloads
+field_name: field_iq_group_downloads
 entity_type: user
 type: entity_reference
 settings:
-  target_type: group
+  target_type: node
 module: core
 locked: false
 cardinality: -1

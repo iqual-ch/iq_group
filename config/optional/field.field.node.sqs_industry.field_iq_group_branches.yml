@@ -1,0 +1,29 @@
+uuid: 9df3d48a-2006-44af-b44d-a63a5f0e4905
+langcode: de
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_iq_group_branches
+    - node.type.sqs_industry
+    - taxonomy.vocabulary.branches
+id: node.sqs_industry.field_iq_group_branches
+field_name: field_iq_group_branches
+entity_type: node
+bundle: sqs_industry
+label: Branches
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      branches: branches
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

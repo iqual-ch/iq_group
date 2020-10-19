@@ -1,0 +1,32 @@
+uuid: 00a03f8f-049c-4c55-9677-9743acf38781
+langcode: de
+status: true
+dependencies:
+  config:
+    - core.entity_view_mode.node.teaser
+    - field.field.node.iq_group_whitepaper.field_iq_group_branches
+    - field.field.node.iq_group_whitepaper.field_iq_group_introduction_text
+    - field.field.node.iq_group_whitepaper.field_iq_group_node_group
+    - field.field.node.iq_group_whitepaper.field_iq_group_products
+    - field.field.node.iq_group_whitepaper.field_iq_group_whitepaper_file
+    - node.type.iq_group_whitepaper
+  module:
+    - user
+id: node.iq_group_whitepaper.teaser
+targetEntityType: node
+bundle: iq_group_whitepaper
+mode: teaser
+content:
+  links:
+    weight: 100
+    settings: {  }
+    third_party_settings: {  }
+    region: content
+hidden:
+  field_iq_group_branches: true
+  field_iq_group_introduction_text: true
+  field_iq_group_node_group: true
+  field_iq_group_products: true
+  field_iq_group_whitepaper_file: true
+  langcode: true
+  search_api_excerpt: true

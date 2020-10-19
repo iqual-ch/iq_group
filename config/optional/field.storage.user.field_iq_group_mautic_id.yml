@@ -1,0 +1,20 @@
+uuid: 0450f1f6-d0f6-4162-ab4b-1b842d086214
+langcode: de
+status: true
+dependencies:
+  module:
+    - user
+id: user.field_iq_group_mautic_id
+field_name: field_iq_group_mautic_id
+entity_type: user
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

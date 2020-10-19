@@ -1,0 +1,31 @@
+uuid: a3a3ed91-f792-4171-8388-8e2da0787713
+langcode: de
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_iq_group_introduction_text
+    - node.type.iq_group_whitepaper
+  module:
+    - allowed_formats
+    - text
+third_party_settings:
+  allowed_formats:
+    default_editor: '0'
+    pagedesigner: '0'
+    structure: '0'
+    plain_text: '0'
+id: node.iq_group_whitepaper.field_iq_group_introduction_text
+field_name: field_iq_group_introduction_text
+entity_type: node
+bundle: iq_group_whitepaper
+label: 'Introduction text'
+description: ''
+required: false
+translatable: false
+default_value:
+  -
+    value: "<div class=\"iqbm-text\">\r\n<h1>Whitepaper download</h1>\r\n\r\n<p>&nbsp;</p>\r\n\r\n<p>Wir wünschen Ihnen viel Spass beim Lesen dieses Whitepapers.</p>\r\n\r\n<p>Sollten Sie Fragen haben oder Unterstützung benötigen, stehen wir Ihnen selbstverständlich gerne zur Verfügung.</p>\r\n</div>\r\n"
+    format: default_editor
+default_value_callback: ''
+settings: {  }
+field_type: text_long

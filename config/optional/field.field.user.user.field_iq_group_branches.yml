@@ -1,17 +1,19 @@
-uuid: 00ba510e-e1ee-4b4f-8991-3e8d9ca53cb3
+uuid: 9dbf52dd-1130-480e-aecf-a022f62f7fec
 langcode: de
 status: true
 dependencies:
   config:
-    - field.storage.user.field_iq_group_tags
-    - taxonomy.vocabulary.tags
+    - field.storage.user.field_iq_group_branches
+    - taxonomy.vocabulary.branches
   module:
     - user
-id: user.user.field_iq_group_tags
-field_name: field_iq_group_tags
+_core:
+  default_config_hash: D4V_Wk3R6-uWn13SL1MkFsPXCF1OZ_lsyAXI_D0TTbE
+id: user.user.field_iq_group_branches
+field_name: field_iq_group_branches
 entity_type: user
 bundle: user
-label: Tags
+label: Branchen
 description: ''
 required: false
 translatable: false
@@ -21,10 +23,10 @@ settings:
   handler: 'default:taxonomy_term'
   handler_settings:
     target_bundles:
-      tags: tags
+      branches: branches
     sort:
       field: name
       direction: asc
-    auto_create: true
+    auto_create: false
     auto_create_bundle: ''
 field_type: entity_reference

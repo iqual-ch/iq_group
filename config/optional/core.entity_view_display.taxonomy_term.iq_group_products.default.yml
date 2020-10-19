@@ -1,0 +1,32 @@
+uuid: 4d775a96-c546-4e1e-962c-efde701d87e8
+langcode: de
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.iq_group_products.field_iq_group_product_id
+    - taxonomy.vocabulary.iq_group_products
+  module:
+    - text
+id: taxonomy_term.iq_group_products.default
+targetEntityType: taxonomy_term
+bundle: iq_group_products
+mode: default
+content:
+  description:
+    label: hidden
+    type: text_default
+    weight: 0
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  field_iq_group_product_id:
+    weight: 1
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    type: string
+    region: content
+hidden:
+  langcode: true
+  search_api_excerpt: true

@@ -1,0 +1,21 @@
+uuid: 3e07bf6c-523e-4356-9aec-1d348924955a
+langcode: de
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_iq_group_salutation
+  module:
+    - options
+    - user
+id: user.user.field_iq_group_salutation
+field_name: field_iq_group_salutation
+entity_type: user
+bundle: user
+label: Anrede
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string

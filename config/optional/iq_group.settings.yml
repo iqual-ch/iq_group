@@ -1,0 +1,12 @@
+default_redirection: /member-area
+general_group_id: '5'
+name: SQS
+from: headoffice@sqs.ch
+reply_to: headoffice@sqs.ch
+terms_and_conditions: 'https://www.sqs.ch/de/datenschutzbestimmungen'
+login_intro: 'Login to SQS member area'
+project_name: SQS
+redirection_after_register: /node/1
+redirection_after_signup: /node/171831
+redirection_after_account_delete: /node/171832
+project_address: "Stapfenstrasse 51, \r\n3018 Bern"

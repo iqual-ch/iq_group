@@ -1,8 +1,11 @@
-langcode: en
+uuid: a8df6538-8072-4b3c-81fa-b735544c461f
+langcode: de
 status: true
 dependencies:
   module:
     - user
+_core:
+  default_config_hash: xLLitAcWZgD4VaZgOHJjw8faXDwsYOkRVVy3fM0kWuw
 id: user.field_iq_group_user_token
 field_name: field_iq_group_user_token
 entity_type: user

@@ -1,0 +1,23 @@
+uuid: 55683b1e-668e-4baf-888e-479cb50d40ac
+langcode: de
+status: true
+dependencies:
+  module:
+    - file
+    - node
+id: node.field_iq_group_whitepaper_file
+field_name: field_iq_group_whitepaper_file
+entity_type: node
+type: file
+settings:
+  display_field: false
+  display_default: false
+  uri_scheme: private
+  target_type: file
+module: file
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

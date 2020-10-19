@@ -1,0 +1,31 @@
+uuid: f62b8b13-e880-4d0f-a5f5-c454cc286622
+langcode: de
+status: true
+dependencies:
+  config:
+    - field.storage.user.field_iq_group_downloads
+    - node.type.iq_group_whitepaper
+  module:
+    - user
+_core:
+  default_config_hash: 0Z9zQFJnd_aRL-ZALHNSFiXb0gtMZc9n-u1PIC5caGs
+id: user.user.field_iq_group_downloads
+field_name: field_iq_group_downloads
+entity_type: user
+bundle: user
+label: 'Whitepaper downloads'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:node'
+  handler_settings:
+    target_bundles:
+      iq_group_whitepaper: iq_group_whitepaper
+    sort:
+      field: _none
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference
