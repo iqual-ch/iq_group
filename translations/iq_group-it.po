@@ -163,9 +163,6 @@ msgstr "Confermare la password"
 msgid "<h1>Login to create a @project_name member area</h1>"
 msgstr "<h1>Creare un login per la Member area di @project_name</h1>"
 
-msgid "Login to SQS member area"
-msgstr "Login alla sezione «Member area SQS»"
-
 msgid "Edit profile"
 msgstr "Modificare il profilo"
 
@@ -186,9 +183,6 @@ msgstr "Confermi la registrazione del suo account utente"
 
 msgid "Confirm registration of @project_name account"
 msgstr "Confermi la registrazione del suo account utente @project_name"
-
-msgid "I have read the <a href=\"@terms_and_conditions\" target=\"_blank\">terms and conditions</a> and data protection regulations and I agree."
-msgstr "Accetto le <a href=\"@terms_and_conditions\" target=\"_blank\">disposizioni SQS sulla protezione dei dati </a>."
 
 msgid "The username %name has not been activated or is blocked."
 msgstr "Il nome utente %name non è stato attivato o è bloccato."
@@ -223,14 +217,8 @@ msgstr "Password attuale mancante o scorretta. Campo necessario per modificare %
 msgid "%name is not recognized as a username or an email address."
 msgstr "%name non viene riconosciuto come nome utente o come indirizzo e-mail."
 
-msgid "Login to SQS member area"
-msgstr "Login alla sezione «Member area SQS»"
-
 msgid "Logout"
 msgstr "Disdire"
-
-msgid "Would you like to be informed in future about SQS news/activities and customer portraits?"
-msgstr "Vuole ricevere informazioni sulle novità/attività di SQS e sulle storie dei nostri clienti?"
 
 msgid "If yes, we will inform you about new certifications, audit offers, trainings, seminars and events, by and with us, every 2-3 months."
 msgstr "In caso di risposta affermativa, a intervalli di circa 2-3 mesi le comunicheremo eventuali novità in termini di certificazioni, offerte di audit, corsi di formazione, seminari ed eventi organizzati da e con noi."
@@ -283,9 +271,6 @@ msgstr "Scaricare il white paper"
 msgid "Invalid e-mail address"
 msgstr "Indirizzo e-mail non valido"
 
-msgid 'I accept the <a href="@terms_and_conditions" target="_blank">SQS data protection regulations</a>.'
-msgstr 'Accetto le <a href=\"@terms_and_conditions\" target=\"_blank\">disposizioni SQS sulla protezione dei dati </a>.'
-
 msgid 'Required if you want to change the e-mail or password below. <a href=":request_new_url" title="Send password reset instructions via email.">Reset your password</a>.'
 msgstr 'Erforderlich, falls Sie Ihre E-Mailadresse oder Ihr Passwort unten ändern wollen. Ihr Passwort zurücksetzen.'
 
@@ -300,9 +285,6 @@ msgstr "Grazie mille per l'iscrizione alla newsletter."
 
 msgid 'Unrecognized username or password. <a href=":password">Forgot your password?</a>'
 msgstr 'Nome utente o password non riconosciuti. <a href=":password"> Hai dimenticato la password? </a>'
-
-msgid "You registered an SQS account to access the SQS Member Area."
-msgstr "Ha registrato un account utente SQS così da avere accesso alla sezione «Member area SQS»."
 
 msgid "We will keep you informed approx. every 2-3 months about new certifications, audit offers, trainings, seminars and events by and with us."
 msgstr "A intervalli di circa 2-3 mesi le comunicheremo eventuali novità in termini di certificazioni, offerte di audit, corsi di formazione, seminari ed eventi organizzati da e con noi."
@@ -325,18 +307,6 @@ msgstr "Le invieremo delle comunicazioni in base ai suoi interessi e alle prefer
 msgid "We look forward to welcoming you soon in our newsletter."
 msgstr "Siamo felici di poterle dare, a breve, il benvenuto nella nostra newsletter."
 
-msgid "Yes, for SQS Newsletter"
-msgstr "Sì, per la newsletter SQS"
-
-msgid "Yes, for SQS GLOBAL Flash"
-msgstr "Sì, per GLOBAL Flash SQS"
-
-msgid "Yes, for SQS messages"
-msgstr "Sì, per comunicazioni SQS"
-
-msgid "Swiss Association for Quality and Management Systems (SQS)"
-msgstr "Associazione Svizzera per Sistemi di Qualità e di Management (SQS)"
-
 msgid "Bernstrasse 103, 3052 Zollikofen, Switzerland"
 msgstr "Bernstrasse 103, 3052 Zollikofen, Svizzera"
 
@@ -348,15 +318,6 @@ msgstr "È stata inoltrata una richiesta di cancellazione del suo account utente
 
 msgid "The cancellation of your account is not reversible. The provided link expires in one day and nothing will happen if it is not used."
 msgstr "La cancellazione del suo account utente è definitiva e irrevocabile. Il seguente link rimane valido per un giorno e decade in automatico qualora non venga utilizzato."
-
-msgid "You may now cancel your account by clicking the following link."
-msgstr "Può cancellare il suo account utente SQS cliccando sul link di seguito riportato."
-
-msgid "You can edit your profile and change your preferences in the SQS Member Area."
-msgstr "Può modificare profilo e preferenze nella sezione «Member area SQS»."
-
-msgid "Use the following link to log into your SQS account in order to access the SQS Member Area."
-msgstr "Clicchi sul link di seguito riportato per effettuare il login all’account utente SQS e accedere alla sezione «Member area SQS»."
 
 msgid "A request to reset the password for your account has been made ."
 msgstr "È stata inoltrata una richiesta per reimpostare la password del suo account utente."
@@ -387,6 +348,3 @@ msgstr "Grazie per l’interesse dimostrato. A breve riceverà un’e-mail con u
 
 msgid "Download your @project_name whitepaper now"
 msgstr "Scarica subito il tuo white paper @project_name"
-
-msgid "Schweizerische Vereinigung für Qualitäts- und Management-Systeme (SQS)"
-msgstr "Associazione Svizzera per la qualità e i sistemi di gestione (SQS)"

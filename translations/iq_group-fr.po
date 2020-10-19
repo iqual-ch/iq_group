@@ -178,9 +178,6 @@ msgstr "Confirmez l'enregistrement de votre compte utilisateur @project_name"
 msgid "I have read the <a href=\"@terms_and_conditions\" target=\"_blank\">terms and conditions</a> and data protection regulations and I agree."
 msgstr "J'accepte la <a href=\"@terms_and_conditions\" target=\"_blank\"> politique de confidentialité.</a>"
 
-msgid 'I accept the <a href="@terms_and_conditions" target="_blank">SQS data protection regulations</a>.'
-msgstr "J'accepte la <a href=\"@terms_and_conditions\" target=\"_blank\"> politique de confidentialité SQS.</a>"
-
 msgid "Whitepapers"
 msgstr "Livres blancs"
 
@@ -223,9 +220,6 @@ msgstr "Entrez ici votre adresse e-mail."
 msgid "Please enter your e-mail address here."
 msgstr "Entrez ici votre adresse e-mail."
 
-msgid "Login to SQS member area"
-msgstr "Inscription à l'espace membre SQS."
-
 msgid "<h1>Login to create a @project_name member area</h1>"
 msgstr "<h1>Identifiant pour créer un espace membre @project_name</h1>"
 
@@ -237,9 +231,6 @@ msgstr "Mon compte"
 
 msgid "Logout"
 msgstr "Se désinscrire"
-
-msgid "Would you like to be informed in future about SQS news/activities and customer portraits?"
-msgstr "Voulez-vous à l'avenir être informé des nouveautés ou activités SQS et portraits client?"
 
 msgid "If yes, we will inform you about new certifications, audit offers, trainings, seminars and events, by and with us, every 2-3 months."
 msgstr "Dans ce cas, nous vous informerons environ tous les 2-3 mois des nouvelles certifications, offres d'audit, formations, séminaires et événements organisés."
@@ -295,14 +286,8 @@ msgstr "Télécharger le livre blanc"
 msgid 'Required if you want to change the e-mail or password below. <a href=":request_new_url" title="Send password reset instructions via email.">Reset your password</a>.'
 msgstr 'Nécessaire si vous souhaitez modifier votre adresse mail ou votre mot de passe ci-dessous. Réinitialiser votre mot de passe.'
 
-msgid "Login to SQS member area"
-msgstr "Inscription à l'espace membre SQS."
-
 msgid 'Unrecognized username or password. <a href=":password">Forgot your password?</a>'
 msgstr 'Nom d\'utilisateur ou mot de passe non reconnu. <a href=":password">Avez-vous oublié votre mot de passe ?</a>'
-
-msgid "You registered an SQS account to access the SQS Member Area."
-msgstr "Vous avez enregistré un compte utilisateur SQS pour avoir accès à l'espace membre SQS."
 
 msgid "We will keep you informed approx. every 2-3 months about new certifications, audit offers, trainings, seminars and events by and with us."
 msgstr "Nous vous informerons tous les 2-3 mois des nouvelles certifications, offres d'audit, formations, séminaires et événements organisés."
@@ -328,18 +313,6 @@ msgstr "Nous vous enverrons des notifications adaptées à vos centres d'intér�
 msgid "We look forward to welcoming you soon in our newsletter."
 msgstr "Nous nous réjouissons de pouvoir prochainement vous envoyer notre newsletter."
 
-msgid "Yes, for SQS Newsletter"
-msgstr "Oui, pour la newsletter SQS"
-
-msgid "Yes, for SQS GLOBAL Flash"
-msgstr "Oui, pour la SQS GLOBAL Flash"
-
-msgid "Yes, for SQS messages"
-msgstr "Oui, pour la SQS messages"
-
-msgid "Swiss Association for Quality and Management Systems (SQS)"
-msgstr "Association Suisse pour les Systèmes de Qualité et de Management (SQS)"
-
 msgid "Bernstrasse 103, 3052 Zollikofen, Switzerland"
 msgstr "Bernstrasse 103, 3052 Zollikofen, Suisse"
 
@@ -351,15 +324,6 @@ msgstr "Une demande de suppression de votre compte utilisateur a été effectué
 
 msgid "The cancellation of your account is not reversible. The provided link expires in one day and nothing will happen if it is not used."
 msgstr "La suppression de votre compte utilisateur ne peut être annulée et est définitive. Le lien suivant est valable pendant un jour et expire automatiquement si vous ne l'utilisez pas."
-
-msgid "You may now cancel your account by clicking the following link."
-msgstr "Vous pouvez à présent effacer votre compte utilisateur SQS en cliquant sur le lien que voici."
-
-msgid "You can edit your profile and change your preferences in the SQS Member Area."
-msgstr "Vous pouvez adapter votre profil ainsi que vos préférences dans l'espace membre SQS."
-
-msgid "Use the following link to log into your SQS account in order to access the SQS Member Area."
-msgstr "Utilisez le lien suivant pour vous connecter à votre compte SQS afin d'accéder à l'Espace membre SQS."
 
 msgid "A request to reset the password for your account has been made."
 msgstr "Une demande de réinitialisation du mot de passe de votre compte utilisateur a été effectuée."
@@ -393,6 +357,3 @@ msgstr "Merci beaucoup pour votre intérêt. Vous recevrez prochainement un e-ma
 
 msgid "Download your @project_name whitepaper now"
 msgstr "Téléchargez votre livre blanc @project_name maintenant"
-
-msgid "Schweizerische Vereinigung für Qualitäts- und Management-Systeme (SQS)"
-msgstr "Association Suisse pour les Systèmes de Qualité et de Management (SQS)"

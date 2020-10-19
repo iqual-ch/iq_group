@@ -25,24 +25,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
  */
 function iq_group_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
   $form['account']['name']['#type'] = 'hidden';
-  if (isset($form['field_sqs_ax_id'])) {
-    $form['field_sqs_ax_id']['#access'] = FALSE;
-  }
-  if (isset($form['field_sqs_company_size'])) {
-    $form['field_sqs_company_size']['#access'] = FALSE;
-  }
-  if (isset($form['field_sqs_scope'])) {
-    $form['field_sqs_scope']['#access'] = FALSE;
-  }
-  if (isset($form['field_iq_user_base_position'])) {
-    $form['field_iq_user_base_position']['#access'] = FALSE;
-  }
-  if (isset($form['field_sqs_sub_branch'])) {
-    $form['field_sqs_sub_branch']['#access'] = FALSE;
-  }
-  if (isset($form['field_iq_group_products'])) {
-    $form['field_iq_group_products']['#access'] = FALSE;
-  }
   $form['account']['name']['#required'] = FALSE;
   $form['actions']['submit']['#submit'][] = 'iq_group_after_register';
   $form['#validate'][] = 'iq_group_register_validation';
@@ -60,18 +42,6 @@ function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterf
   $loggedInUser = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
   if (!$loggedInUser->hasPermission('administer users')) {
     $form['field_iq_group_tags']['#access'] = FALSE;
-    if (isset($form['field_sqs_ax_id'])) {
-      $form['field_sqs_ax_id']['#access'] = FALSE;
-    }
-    if (isset($form['field_sqs_company_size'])) {
-      $form['field_sqs_company_size']['#access'] = FALSE;
-    }
-    if (isset($form['field_sqs_scope'])) {
-      $form['field_sqs_scope']['#access'] = FALSE;
-    }
-    if (isset($form['field_sqs_sub_branch'])) {
-      $form['field_sqs_sub_branch']['#access'] = FALSE;
-    }
     if (isset($form['field_iq_group_products'])) {
       $form['field_iq_group_products']['#access'] = FALSE;
     }
