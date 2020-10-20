@@ -1,8 +1,11 @@
-langcode: en
+uuid: 7d1ead32-113c-4757-a9be-e3789d622226
+langcode: de
 status: true
 dependencies:
   config:
     - group.type.subscription
+_core:
+  default_config_hash: 8dx6pvzpPf3dRSmEukREHSKQUF17dIKqIMx4MAMLLbE
 id: subscription-anonymous
 label: Anonymous
 weight: -102

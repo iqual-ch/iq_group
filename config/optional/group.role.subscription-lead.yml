@@ -1,8 +1,11 @@
-langcode: en
+uuid: ce3948c2-4ab8-461a-ad54-e3a52d1701cf
+langcode: de
 status: true
 dependencies:
   config:
     - group.type.subscription
+_core:
+  default_config_hash: T3M5tAp-xw1KDrectUT-u7vb9ZYBsSU5j6ocENo7VJk
 id: subscription-lead
 label: Lead
 weight: -4

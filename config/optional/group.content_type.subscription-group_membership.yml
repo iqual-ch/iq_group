@@ -1,10 +1,13 @@
-langcode: en
+uuid: aeaf6ee9-2e1c-45f2-9147-010210f562f9
+langcode: de
 status: true
 dependencies:
   config:
     - group.type.subscription
   module:
     - user
+_core:
+  default_config_hash: EsHeGKChQvaZbsMOOm7r4HvAE7ZV6Bml1x7nFSqy7Aw
 id: subscription-group_membership
 label: 'Subscription: Group membership'
 description: 'Adds users to groups as members.'
