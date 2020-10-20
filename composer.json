@@ -12,6 +12,7 @@
     "drupal/group": "*",
     "iqual/iq_user_base": "*",
     "league/csv": "*",
-    "drupal/login_emailusername": "*"
+    "drupal/login_emailusername": "*",
+    "drupal/route_condition":"*"
   }
 }
