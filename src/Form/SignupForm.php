@@ -183,6 +183,7 @@ class SignupForm extends FormBase
           'name' => $name,
           'status' => 1,
           'preferred_langcode' => $currentLanguage,
+          'langcode' => $currentLanguage,
         ];
         if ($form_state->getValue('preferences') != NULL) {
           $user_data['field_iq_group_preferences'] = $form_state->getValue('preferences');

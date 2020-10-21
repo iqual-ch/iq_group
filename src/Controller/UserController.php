@@ -56,7 +56,7 @@ class UserController extends ControllerBase {
     \Drupal::service('page_cache_kill_switch')->trigger();
     $user = User::load($user_id);
 
-    if (!empty($store->get($user_id . '_pending_activation'))) {
+    if (!empty($store->get($user_id . '_pending_activation')) && !empty($user)) {
       $user->set('status', 1);
       $user->save();
       $store->delete($user_id . '_pending_activation');
@@ -108,14 +108,15 @@ class UserController extends ControllerBase {
       }
       // Add member to the other groups that the user has selected in the
       // preferences field.
-      $groups = $user->get('field_iq_group_preferences')->getValue();
-      foreach ($groups as $key => $otherGroup) {
-        $otherGroup = Group::load($otherGroup['target_id']);
-
-        if ($otherGroup != NULL)
-          self::addGroupRoleToUser($otherGroup, $user, 'subscription-subscriber');
+      if (!in_array('subscription-lead', $groupRoles)) {
+        $groups = $user->get('field_iq_group_preferences')->getValue();
+        foreach ($groups as $key => $otherGroup) {
+          $otherGroup = Group::load($otherGroup['target_id']);
+          if ($otherGroup != NULL) {
+            self::addGroupRoleToUser($otherGroup, $user, 'subscription-subscriber');
+          }
+        }
       }
-
 
       $destination = "";
       if (isset($_GET['destination']) && $_GET['destination'] != NULL) {

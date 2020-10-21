@@ -10,6 +10,7 @@ use Drupal\iq_group\Controller\UserController;
 use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\IqGroupEvents;
 use Drupal\node\Entity\Node;
+use Drupal\taxonomy\Entity\Term;
 use Drupal\user\Entity\User;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -117,8 +118,16 @@ class UserEditForm extends FormBase
         $vid = 'branches';
         $terms =\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
         $term_options = [];
+        $language =  \Drupal::languageManager()->getCurrentLanguage()->getId();
         foreach ($terms as $term) {
-          $term_options[$term->tid] = $term->name;
+          $term = Term::load($term->tid);
+          if($term->hasTranslation($language)) {
+            $translated_term = \Drupal::service('entity.repository')
+              ->getTranslationFromContext($term, $language);
+            $term_options[$translated_term->id()] = $translated_term->getName();
+          } else {
+            $term_options[$term->id()] = $term->getName();
+          }
         }
         $selected_branches = $user->get('field_iq_group_branches')
           ->getValue();
@@ -245,6 +254,7 @@ class UserEditForm extends FormBase
     $user->set('name', $name);
     if ($form_state->getValue('preferred_langcode') != NULL) {
       $user->set('preferred_langcode', $form_state->getValue('preferred_langcode'));
+      $user->set('langcode', $form_state->getValue('preferred_langcode'));
     }
     if ($form_state->getValue('password') != NULL) {
       $user->setPassword($form_state->getValue('password'));

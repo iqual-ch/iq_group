@@ -45,6 +45,9 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
 
           $user_data['name'] = $form_state->getValue($key);
           $user_data['mail'] = $user_data['name'];
+          $currentLanguage = $language = \Drupal::languageManager()->getCurrentLanguage()->getId();;
+          $user_data['preferred_langcode'] = $currentLanguage;
+          $user_data['langcode'] = $currentLanguage;
         }
         else {
           $user = reset($user);
