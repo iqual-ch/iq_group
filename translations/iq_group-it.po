@@ -160,8 +160,8 @@ msgstr "Password"
 msgid "Confirm password"
 msgstr "Confermare la password"
 
-msgid "<h1>Login to create a @project_name member area</h1>"
-msgstr "<h1>Creare un login per la Member area di @project_name</h1>"
+msgid "<h1>Create a login for your @project_name account</h1>"
+msgstr "<h1>Creare un login per il tuo account @project_name</h1>"
 
 msgid "Edit profile"
 msgstr "Modificare il profilo"
@@ -175,8 +175,8 @@ msgstr "Le password inserite non coincidono."
 msgid "The submitted passwords do not match."
 msgstr "Le password inserite non coincidono."
 
-msgid "Your profile has been saved. You now have access to :project_name member area."
-msgstr "Il suo account utente è stato memorizzato. Adesso può accedere alla sezione «Member area» di :project_name."
+msgid "Your profile has been saved."
+msgstr "Il suo account utente è stato memorizzato."
 
 msgid "Confirm account registration"
 msgstr "Confermi la registrazione del suo account utente"

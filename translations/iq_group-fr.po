@@ -163,8 +163,8 @@ msgstr "Les mots de passe introduits ne concordent pas."
 msgid "The submitted passwords do not match."
 msgstr "Les mots de passe introduits ne concordent pas."
 
-msgid "Your profile has been saved. You now have access to :project_name member area."
-msgstr "Votre compte utilisateur a été enregistré. A présent, vous avez accès à l'espace membre :project_name."
+msgid "Your profile has been saved."
+msgstr "Votre compte utilisateur a été enregistré."
 
 msgid "Thank you very much for the registration. You will shortly receive an e-mail from us with a confirmation link."
 msgstr "Merci beaucoup pour votre inscription. Nous vous enverrons prochainement un e-mail contenant un lien de confirmation."
@@ -220,8 +220,8 @@ msgstr "Entrez ici votre adresse e-mail."
 msgid "Please enter your e-mail address here."
 msgstr "Entrez ici votre adresse e-mail."
 
-msgid "<h1>Login to create a @project_name member area</h1>"
-msgstr "<h1>Identifiant pour créer un espace membre @project_name</h1>"
+msgid "<h1>Create a login for your @project_name account</h1>"
+msgstr "<h1>Créer un login pour votre compte @project_name</h1>"
 
 msgid "Submit"
 msgstr "Envoyer"

@@ -199,7 +199,7 @@ class UserEditForm extends FormBase
       if (in_array('subscription-subscriber', $groupRoles)) {
         $form['member_area_title'] = [
           '#type' => 'markup',
-          '#markup' => t('<h1>Login to create a @project_name member area</h1>', ['@project_name' => \Drupal::config('iq_group.settings')->get('project_name')]),
+          '#markup' => t('<h1>Create a login for your @project_name account</h1>', ['@project_name' => \Drupal::config('iq_group.settings')->get('project_name')]),
           '#weight' => 50,
         ];
       }
@@ -284,7 +284,7 @@ class UserEditForm extends FormBase
       $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
     }
 
-    \Drupal::messenger()->addMessage(t('Your profile has been saved. You now have access to :project_name member area.', [':project_name' => \Drupal::config('iq_group.settings')->get('project_name')]));
+    \Drupal::messenger()->addMessage(t('Your profile has been saved.'));
     $user->save();
     $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
     // Redirect after saving
