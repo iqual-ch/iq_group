@@ -9,5 +9,4 @@ dependencies:
   - login_emailusername:login_emailusername
   - pagedesigner_block_adaptable:pagedesigner_block_adaptable
   - iq_user_base:iq_user_base
-  - drupal:switch_page_theme
   - drupal:route_condition
