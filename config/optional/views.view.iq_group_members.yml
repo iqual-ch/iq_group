@@ -52,7 +52,7 @@ display:
           sort_asc_label: Asc
           sort_desc_label: Desc
       pager:
-        type: full
+        type: mini
         options:
           items_per_page: 50
           offset: 0
@@ -61,8 +61,6 @@ display:
           tags:
             previous: '‹ Previous'
             next: 'Next ›'
-            first: '« First'
-            last: 'Last »'
           expose:
             items_per_page: false
             items_per_page_label: 'Items per page'
@@ -71,7 +69,6 @@ display:
             items_per_page_options_all_label: '- All -'
             offset: false
             offset_label: Offset
-          quantity: 9
       style:
         type: table
         options:
@@ -1201,36 +1198,6 @@ display:
           admin_label: 'field_iq_group_preferences: Gruppe'
           required: false
           plugin_id: standard
-        group_content_id:
-          id: group_content_id
-          table: groups_field_data
-          field: group_content_id
-          relationship: field_iq_group_preferences_1
-          group_type: group
-          admin_label: 'Group content'
-          required: false
-          group_content_plugins:
-            group_membership: group_membership
-            'group_node:certificate': '0'
-            'group_node:company': '0'
-            'group_node:iqbm_component': '0'
-            'group_node:iqbm_content': '0'
-            'group_node:iqbm_news': '0'
-            'group_node:iqbm_page': '0'
-            'group_node:iqbm_row': '0'
-            'group_node:iqbm_template': '0'
-            'group_node:iq_group_whitepaper': '0'
-            'group_node:pagedesigner_element': '0'
-            'group_node:pagedesigner_part': '0'
-            'group_node:seminar': '0'
-            'group_node:seminar_execution': '0'
-            'group_node:seminar_location': '0'
-            'group_node:sqs_employee': '0'
-            'group_node:sqs_industry': '0'
-            'group_node:sqs_mdr_page': '0'
-            'group_node:sqs_product': '0'
-          entity_type: group
-          plugin_id: group_to_group_content
         group_content:
           id: group_content
           table: users_field_data
