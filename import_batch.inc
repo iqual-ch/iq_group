@@ -19,15 +19,21 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
   $records = $stmt->process($reader);
   $j = 1;
 
+  
   // Field mapping.
   $field_mappings = [
+    'salutation' => 'field_iq_group_salutation',
     'given_name' => 'field_iq_user_base_address',
     'family_name' => 'field_iq_user_base_address',
     'preferences' => 'field_iq_group_preferences',
     'products' => 'field_iq_group_products',
     'branches' => 'field_iq_group_branches',
+    'position' => 'field_iq_user_base_position',
     'organization' => 'field_iq_user_base_address',
     'postal_code' => 'field_iq_user_base_address',
+    'address_line1' => 'field_iq_user_base_address',
+    'locality' => 'field_iq_user_base_address',
+    'country_code' => 'field_iq_user_base_address',
     'mail' => 'mail',
   ];
   if (empty($context['results'])) {
