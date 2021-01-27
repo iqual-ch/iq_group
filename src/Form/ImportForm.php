@@ -151,14 +151,20 @@ class ImportForm extends FormBase
     $branch_ids = [];
     $result = \Drupal::entityTypeManager()
       ->getStorage('taxonomy_term')
-      ->loadByProperties(['vid' => 'iq_group_branches']);
+      ->loadByProperties(['vid' => 'branches']);
 
     /**
      * @var  int $key
      * @var  \Drupal\taxonomy\Entity\Term $branch
      */
     foreach ($result as $key => $branch) {
-      $branch_ids[$branch->id()] = $branch->getName();
+      if($branch->hasTranslation('en')){
+        $translated_term = \Drupal::service('entity.repository')->getTranslationFromContext($branch, 'en');
+        $branch_ids[$branch->id()] = $translated_term->getName();
+      }
+      else {
+        $branch_ids[$branch->id()] = $branch->getName();
+      }
     }
 
     // Get options for the tags and user override.
