@@ -14,7 +14,6 @@
     "league/csv": "*",
     "drupal/login_emailusername": "*",
     "drupal/route_condition":"*",
-    "iqual/pagedesigner_block_adaptable": "dev-filter_plugin_system",
     "drupal/switch_page_theme": "*"
   }
 }
