@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Site\Settings;
 use Drupal\group\Entity\Group;
 use Drupal\iq_group\Controller\UserController;
+use Drupal\taxonomy\Entity\Term;
 use Drupal\user\Entity\User;
 
 class SignupForm extends FormBase
@@ -99,6 +100,44 @@ class SignupForm extends FormBase
       '#default_value' => $default_preferences,
       '#title' => $this->t('Preferences')
     ];
+
+    $vid = 'branches';
+    $terms =\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
+    $term_options = [];
+    $language =  \Drupal::languageManager()->getCurrentLanguage()->getId();
+    foreach ($terms as $term) {
+      $term = Term::load($term->tid);
+      if($term->hasTranslation($language)) {
+        $translated_term = \Drupal::service('entity.repository')
+          ->getTranslationFromContext($term, $language);
+        $term_options[$translated_term->id()] = $translated_term->getName();
+      } else {
+        $term_options[$term->id()] = $term->getName();
+      }
+    }
+    $default_branches = [];
+    if ($account->isAuthenticated()) {
+      $user = User::load($account->id());
+      $selected_branches = $user->get('field_iq_group_branches')
+        ->getValue();
+      foreach ($selected_branches as $key => $value) {
+        $default_branches = array_merge($default_branches, [$value['target_id']]);
+      }
+    }
+    $form['branches_settings'] = [
+      '#type' => 'details',
+      '#title' => t('Branches options'),
+      '#open' => FALSE,
+      '#optional' => FALSE,
+    ];
+    $form['branches_settings']['branches'] = [
+      '#type' => 'checkboxes',
+      '#options' => $term_options,
+      '#default_value' => $default_branches,
+      '#multiple' => TRUE,
+      '#title' => $this->t('Branches'),
+      '#group' => 'branches_settings'
+    ];
     $form['destination'] = [
       '#type' => 'hidden',
       '#default_value' => ''
@@ -187,6 +226,9 @@ class SignupForm extends FormBase
         ];
         if ($form_state->getValue('preferences') != NULL) {
           $user_data['field_iq_group_preferences'] = $form_state->getValue('preferences');
+        }
+        if ($form_state->getValue('branches')!= NULL) {
+          $user_data['field_iq_group_branches'] = $form_state->getValue('branches');
         }
         if ($form_state->getValue('destination') != "")  {
           $destination = $form_state->getValue('destination');
