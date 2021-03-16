@@ -115,29 +115,36 @@ class SignupForm extends FormBase
         $term_options[$term->id()] = $term->getName();
       }
     }
-    $default_branches = [];
-    if ($account->isAuthenticated()) {
-      $user = User::load($account->id());
-      $selected_branches = $user->get('field_iq_group_branches')
-        ->getValue();
-      foreach ($selected_branches as $key => $value) {
-        $default_branches = array_merge($default_branches, [$value['target_id']]);
+
+    /** @var User $example_user */
+    $example_user = User::load(\Drupal::currentUser()->id());
+
+    if ($example_user->hasField('field_iq_group_branches')) {
+      $default_branches = [];
+      if ($account->isAuthenticated()) {
+        $user = User::load($account->id());
+        $selected_branches = $user->get('field_iq_group_branches')
+          ->getValue();
+        foreach ($selected_branches as $key => $value) {
+          $default_branches = array_merge($default_branches, [$value['target_id']]);
+        }
       }
+
+      $form['branches_settings'] = [
+        '#type' => 'details',
+        '#title' => t('Branches options'),
+        '#open' => FALSE,
+        '#optional' => FALSE,
+      ];
+      $form['branches_settings']['branches'] = [
+        '#type' => 'checkboxes',
+        '#options' => $term_options,
+        '#default_value' => $default_branches,
+        '#multiple' => TRUE,
+        '#title' => $this->t('Branches'),
+        '#group' => 'branches_settings'
+      ];
     }
-    $form['branches_settings'] = [
-      '#type' => 'details',
-      '#title' => t('Branches options'),
-      '#open' => FALSE,
-      '#optional' => FALSE,
-    ];
-    $form['branches_settings']['branches'] = [
-      '#type' => 'checkboxes',
-      '#options' => $term_options,
-      '#default_value' => $default_branches,
-      '#multiple' => TRUE,
-      '#title' => $this->t('Branches'),
-      '#group' => 'branches_settings'
-    ];
     $form['destination'] = [
       '#type' => 'hidden',
       '#default_value' => ''
