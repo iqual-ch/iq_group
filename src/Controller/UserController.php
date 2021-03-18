@@ -66,7 +66,7 @@ class UserController extends ControllerBase {
       return new RedirectResponse(Url::fromRoute('<front>')->toString());
     }
 
-    
+
     // is the token valid for that user
     if (!empty($token) && $token === $user->field_iq_group_user_token->value) {
       if (!empty($_GET['signup'])) {
@@ -306,4 +306,45 @@ class UserController extends ControllerBase {
     }
     return $user;
   }
+
+  /**
+   * Helper function to set the reference fields when importing users.
+   *
+   * @param $user_data
+   * @param $user
+   * @param $option
+   * @param $entity_ids
+   * @param $import_key
+   * @param $field_key
+   */
+  public static function set_user_reference_field(&$user_data, &$user, $option, $entity_ids, $import_key, $field_key) {
+    $ids = [];
+    $user_data[$import_key] = explode(',', $user_data[$import_key]);
+    foreach ($user_data[$import_key] as $entity) {
+      if (in_array(trim($entity), $entity_ids)) {
+        $ids[] = ['target_id' => (string)array_search(trim($entity), $entity_ids)];
+      }
+    }
+    // Set preferences based on the preference override option.
+    if ($option == 'override_preferences') {
+      $user_data[$import_key] = $ids;
+    }
+    else {
+      if ($option == 'add_preferences') {
+        $existing_entities = $user->get($field_key)->getValue();
+        $ids = array_merge($existing_entities, $ids);
+      }
+      else {
+        $existing_entities = $user->get($field_key)->getValue();
+        $existing_entities = array_filter(array_column($existing_entities, 'target_id'));
+        $ids = array_filter(array_column($ids, 'target_id'));
+        foreach ($ids as $delete_id) {
+          unset($existing_entities[array_search($delete_id, $existing_entities)]);
+        }
+        $ids = $existing_entities;
+      }
+    }
+    $user_data[$import_key] = $ids;
+  }
+
 }

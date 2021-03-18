@@ -3,6 +3,7 @@
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Site\Settings;
 use Drupal\group\Entity\Group;
+use Drupal\iq_group\Controller\UserController;
 use Drupal\user\Entity\User;
 use League\Csv\Reader;
 
@@ -19,7 +20,6 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
   $records = $stmt->process($reader);
   $j = 1;
 
-  
   // Field mapping.
   $field_mappings = [
     'salutation' => 'field_iq_group_salutation',
@@ -113,14 +113,19 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
       }
       $tags = explode(',', $user_data['tags']);
       override_user_tags($tags, $user, $options['tag_option'], $existing_terms);
-      set_user_preferences($user_data, $user, $options['preference_option'], $preference_names);
+      UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences');
+      // set_user_preferences($user_data, $user, $options['preference_option'], $preference_names);
       if ($user->hasField('field_iq_group_products')) {
-        set_user_products($user_data, $user, $options['preference_option'], $product_ids);
+        UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $product_ids, 'products', 'field_iq_group_products');
+        // set_user_products($user_data, $user, $options['preference_option'], $product_ids);
       }
       if ($user->hasField('field_iq_group_branches')) {
-        set_user_branches($user_data, $user, $options['preference_option'], $branch_ids);
+        UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $branch_ids, 'branches', 'field_iq_group_branches');
+        // set_user_branches($user_data, $user, $options['preference_option'], $branch_ids);
       }
 
+      \Drupal::moduleHandler()
+        ->invokeAll('iq_group_reference_import', [$user_data, $user, $options, $field_keys]);
       // Go through each of the fields and map them to the appropriate keys.
       $address_info = [];
 
@@ -336,7 +341,6 @@ function set_user_branches(&$user_data, &$user, $option, $branch_ids) {
   }
   $user_data['branches'] = $ids;
 }
-
 
 function finished_import($success, $results, $operations) {
   $msg = '<p>Finished import, processed ' . ($results['cnt_import'] + $results['cnt_error'] + $results['cnt_update']) . ' records<p>';
