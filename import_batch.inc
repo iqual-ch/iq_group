@@ -125,7 +125,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
       }
 
       \Drupal::moduleHandler()
-        ->invokeAll('iq_group_reference_import', [$user_data, $user, $options, $field_keys]);
+        ->invokeAll('iq_group_reference_import', [&$user_data, $user, $options, &$field_keys]);
       // Go through each of the fields and map them to the appropriate keys.
       $address_info = [];
 
