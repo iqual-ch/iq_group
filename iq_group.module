@@ -62,9 +62,11 @@ function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterf
   $form['account']['name']['#type'] = 'hidden';
   $form['account']['mail']['#description'] = '';
   //$form['actions']['submit']['#submit'][] = 'iq_group_after_register';
-  foreach ($form['field_iq_group_preferences']['widget']['#options'] as $key => $value) {
-    if (reset($value) == 'General') {
-      unset($form['field_iq_group_preferences']['widget']['#options'][$key]);
+  if (!empty($form['field_iq_group_preferences'])) {
+    foreach ($form['field_iq_group_preferences']['widget']['#options'] as $key => $value) {
+      if (reset($value) == 'General') {
+        unset($form['field_iq_group_preferences']['widget']['#options'][$key]);
+      }
     }
   }
 
