@@ -20,6 +20,9 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
   $records = $stmt->process($reader);
   $j = 1;
 
+  $hidden_fields = ['field_sqs_company_size','field_iq_user_base_contact_link','field_iq_function',
+    'field_iq_user_base_gender','field_sqs_scope','field_iq_user_base_phone','field_sqs_sub_branch'];
+
   // Field mapping.
   $field_mappings = [
     'salutation' => 'field_iq_group_salutation',
@@ -35,6 +38,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
     'locality' => 'field_iq_user_base_address',
     'country_code' => 'field_iq_user_base_address',
     'mail' => 'mail',
+    'drupal_id' => 'uid'
   ];
   if (empty($context['results'])) {
     $context['sandbox'] = ['set' => 'now it is set'];
@@ -73,28 +77,79 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
       \Drupal::moduleHandler()
         ->invokeAll('iq_group_before_import', [&$user_data]);
       // import user.
-      // Check if user already exists.
+      // Check if user already exists by the import key.
+      $import_key = $options['import_key'];
       $checkingUser = \Drupal::entityTypeManager()
         ->getStorage('user')
         ->loadByProperties([
-          'mail' => $user_data['mail']
+          $import_key => $user_data[$import_key]
         ]);
+      // Flag to indicate whether the user exists already.
+      $found_user = FALSE;
 
       $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
       // Get the existing user or create a new user.
       if (!empty($checkingUser)) {
+        $found_user = TRUE;
         $user = reset($checkingUser);
         $context['results']['cnt_update']++;
       }
       else {
-        $context['results']['cnt_import']++;
-        $user = User::create([
-          'mail' => $user_data['mail'],
-          'name' => $user_data['mail'],
-          'status' => 1,
-        ]);
-        $store->set(crc32($user_data['mail']) . '_pending_finalization', true);
-        $user->save();
+        // Make sure that there is no other user associated with the import keys.
+        $user_import_key_options = UserController::userImportKeyOptions();
+        foreach ($user_import_key_options as $import_key_option => $import_value_option) {
+          \Drupal::logger('iq_group')->notice($import_key_option);
+          \Drupal::logger('iq_group')->notice($user_data[$import_key_option]);
+          if (!empty($user_data[$import_key_option])) {
+            $checkingUser = \Drupal::entityTypeManager()
+              ->getStorage('user')
+              ->loadByProperties([
+                $import_key_option => $user_data[$import_key_option]
+              ]);
+            if (!empty($checkingUser)) {
+              $found_user = TRUE;
+              $found_import_key = $import_key_option;
+              $user = reset($checkingUser);
+              break;
+            }
+            else {
+              \Drupal::logger('iq_group')->notice('Ne go najde');
+            }
+          }
+        }
+
+        if ($found_user) {
+          // @TODO Decide what to do if a user is found with an import key
+          // @TODO that was not specified in the import settings.
+          if (empty($context['result']['log_error'])) {
+            $context['results']['log_error'] = [];
+          }
+          if (empty($context['results']['log_error']['import_key_error' . $found_import_key]) && !isset($context['results']['log_error']['import_key_error' . $found_import_key]['message'])) {
+            $context['results']['log_error']['import_key_error' . $found_import_key]['message'] = t('Multiple users found with the same ' . $found_import_key .  ' at rows: ');
+          }
+          $context['results']['log_error']['import_key_error' . $found_import_key]['rows'][] = (int)$offset+1;
+          if ($found_import_key == 'mail') {
+            if (empty($context['results']['log_error']['conflicting_import_keys']) && !isset($context['results']['log_error']['conflicting_import_keys']['message'])) {
+              $context['results']['log_error']['conflicting_import_keys']['message'] = t('Skipped import for users at rows:');
+            }
+            $context['results']['log_error']['conflicting_import_keys']['rows'][] = (int)$offset+1;
+            $context['results']['cnt_error']++;
+            continue;
+          }
+          else {
+
+          }
+        }
+        if (!$found_user) {
+          $context['results']['cnt_import']++;
+          $user = User::create([
+            'mail' => $user_data['mail'],
+            'name' => $user_data['mail'],
+            'status' => 1,
+          ]);
+          $store->set(crc32($user_data['mail']) . '_pending_finalization', true);
+          $user->save();
+        }
         $data = time();
         $data .= $user->id();
         $data .= $user->getEmail();
@@ -116,7 +171,8 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
       UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences');
       // set_user_preferences($user_data, $user, $options['preference_option'], $preference_names);
       if ($user->hasField('field_iq_group_products')) {
-        UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $product_ids, 'products', 'field_iq_group_products');
+        $preference_option = $options['product_option'] == 'override_product' ? "override_preferences" : "not_override_preferences";
+        UserController::set_user_reference_field($user_data, $user, $preference_option, $product_ids, 'products', 'field_iq_group_products');
         // set_user_products($user_data, $user, $options['preference_option'], $product_ids);
       }
       if ($user->hasField('field_iq_group_branches')) {
@@ -136,6 +192,25 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
           }
           else {
             $user->set($field_mapping, $user_data[$field_key]);
+          }
+        }
+        else if ($options['user_option'] == 'override_user_hidden_fields') {
+          if (in_array($field_mapping, $hidden_fields)) {
+            $user->set($field_mapping, $user_data[$field_key]);
+          }
+        }
+        else if ($options['user_option'] == 'not_override_user') {
+          if ($found_user) {
+            // If user was existing already, just skip it.
+            continue;
+          }
+          else {
+            if ($field_mapping == 'field_iq_user_base_address') {
+              $address_info[$field_key] = $user_data[$field_key];
+            }
+            else {
+              $user->set($field_mapping, $user_data[$field_key]);
+            }
           }
         }
         else {
@@ -189,8 +264,10 @@ function validateUser(&$user_data, $field_keys, $offset, &$context) {
   $required_fields = ['mail'];
   $valid = true;
   if (strpos($user_data['mail'], '@') < 1) {
-    if (empty($context['results']['log_error']['invalid_email']) && !isset($context['results']['log_error']['invalid_email']['message'])) {
+    if (empty($context['result']['log_error'])) {
       $context['results']['log_error'] = [];
+    }
+    if (empty($context['results']['log_error']['invalid_email']) && !isset($context['results']['log_error']['invalid_email']['message'])) {
       $context['results']['log_error']['invalid_email']['message'] = t('Invalid email at rows: ');
     }
     $context['results']['log_error']['invalid_email']['rows'][] = (int)$offset+1;
@@ -215,6 +292,9 @@ function validateUser(&$user_data, $field_keys, $offset, &$context) {
 }
 
 function override_user_tags($tags, &$user, $option, $existing_terms) {
+  if ($option == 'not_override_tags') {
+    return ;
+  }
   $user_tags = [];
   // @todo Go through the tags and check if they exists and create them if they do not exist.
   foreach ($tags as $tag) {
@@ -241,6 +321,9 @@ function override_user_tags($tags, &$user, $option, $existing_terms) {
     if ($option == 'add_tags') {
       $existing_tags = $user->get('field_iq_group_tags')->getValue();
       $user->set('field_iq_group_tags', array_merge($existing_tags, $user_tags));
+    }
+    else if ($option == 'remove_tags') {
+      // @TODO handle case when removing tags.
     }
     else {
       $existing_tags = $user->get('field_iq_group_tags')->getValue();
