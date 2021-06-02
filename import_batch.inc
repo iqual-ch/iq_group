@@ -147,13 +147,14 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
             'status' => 1,
           ]);
           $store->set(crc32($user_data['mail']) . '_pending_finalization', true);
+          $data = time();
+          $data .= $user->id();
+          $data .= $user->getEmail();
+          $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
+          $user->set('field_iq_group_user_token', $hash_token);
           $user->save();
         }
-        $data = time();
-        $data .= $user->id();
-        $data .= $user->getEmail();
-        $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
-        $user->set('field_iq_group_user_token', $hash_token);
+
         // Load General group (id=5) and get the roles for the user.
         $generalGroup = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
         $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
