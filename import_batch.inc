@@ -46,9 +46,11 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
     $context['sandbox']['progress'] = 0;
     $context['results'] = [];
     $context['results']['log_error'] = '';
+    $context['results']['log_warning'] = '';
     $context['results']['cnt_import'] = 0;
     $context['results']['cnt_update'] = 0;
     $context['results']['cnt_error'] = 0;
+    $context['results']['cnt_warning'] = 0;
     $context['results']['processed_users'] = [];
     $context['results']['start'] = microtime(TRUE);
   }
@@ -109,12 +111,16 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
             ->loadByProperties([
               $import_key_option => $user_data[$import_key_option]
             ]);
+          // If it found a conflicting user.
           if (!empty($checkingUser)) {
-            $conflicting_user = TRUE;
-            $found_user = TRUE;
-            $found_import_key = $import_key_option;
-            $user = reset($checkingUser);
-            break;
+            $check_user = reset($checkingUser);
+            // If the conflicting user is not the same as the found user before
+            // or there is an existing conflicting user when creating a new user.
+            if (($found_user && $check_user->id() != $user->id()) || !$found_user) {
+              $conflicting_user = TRUE;
+              $found_import_key = $import_key_option;
+              break;
+            }
           }
         }
       }
@@ -126,11 +132,14 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         if (empty($context['result']['log_error'])) {
           $context['results']['log_error'] = [];
         }
-        if (empty($context['results']['log_error']['import_key_error' . $found_import_key]) && !isset($context['results']['log_error']['import_key_error' . $found_import_key]['message'])) {
-          $context['results']['log_error']['import_key_error' . $found_import_key]['message'] = t('Multiple users found with the same ' . $found_import_key .  ' at rows: ');
+        if (empty($context['result']['log_warning'])) {
+          $context['results']['log_warning'] = [];
         }
-        $context['results']['log_error']['import_key_error' . $found_import_key]['rows'][] = (int)$offset+1;
         if ($found_import_key == 'mail') {
+          if (empty($context['results']['log_error']['import_key_error' . $found_import_key]) && !isset($context['results']['log_error']['import_key_error' . $found_import_key]['message'])) {
+            $context['results']['log_error']['import_key_error' . $found_import_key]['message'] = t('Multiple users found with the same ' . $found_import_key .  ' at rows: ');
+          }
+          $context['results']['log_error']['import_key_error' . $found_import_key]['rows'][] = (int)$offset+1;
           if (empty($context['results']['log_error']['conflicting_import_keys']) && !isset($context['results']['log_error']['conflicting_import_keys']['message'])) {
             $context['results']['log_error']['conflicting_import_keys']['message'] = t('Skipped import for users at rows:');
           }
@@ -138,6 +147,12 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
           $context['results']['cnt_error']++;
           $context['results']['cnt_update']--;
           continue;
+        } else {
+          if (empty($context['results']['log_warning']['import_key_error' . $found_import_key]) && !isset($context['results']['log_warning']['import_key_error' . $found_import_key]['message'])) {
+            $context['results']['log_warning']['import_key_error' . $found_import_key]['message'] = t('Multiple users found with the same ' . $found_import_key .  ' at rows: ');
+          }
+          $context['results']['log_warning']['import_key_error' . $found_import_key]['rows'][] = (int)$offset+1;
+          $context['results']['cnt_warning']++;
         }
       }
       if (!$found_user) {
@@ -453,6 +468,14 @@ function finished_import($success, $results, $operations) {
     }
     $rendered_msg = \Drupal\Core\Render\Markup::create($msg);
     \Drupal::messenger()->addError($rendered_msg);
+  }
+  if ($results['cnt_warning'] > 0) {
+    $msg = '<p>Warning on ' . $results['cnt_warning'] . ' records:</p>';
+    foreach ($results['log_warning'] as $error) {
+      $msg .= '<ul>' . $error['message'] . implode(', ', $error['rows']) . '</ul>';
+    }
+    $rendered_msg = \Drupal\Core\Render\Markup::create($msg);
+    \Drupal::messenger()->addWarning($rendered_msg);
   }
 }
 
