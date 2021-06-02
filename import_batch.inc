@@ -101,6 +101,8 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
       else {
         // Make sure that there is no other user associated with the import keys.
         $user_import_key_options = UserController::userImportKeyOptions();
+        unset($user_import_key_options[$options['import_key']]);
+        $conflicting_user = FALSE;
         foreach ($user_import_key_options as $import_key_option => $import_value_option) {
           if (!empty($user_data[$import_key_option])) {
             $checkingUser = \Drupal::entityTypeManager()
@@ -109,6 +111,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
                 $import_key_option => $user_data[$import_key_option]
               ]);
             if (!empty($checkingUser)) {
+              $conflicting_user = TRUE;
               $found_user = TRUE;
               $found_import_key = $import_key_option;
               $user = reset($checkingUser);
@@ -117,7 +120,8 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
           }
         }
 
-        if ($found_user || $found_import_key != $options['import_key']) {
+        // Log if a conflicting user is found, and continue if it's the email
+        if ($conflicting_user) {
           // @TODO Decide what to do if a user is found with an import key
           // @TODO that was not specified in the import settings.
           if (empty($context['result']['log_error'])) {
@@ -195,8 +199,23 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
           }
         }
         else if ($options['user_option'] == 'override_user_hidden_fields') {
-          if (in_array($field_mapping, $hidden_fields)) {
-            $user->set($field_mapping, $user_data[$field_key]);
+          if ($found_user) {
+            if (in_array($field_mapping, $hidden_fields)) {
+              if ($field_mapping == 'field_iq_user_base_address') {
+                $address_info[$field_key] = $user_data[$field_key];
+              }
+              else {
+                $user->set($field_mapping, $user_data[$field_key]);
+              }
+            }
+          }
+          else {
+            if ($field_mapping == 'field_iq_user_base_address') {
+              $address_info[$field_key] = $user_data[$field_key];
+            }
+            else {
+              $user->set($field_mapping, $user_data[$field_key]);
+            }
           }
         }
         else if ($options['user_option'] == 'not_override_user') {
