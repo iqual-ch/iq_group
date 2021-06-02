@@ -58,6 +58,24 @@ class IqGroupSettingsForm extends ConfigFormBase
       '#description' => $this->t('Add a valid url to redirect to after signup'),
       '#default_value' => $iqGroupSettings['redirection_after_signup']
     ];
+
+    $form['import_users'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('IQ Group Import Settings'),
+      '#description' => $this->t('IQ Group Import Settings'),
+      '#attributes' => [
+        'style' => 'width: 50em;'
+      ],
+    ];
+    $form['import_users']['hidden_fields'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Hidden fields'),
+      '#description' => $this->t('Enter the hidden fields for the import separated by a comma (,).'),
+      '#default_value' => $iqGroupSettings['hidden_fields'],
+      '#attributes' => [
+        'style' => 'width: 50em;'
+      ],
+    ];
     $form['general_group_id'] = [
       '#type' => 'textfield',
       '#title' => $this->t('General group ID'),
@@ -102,6 +120,9 @@ class IqGroupSettingsForm extends ConfigFormBase
       '#title' => $this->t('Project Address'),
       '#description' => $this->t('This address will be displayed in the footer of the email.'),
       '#default_value' => $iqGroupSettings['project_address'],
+      '#attributes' => [
+        'style' => 'width: 50em;'
+      ],
     ];
     $form['terms_and_conditions'] = [
       '#type' => 'textfield',
@@ -138,6 +159,7 @@ class IqGroupSettingsForm extends ConfigFormBase
       ->set('redirection_after_account_delete', $form_state->getValue('redirection_after_account_delete'))
       ->set('redirection_after_signup', $form_state->getValue('redirection_after_signup'))
       ->set('project_address', $form_state->getValue('project_address'))
+      ->set('hidden_fields', $form_state->getValue('hidden_fields'))
       ->save();
 
     parent::submitForm($form, $form_state);

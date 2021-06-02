@@ -20,8 +20,9 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
   $records = $stmt->process($reader);
   $j = 1;
 
-  $hidden_fields = ['field_sqs_company_size','field_iq_user_base_contact_link','field_iq_function',
-    'field_iq_user_base_gender','field_sqs_scope','field_iq_user_base_phone','field_sqs_sub_branch'];
+  $iqGroupSettings = UserController::getIqGroupSettings();
+  $hidden_fields = $iqGroupSettings['hidden_fields'];
+  $hidden_fields = array_map('trim', explode(',', $hidden_fields));
 
   // Field mapping.
   $field_mappings = [
