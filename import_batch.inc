@@ -98,77 +98,73 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         $user = reset($checkingUser);
         $context['results']['cnt_update']++;
       }
-      else {
-        // Make sure that there is no other user associated with the import keys.
-        $user_import_key_options = UserController::userImportKeyOptions();
-        unset($user_import_key_options[$options['import_key']]);
-        $conflicting_user = FALSE;
-        foreach ($user_import_key_options as $import_key_option => $import_value_option) {
-          if (!empty($user_data[$import_key_option])) {
-            $checkingUser = \Drupal::entityTypeManager()
-              ->getStorage('user')
-              ->loadByProperties([
-                $import_key_option => $user_data[$import_key_option]
-              ]);
-            if (!empty($checkingUser)) {
-              $conflicting_user = TRUE;
-              $found_user = TRUE;
-              $found_import_key = $import_key_option;
-              $user = reset($checkingUser);
-              break;
-            }
+      // Make sure that there is no other user associated with the import keys.
+      $user_import_key_options = UserController::userImportKeyOptions();
+      unset($user_import_key_options[$options['import_key']]);
+      $conflicting_user = FALSE;
+      foreach ($user_import_key_options as $import_key_option => $import_value_option) {
+        if (!empty($user_data[$import_key_option])) {
+          $checkingUser = \Drupal::entityTypeManager()
+            ->getStorage('user')
+            ->loadByProperties([
+              $import_key_option => $user_data[$import_key_option]
+            ]);
+          if (!empty($checkingUser)) {
+            $conflicting_user = TRUE;
+            $found_user = TRUE;
+            $found_import_key = $import_key_option;
+            $user = reset($checkingUser);
+            break;
           }
         }
+      }
 
-        // Log if a conflicting user is found, and continue if it's the email
-        if ($conflicting_user) {
-          // @TODO Decide what to do if a user is found with an import key
-          // @TODO that was not specified in the import settings.
-          if (empty($context['result']['log_error'])) {
-            $context['results']['log_error'] = [];
+      // Log if a conflicting user is found, and continue if it's the email
+      if ($conflicting_user) {
+        // @TODO Decide what to do if a user is found with an import key
+        // @TODO that was not specified in the import settings.
+        if (empty($context['result']['log_error'])) {
+          $context['results']['log_error'] = [];
+        }
+        if (empty($context['results']['log_error']['import_key_error' . $found_import_key]) && !isset($context['results']['log_error']['import_key_error' . $found_import_key]['message'])) {
+          $context['results']['log_error']['import_key_error' . $found_import_key]['message'] = t('Multiple users found with the same ' . $found_import_key .  ' at rows: ');
+        }
+        $context['results']['log_error']['import_key_error' . $found_import_key]['rows'][] = (int)$offset+1;
+        if ($found_import_key == 'mail') {
+          if (empty($context['results']['log_error']['conflicting_import_keys']) && !isset($context['results']['log_error']['conflicting_import_keys']['message'])) {
+            $context['results']['log_error']['conflicting_import_keys']['message'] = t('Skipped import for users at rows:');
           }
-          if (empty($context['results']['log_error']['import_key_error' . $found_import_key]) && !isset($context['results']['log_error']['import_key_error' . $found_import_key]['message'])) {
-            $context['results']['log_error']['import_key_error' . $found_import_key]['message'] = t('Multiple users found with the same ' . $found_import_key .  ' at rows: ');
-          }
-          $context['results']['log_error']['import_key_error' . $found_import_key]['rows'][] = (int)$offset+1;
-          if ($found_import_key == 'mail') {
-            if (empty($context['results']['log_error']['conflicting_import_keys']) && !isset($context['results']['log_error']['conflicting_import_keys']['message'])) {
-              $context['results']['log_error']['conflicting_import_keys']['message'] = t('Skipped import for users at rows:');
-            }
-            $context['results']['log_error']['conflicting_import_keys']['rows'][] = (int)$offset+1;
-            $context['results']['cnt_error']++;
-            continue;
-          }
-          else {
+          $context['results']['log_error']['conflicting_import_keys']['rows'][] = (int)$offset+1;
+          $context['results']['cnt_error']++;
+          $context['results']['cnt_update']--;
+          continue;
+        }
+      }
+      if (!$found_user) {
+        $context['results']['cnt_import']++;
+        $user = User::create([
+          'mail' => $user_data['mail'],
+          'name' => $user_data['mail'],
+          'status' => 1,
+        ]);
+        $store->set(crc32($user_data['mail']) . '_pending_finalization', true);
+        $data = time();
+        $data .= $user->id();
+        $data .= $user->getEmail();
+        $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
+        $user->set('field_iq_group_user_token', $hash_token);
+        $user->save();
+      }
 
-          }
-        }
-        if (!$found_user) {
-          $context['results']['cnt_import']++;
-          $user = User::create([
-            'mail' => $user_data['mail'],
-            'name' => $user_data['mail'],
-            'status' => 1,
-          ]);
-          $store->set(crc32($user_data['mail']) . '_pending_finalization', true);
-          $data = time();
-          $data .= $user->id();
-          $data .= $user->getEmail();
-          $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
-          $user->set('field_iq_group_user_token', $hash_token);
-          $user->save();
-        }
-
-        // Load General group (id=5) and get the roles for the user.
-        $generalGroup = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-        $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
-        $groupRoles = $group_role_storage->loadByUserAndGroup($user, $generalGroup);
-        $groupRoles = array_keys($groupRoles);
-        if (!in_array('subscription-subscriber', $groupRoles) && !in_array('subscription-lead', $groupRoles)) {
-          \Drupal\iq_group\Controller\UserController::addGroupRoleToUser($generalGroup, $user, 'subscription-subscriber');
-          $eventDispatcher = \Drupal::service('event_dispatcher');
-          $eventDispatcher->dispatch(\Drupal\iq_group\IqGroupEvents::USER_OPT_IN, new \Drupal\iq_group\Event\IqGroupEvent( $user));
-        }
+      // Load General group (id=5) and get the roles for the user.
+      $generalGroup = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+      $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+      $groupRoles = $group_role_storage->loadByUserAndGroup($user, $generalGroup);
+      $groupRoles = array_keys($groupRoles);
+      if (!in_array('subscription-subscriber', $groupRoles) && !in_array('subscription-lead', $groupRoles)) {
+        \Drupal\iq_group\Controller\UserController::addGroupRoleToUser($generalGroup, $user, 'subscription-subscriber');
+        $eventDispatcher = \Drupal::service('event_dispatcher');
+        $eventDispatcher->dispatch(\Drupal\iq_group\IqGroupEvents::USER_OPT_IN, new \Drupal\iq_group\Event\IqGroupEvent( $user));
       }
       $tags = explode(',', $user_data['tags']);
       override_user_tags($tags, $user, $options['tag_option'], $existing_terms, $found_user);
