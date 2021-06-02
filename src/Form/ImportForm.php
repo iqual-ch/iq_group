@@ -50,7 +50,7 @@ class ImportForm extends FormBase
     $form['override_user'] = [
       '#type' => 'select',
       '#title' => $this->t('Override contact fields'),
-      '#description' => $this->t('Override existing users.'),
+      '#description' => $this->t('Override contact data fields (e.g. name, address, ...)'),
       '#options' => [
         'override_user' => $this->t('Override all fields'),
         'override_user_if_empty' => $this->t('Override user if the existing fields are empty'),

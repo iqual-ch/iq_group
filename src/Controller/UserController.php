@@ -312,15 +312,16 @@ class UserController extends ControllerBase {
    * Helper function to set the reference fields when importing users.
    *
    * @param $user_data
-   * @param $user
+   * @param UserInterface $user
    * @param $option
    * @param $entity_ids
    * @param $import_key
    * @param $field_key
    */
-  public static function set_user_reference_field(&$user_data, &$user, $option, $entity_ids, $import_key, $field_key) {
+  public static function set_user_reference_field(&$user_data, &$user, $option, $entity_ids, $import_key, $field_key, $found_user) {
+
     // If the preferences do not need to be overidden, just return.
-    if ($option == 'not_override_preferences') {
+    if ($option == 'not_override_preferences' && $found_user) {
       return;
     }
     $ids = [];

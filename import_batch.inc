@@ -80,15 +80,18 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
       // import user.
       // Check if user already exists by the import key.
       $import_key = $options['import_key'];
-      $checkingUser = \Drupal::entityTypeManager()
-        ->getStorage('user')
-        ->loadByProperties([
-          $import_key => $user_data[$import_key]
-        ]);
+      if (!empty($import_key) && !empty($user_data[$import_key])) {
+        $checkingUser = \Drupal::entityTypeManager()
+          ->getStorage('user')
+          ->loadByProperties([
+            $import_key => $user_data[$import_key]
+          ]);
+      }
       // Flag to indicate whether the user exists already.
       $found_user = FALSE;
 
       $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
+      $found_import_key = $options['import_key'];
       // Get the existing user or create a new user.
       if (!empty($checkingUser)) {
         $found_user = TRUE;
@@ -99,8 +102,6 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         // Make sure that there is no other user associated with the import keys.
         $user_import_key_options = UserController::userImportKeyOptions();
         foreach ($user_import_key_options as $import_key_option => $import_value_option) {
-          \Drupal::logger('iq_group')->notice($import_key_option);
-          \Drupal::logger('iq_group')->notice($user_data[$import_key_option]);
           if (!empty($user_data[$import_key_option])) {
             $checkingUser = \Drupal::entityTypeManager()
               ->getStorage('user')
@@ -113,13 +114,10 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
               $user = reset($checkingUser);
               break;
             }
-            else {
-              \Drupal::logger('iq_group')->notice('Ne go najde');
-            }
           }
         }
 
-        if ($found_user) {
+        if ($found_user || $found_import_key != $options['import_key']) {
           // @TODO Decide what to do if a user is found with an import key
           // @TODO that was not specified in the import settings.
           if (empty($context['result']['log_error'])) {
@@ -168,21 +166,21 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         }
       }
       $tags = explode(',', $user_data['tags']);
-      override_user_tags($tags, $user, $options['tag_option'], $existing_terms);
-      UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences');
+      override_user_tags($tags, $user, $options['tag_option'], $existing_terms, $found_user);
+      UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences', $found_user);
       // set_user_preferences($user_data, $user, $options['preference_option'], $preference_names);
       if ($user->hasField('field_iq_group_products')) {
         $preference_option = $options['product_option'] == 'override_product' ? "override_preferences" : "not_override_preferences";
-        UserController::set_user_reference_field($user_data, $user, $preference_option, $product_ids, 'products', 'field_iq_group_products');
+        UserController::set_user_reference_field($user_data, $user, $preference_option, $product_ids, 'products', 'field_iq_group_products', $found_user);
         // set_user_products($user_data, $user, $options['preference_option'], $product_ids);
       }
       if ($user->hasField('field_iq_group_branches')) {
-        UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $branch_ids, 'branches', 'field_iq_group_branches');
+        UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $branch_ids, 'branches', 'field_iq_group_branches', $found_user);
         // set_user_branches($user_data, $user, $options['preference_option'], $branch_ids);
       }
 
       \Drupal::moduleHandler()
-        ->invokeAll('iq_group_reference_import', [&$user_data, $user, $options, &$field_keys]);
+        ->invokeAll('iq_group_reference_import', [&$user_data, $user, $options, &$field_keys, $found_user]);
       // Go through each of the fields and map them to the appropriate keys.
       $address_info = [];
 
@@ -292,8 +290,8 @@ function validateUser(&$user_data, $field_keys, $offset, &$context) {
   }
 }
 
-function override_user_tags($tags, &$user, $option, $existing_terms) {
-  if ($option == 'not_override_tags') {
+function override_user_tags($tags, &$user, $option, $existing_terms, $found_user) {
+  if ($option == 'not_override_tags' && $found_user) {
     return ;
   }
   $user_tags = [];
@@ -324,7 +322,9 @@ function override_user_tags($tags, &$user, $option, $existing_terms) {
       $user->set('field_iq_group_tags', array_merge($existing_tags, $user_tags));
     }
     else if ($option == 'remove_tags') {
-      // @TODO handle case when removing tags.
+      // Remove the tags that are listed in the import.
+      $existing_tags = $user->get('field_iq_group_tags')->getValue();
+      $user->set('field_iq_group_tags', array_diff($existing_tags, $user_tags));
     }
     else {
       $existing_tags = $user->get('field_iq_group_tags')->getValue();
