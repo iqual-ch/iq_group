@@ -322,8 +322,10 @@ class UserController extends ControllerBase {
 
     // If the preferences do not need to be overidden, just return.
     if ($option == 'not_override_preferences' && $found_user) {
+      $existing_entities = $user->get($field_key)->getValue();
+      $existing_entities = array_filter(array_column($existing_entities, 'target_id'));
       unset($user_data[$import_key]);
-      return;
+      return $existing_entities;
     }
     $ids = [];
     $user_data[$import_key] = explode(',', $user_data[$import_key]);
@@ -334,10 +336,13 @@ class UserController extends ControllerBase {
     }
     // Set preferences based on the preference override option.
     if ($option == 'override_preferences') {
+      $ids = array_filter(array_column($ids, 'target_id'));
       $user_data[$import_key] = $ids;
     }
     else if ($option == 'add_preferences') {
       $existing_entities = $user->get($field_key)->getValue();
+      $existing_entities = array_filter(array_column($existing_entities, 'target_id'));
+      $ids = array_filter(array_column($ids, 'target_id'));
       $ids = array_merge($existing_entities, $ids);
     }
     else if ($option == 'remove_preferences') {
@@ -350,8 +355,8 @@ class UserController extends ControllerBase {
       $ids = $existing_entities;
     }
     if (!empty($ids)) {
-      $user->set($field_key, $ids);
       unset($user_data[$import_key]);
+      return array_unique($ids);
     }
   }
 

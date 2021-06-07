@@ -183,15 +183,21 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         $eventDispatcher->dispatch(\Drupal\iq_group\IqGroupEvents::USER_OPT_IN, new \Drupal\iq_group\Event\IqGroupEvent( $user));
       }
       override_user_tags($user_data, $user, $options['tag_option'], $existing_terms, $found_user);
-      UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences', $found_user);
+      $ids = UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences', $found_user);
+      $user->set('field_iq_group_preferences', $ids);
+      unset($field_keys['preferences']);
       // set_user_preferences($user_data, $user, $options['preference_option'], $preference_names);
       if ($user->hasField('field_iq_group_products')) {
         $preference_option = $options['product_option'] == 'override_product' ? "override_preferences" : "not_override_preferences";
-        UserController::set_user_reference_field($user_data, $user, $preference_option, $product_ids, 'products', 'field_iq_group_products', $found_user);
+        $ids = UserController::set_user_reference_field($user_data, $user, $preference_option, $product_ids, 'products', 'field_iq_group_products', $found_user);
+        $user->set('field_iq_group_products', $ids);
+        unset($field_keys['products']);
         // set_user_products($user_data, $user, $options['preference_option'], $product_ids);
       }
       if ($user->hasField('field_iq_group_branches')) {
-        UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $branch_ids, 'branches', 'field_iq_group_branches', $found_user);
+        $ids = UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $branch_ids, 'branches', 'field_iq_group_branches', $found_user);
+        $user->set('field_iq_group_branches', $ids);
+        unset($field_keys['branches']);
         // set_user_branches($user_data, $user, $options['preference_option'], $branch_ids);
       }
 
