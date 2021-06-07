@@ -354,10 +354,8 @@ class UserController extends ControllerBase {
       }
       $ids = $existing_entities;
     }
-    if (!empty($ids)) {
-      unset($user_data[$import_key]);
-      return array_unique($ids);
-    }
+    unset($user_data[$import_key]);
+    return array_unique($ids);
   }
 
   public static function userImportKeyOptions() {
