@@ -372,10 +372,8 @@ function override_user_tags(&$user_data, &$user, $option, $existing_terms, $foun
       $user_data['tags'] = array_diff($existing_tags, $user_tags);
     }
   }
-  if (!empty($user_data['tags'])) {
-    $user->set('field_iq_group_tags', $user_data['tags']);
-    unset($user_data['tags']);
-  }
+  $user->set('field_iq_group_tags', $user_data['tags']);
+  unset($user_data['tags']);
 }
 
 function set_user_preferences(&$user_data, &$user, $option, $preference_names) {
