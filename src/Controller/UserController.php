@@ -322,6 +322,7 @@ class UserController extends ControllerBase {
 
     // If the preferences do not need to be overidden, just return.
     if ($option == 'not_override_preferences' && $found_user) {
+      unset($user_data[$import_key]);
       return;
     }
     $ids = [];
@@ -348,7 +349,10 @@ class UserController extends ControllerBase {
       }
       $ids = $existing_entities;
     }
-    $user_data[$import_key] = $ids;
+    if (!empty($ids)) {
+      $user->set($field_key, $ids);
+      unset($user_data[$import_key]);
+    }
   }
 
   public static function userImportKeyOptions() {

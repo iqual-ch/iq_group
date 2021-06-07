@@ -163,6 +163,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
           'status' => 1,
         ]);
         $store->set(crc32($user_data['mail']) . '_pending_finalization', true);
+        $user->save();
         $data = time();
         $data .= $user->id();
         $data .= $user->getEmail();
@@ -181,8 +182,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         $eventDispatcher = \Drupal::service('event_dispatcher');
         $eventDispatcher->dispatch(\Drupal\iq_group\IqGroupEvents::USER_OPT_IN, new \Drupal\iq_group\Event\IqGroupEvent( $user));
       }
-      $tags = explode(',', $user_data['tags']);
-      override_user_tags($tags, $user, $options['tag_option'], $existing_terms, $found_user);
+      override_user_tags($user_data, $user, $options['tag_option'], $existing_terms, $found_user);
       UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences', $found_user);
       // set_user_preferences($user_data, $user, $options['preference_option'], $preference_names);
       if ($user->hasField('field_iq_group_products')) {
@@ -257,7 +257,9 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         }
       }
       if (!empty($address_info)) {
-        $address_info['country_code'] = 'CH';
+        if (empty($address_info['country_code'])) {
+          $address_info['country_code'] = 'CH';
+        }
         $user->set('field_iq_user_base_address', $address_info);
       }
       $store->delete(crc32($user_data['mail']) . '_pending_finalization');
@@ -280,7 +282,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
     $context['message'] = 'Processed ' . $processed_abs . ' of ' . ($context['sandbox']['max'] + 1) . ' records (' . round($processed_rel) . ' %).';
   }
 
-  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
+  if (!empty($context['sandbox']['max']) && !empty($context['sandbox']['progress']) && $context['sandbox']['progress'] != $context['sandbox']['max'] && $context['sandbox']['max'] != 0) {
     $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
   }
 }
@@ -321,8 +323,10 @@ function validateUser(&$user_data, $field_keys, $offset, &$context) {
   }
 }
 
-function override_user_tags($tags, &$user, $option, $existing_terms, $found_user) {
+function override_user_tags(&$user_data, &$user, $option, $existing_terms, $found_user) {
+  $tags = explode(',', $user_data['tags']);
   if ($option == 'not_override_tags' && $found_user) {
+    unset($user_data['tags']);
     return ;
   }
   $user_tags = [];
@@ -345,25 +349,22 @@ function override_user_tags($tags, &$user, $option, $existing_terms, $found_user
 
   // Set tags based on the tag override option.
   if ($option == 'override_tags') {
-    $user->set('field_iq_group_tags', $user_tags);
+    $user_data['tags'] = $user_tags;
   }
   else {
     if ($option == 'add_tags') {
       $existing_tags = $user->get('field_iq_group_tags')->getValue();
-      $user->set('field_iq_group_tags', array_merge($existing_tags, $user_tags));
+      $user_data['tags'] = array_merge($existing_tags, $user_tags);
     }
     else if ($option == 'remove_tags') {
       // Remove the tags that are listed in the import.
       $existing_tags = $user->get('field_iq_group_tags')->getValue();
-      $user->set('field_iq_group_tags', array_diff($existing_tags, $user_tags));
+      $user_data['tags'] = array_diff($existing_tags, $user_tags);
     }
-    else {
-      $existing_tags = $user->get('field_iq_group_tags')->getValue();
-      $existing_tags = array_filter(array_column($existing_tags, 'target_id'));
-      $user_tags = array_filter(array_column($user_tags, 'target_id'));
-      $tag_ids = array_diff($existing_tags, $user_tags);
-      $user->set('field_iq_group_tags', $tag_ids);
-    }
+  }
+  if (!empty($user_data['tags'])) {
+    $user->set('field_iq_group_tags', $user_data['tags']);
+    unset($user_data['tags']);
   }
 }
 
@@ -464,7 +465,9 @@ function finished_import($success, $results, $operations) {
   if ($results['cnt_error'] > 0) {
     $msg = '<p>Skipped ' . $results['cnt_error'] . ' records due to errors:</p>';
     foreach ($results['log_error'] as $error) {
-      $msg .= '<ul>' . $error['message'] . implode(', ', $error['rows']) . '</ul>';
+      if (!empty($error['message']) && !empty($error['rows'])) {
+        $msg .= '<ul>' . $error['message'] . implode(', ', $error['rows']) . '</ul>';
+      }
     }
     $rendered_msg = \Drupal\Core\Render\Markup::create($msg);
     \Drupal::messenger()->addError($rendered_msg);
@@ -472,7 +475,9 @@ function finished_import($success, $results, $operations) {
   if ($results['cnt_warning'] > 0) {
     $msg = '<p>Warning on ' . $results['cnt_warning'] . ' records:</p>';
     foreach ($results['log_warning'] as $error) {
-      $msg .= '<ul>' . $error['message'] . implode(', ', $error['rows']) . '</ul>';
+      if (!empty($error['message']) && !empty($error['rows'])) {
+        $msg .= '<ul>' . $error['message'] . implode(', ', $error['rows']) . '</ul>';
+      }
     }
     $rendered_msg = \Drupal\Core\Render\Markup::create($msg);
     \Drupal::messenger()->addWarning($rendered_msg);

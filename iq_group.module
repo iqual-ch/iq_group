@@ -407,9 +407,10 @@ function iq_group_user_update(\Drupal\user\UserInterface $account) {
         if ($group->id() != \Drupal::config('iq_group.settings')
             ->get('general_group_id')) {
           if (in_array($group->id(), $selected_preferences)) {
+            $roles = $generalGroup->getMember($account)
+              ->getRoles();
             /** @var \Drupal\group\Entity\GroupRoleInterface $generalGroupRole */
-            $generalGroupRole = reset($generalGroup->getMember($account)
-              ->getRoles());
+            $generalGroupRole = reset($roles);
             UserController::addGroupRoleToUser($group, $account, $generalGroupRole->id());
           }
           else {
