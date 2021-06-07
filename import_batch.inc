@@ -354,11 +354,15 @@ function override_user_tags(&$user_data, &$user, $option, $existing_terms, $foun
   else {
     if ($option == 'add_tags') {
       $existing_tags = $user->get('field_iq_group_tags')->getValue();
-      $user_data['tags'] = array_merge($existing_tags, $user_tags);
+      $existing_tags = array_filter(array_column($existing_tags, 'target_id'));
+      $user_tags = array_filter(array_column($user_tags, 'target_id'));
+      $user_data['tags'] = array_unique(array_merge($existing_tags, $user_tags));
     }
     else if ($option == 'remove_tags') {
       // Remove the tags that are listed in the import.
       $existing_tags = $user->get('field_iq_group_tags')->getValue();
+      $existing_tags = array_filter(array_column($existing_tags, 'target_id'));
+      $user_tags = array_filter(array_column($user_tags, 'target_id'));
       $user_data['tags'] = array_diff($existing_tags, $user_tags);
     }
   }
