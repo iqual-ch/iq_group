@@ -41,3 +41,6 @@ iq_group.settings:
     project_address:
       type: string
       label: 'The address of the project.'
+    hidden_fields:
+      type: string
+      label: 'The hidden fields for the import.'

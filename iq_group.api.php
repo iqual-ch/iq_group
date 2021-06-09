@@ -37,7 +37,7 @@ function hook_iq_group_after_import(array &$data) {
  * @param array $field_keys
  *   The field mappings for the user data.
  */
-function hook_iq_group_reference_import(array &$data, \Drupal\user\UserInterface $user, $option, array &$field_keys) {
+function hook_iq_group_reference_import(array &$data, \Drupal\user\UserInterface $user, $option, array &$field_keys, $found_user) {
   // here others will make a module that will call this to alter "$data"
 }
 

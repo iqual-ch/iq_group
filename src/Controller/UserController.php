@@ -237,6 +237,7 @@ class UserController extends ControllerBase {
       'redirection_after_account_delete' => $iqGroupSettingsConfig->get('redirection_after_account_delete') != NULL ? $iqGroupSettingsConfig->get('redirection_after_account_delete') : "",
       'redirection_after_signup' => $iqGroupSettingsConfig->get('redirection_after_signup') != NULL ? $iqGroupSettingsConfig->get('redirection_after_signup') : "",
       'project_address' => $iqGroupSettingsConfig->get('project_address') != NULL ? $iqGroupSettingsConfig->get('project_address') : "",
+      'hidden_fields' => $iqGroupSettingsConfig->get('hidden_fields') != NULL ? $iqGroupSettingsConfig->get('hidden_fields') : "",
     ];
   }
 
@@ -311,13 +312,21 @@ class UserController extends ControllerBase {
    * Helper function to set the reference fields when importing users.
    *
    * @param $user_data
-   * @param $user
+   * @param UserInterface $user
    * @param $option
    * @param $entity_ids
    * @param $import_key
    * @param $field_key
    */
-  public static function set_user_reference_field(&$user_data, &$user, $option, $entity_ids, $import_key, $field_key) {
+  public static function set_user_reference_field(&$user_data, &$user, $option, $entity_ids, $import_key, $field_key, $found_user) {
+
+    // If the preferences do not need to be overidden, just return.
+    if ($option == 'not_override_preferences' && $found_user) {
+      $existing_entities = $user->get($field_key)->getValue();
+      $existing_entities = array_filter(array_column($existing_entities, 'target_id'));
+      unset($user_data[$import_key]);
+      return $existing_entities;
+    }
     $ids = [];
     $user_data[$import_key] = explode(',', $user_data[$import_key]);
     foreach ($user_data[$import_key] as $entity) {
@@ -327,24 +336,41 @@ class UserController extends ControllerBase {
     }
     // Set preferences based on the preference override option.
     if ($option == 'override_preferences') {
+      $ids = array_filter(array_column($ids, 'target_id'));
       $user_data[$import_key] = $ids;
     }
-    else {
-      if ($option == 'add_preferences') {
-        $existing_entities = $user->get($field_key)->getValue();
-        $ids = array_merge($existing_entities, $ids);
-      }
-      else {
-        $existing_entities = $user->get($field_key)->getValue();
-        $existing_entities = array_filter(array_column($existing_entities, 'target_id'));
-        $ids = array_filter(array_column($ids, 'target_id'));
-        foreach ($ids as $delete_id) {
-          unset($existing_entities[array_search($delete_id, $existing_entities)]);
-        }
-        $ids = $existing_entities;
-      }
+    else if ($option == 'add_preferences') {
+      $existing_entities = $user->get($field_key)->getValue();
+      $existing_entities = array_filter(array_column($existing_entities, 'target_id'));
+      $ids = array_filter(array_column($ids, 'target_id'));
+      $ids = array_merge($existing_entities, $ids);
     }
-    $user_data[$import_key] = $ids;
+    else if ($option == 'remove_preferences') {
+      $existing_entities = $user->get($field_key)->getValue();
+      $existing_entities = array_filter(array_column($existing_entities, 'target_id'));
+      $ids = array_filter(array_column($ids, 'target_id'));
+      foreach ($ids as $delete_id) {
+        unset($existing_entities[array_search($delete_id, $existing_entities)]);
+      }
+      $ids = $existing_entities;
+    }
+    unset($user_data[$import_key]);
+    return array_unique($ids);
   }
 
+  public static function userImportKeyOptions() {
+    $user_import_key_options = [];
+    $user_fields = \Drupal::service('entity_field.manager')->getFieldDefinitions('user', 'user');
+    foreach($user_fields as $user_field) {
+      $field_name = $user_field->getName();
+      $field_label = $user_field->getLabel();
+      if (substr($field_name,-3) =='_id' || $field_name == 'mail') {
+        $user_import_key_options[$field_name] = $field_label;
+      }
+      if ($field_name == 'uid') {
+        $user_import_key_options[$field_name] = t('Drupal ID');
+      }
+    }
+    return $user_import_key_options;
+  }
 }

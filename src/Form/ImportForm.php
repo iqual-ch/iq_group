@@ -8,6 +8,7 @@ namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\iq_group\Controller\UserController;
 use League\Csv\Reader;
 
 class ImportForm extends FormBase
@@ -37,15 +38,26 @@ class ImportForm extends FormBase
         'file_validate_extensions' => array('csv'),
       ),
     ];
+    // Choose to update user by an email field or the ID fields.
+    $user_import_key_options = UserController::userImportKeyOptions();
+    $form['import_key'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Import key'),
+      '#description' => $this->t('User will be updated by this field.'),
+      '#options' => $user_import_key_options,
+      '#default_value' => 'mail'
+    ];
     $form['override_user'] = [
       '#type' => 'select',
-      '#title' => $this->t('User override'),
-      '#description' => $this->t('Override existing users.'),
+      '#title' => $this->t('Override contact fields'),
+      '#description' => $this->t('Override contact data fields (e.g. name, address, ...)'),
       '#options' => [
-        'override_user' => $this->t('Override user if email exists'),
-        'override_user_if_empty' => $this->t('Override user if the existing fields are empty')
+        'override_user' => $this->t('Override all fields'),
+        'override_user_if_empty' => $this->t('Override user if the existing fields are empty'),
+        'override_user_hidden_fields' => $this->t('Override hidden fields'),
+        'not_override_user' => $this->t('Do not override')
       ],
-      '#default_value' => 'override_user',
+      '#default_value' => 'override_user_hidden_fields',
       '#required' => TRUE,
     ];
     $form['override_tags'] = [
@@ -55,7 +67,8 @@ class ImportForm extends FormBase
       '#options' => [
         'override_tags' => $this->t('Override tags'),
         'add_tags' => $this->t('Append tags'),
-        'remove_tags' => $this->t('Remove tags')
+        'remove_tags' => $this->t('Remove tags'),
+        'not_override_tags' => $this->t('Do not override tags')
       ],
       '#default_value' => 'override_tags',
       '#required'=> TRUE
@@ -63,13 +76,25 @@ class ImportForm extends FormBase
     $form['override_preferences'] = [
       '#type' => 'select',
       '#title' => $this->t('Override user settings'),
-      '#description' => $this->t('Choose what to do with the user preferences, branches and products'),
+      '#description' => $this->t('Choose what to do with the user preferences, branches'),
       '#options' => [
         'override_preferences' => $this->t('Override user settings'),
         'add_preferences' => $this->t('Append user settings'),
-        'remove_preferences' => $this->t('Remove user settings')
+        'remove_preferences' => $this->t('Remove user settings'),
+        'not_override_preferences' => $this->t('Do not override user settings')
       ],
-      '#default_value' => 'override_preferences',
+      '#default_value' => 'not_override_preferences',
+      '#required'=> TRUE
+    ];
+    $form['override_product'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Override product settings'),
+      '#description' => $this->t('Choose what to do with the user product field'),
+      '#options' => [
+        'override_product' => $this->t('Override product field'),
+        'not_override_product' => $this->t('Do not override product field'),
+      ],
+      '#default_value' => 'not_override_product',
       '#required'=> TRUE
     ];
     $form['delimiter'] = [
@@ -81,7 +106,7 @@ class ImportForm extends FormBase
         'semi_colon' => $this->t('Semi colon (;)'),
         'tab' => $this->t('Tab (\t)')
       ],
-      '#default_value' => 'comma',
+      '#default_value' => 'semi_colon',
       '#required'=> TRUE
     ];
 
@@ -172,7 +197,9 @@ class ImportForm extends FormBase
       'tag_option' => $form_state->getValue('override_tags'),
       'user_option' => $form_state->getValue('override_user'),
       'preference_option' => $form_state->getValue('override_preferences'),
-      'delimiter' => $delimiter
+      'product_option' => $form_state->getValue('override_product'),
+      'delimiter' => $delimiter,
+      'import_key' => $form_state->getValue('import_key')
     ];
 
 
