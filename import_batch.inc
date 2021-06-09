@@ -32,6 +32,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
     'preferences' => 'field_iq_group_preferences',
     'products' => 'field_iq_group_products',
     'branches' => 'field_iq_group_branches',
+    'tags' => 'field_iq_group_tags',
     'position' => 'field_iq_user_base_position',
     'organization' => 'field_iq_user_base_address',
     'postal_code' => 'field_iq_user_base_address',
@@ -182,19 +183,25 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         $eventDispatcher = \Drupal::service('event_dispatcher');
         $eventDispatcher->dispatch(\Drupal\iq_group\IqGroupEvents::USER_OPT_IN, new \Drupal\iq_group\Event\IqGroupEvent( $user));
       }
-      override_user_tags($user_data, $user, $options['tag_option'], $existing_terms, $found_user);
-      $ids = UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences', $found_user);
-      $user->set('field_iq_group_preferences', $ids);
-      unset($field_keys['preferences']);
+      if (array_key_exists('tags', $field_keys)) {
+        override_user_tags($user_data, $user, $options['tag_option'], $existing_terms, $found_user);
+        unset($field_keys['tags']);
+      }
+      
+      if (array_key_exists('preferences', $field_keys)) {
+        $ids = UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences', $found_user);
+        $user->set('field_iq_group_preferences', $ids);
+        unset($field_keys['preferences']);
+      }
       // set_user_preferences($user_data, $user, $options['preference_option'], $preference_names);
-      if ($user->hasField('field_iq_group_products')) {
+      if ($user->hasField('field_iq_group_products') && array_key_exists('products', $field_keys)) {
         $preference_option = $options['product_option'] == 'override_product' ? "override_preferences" : "not_override_preferences";
         $ids = UserController::set_user_reference_field($user_data, $user, $preference_option, $product_ids, 'products', 'field_iq_group_products', $found_user);
         $user->set('field_iq_group_products', $ids);
         unset($field_keys['products']);
         // set_user_products($user_data, $user, $options['preference_option'], $product_ids);
       }
-      if ($user->hasField('field_iq_group_branches')) {
+      if ($user->hasField('field_iq_group_branches') && array_key_exists('branches', $field_keys)) {
         $ids = UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $branch_ids, 'branches', 'field_iq_group_branches', $found_user);
         $user->set('field_iq_group_branches', $ids);
         unset($field_keys['branches']);
