@@ -183,37 +183,41 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         $eventDispatcher = \Drupal::service('event_dispatcher');
         $eventDispatcher->dispatch(\Drupal\iq_group\IqGroupEvents::USER_OPT_IN, new \Drupal\iq_group\Event\IqGroupEvent( $user));
       }
-      if (array_key_exists('tags', $field_keys)) {
+
+      // Set the keys that have to be processed to the the available columns in the import
+      $fields_to_process = $field_keys;
+
+      if (array_key_exists('tags', $fields_to_process)) {
         override_user_tags($user_data, $user, $options['tag_option'], $existing_terms, $found_user);
-        unset($field_keys['tags']);
+        unset($fields_to_process['tags']);
       }
       
-      if (array_key_exists('preferences', $field_keys)) {
+      if (array_key_exists('preferences', $fields_to_process)) {
         $ids = UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences', $found_user);
         $user->set('field_iq_group_preferences', $ids);
-        unset($field_keys['preferences']);
+        unset($fields_to_process['preferences']);
       }
       // set_user_preferences($user_data, $user, $options['preference_option'], $preference_names);
-      if ($user->hasField('field_iq_group_products') && array_key_exists('products', $field_keys)) {
+      if ($user->hasField('field_iq_group_products') && array_key_exists('products', $fields_to_process)) {
         $preference_option = $options['product_option'] == 'override_product' ? "override_preferences" : "not_override_preferences";
         $ids = UserController::set_user_reference_field($user_data, $user, $preference_option, $product_ids, 'products', 'field_iq_group_products', $found_user);
         $user->set('field_iq_group_products', $ids);
-        unset($field_keys['products']);
+        unset($fields_to_process['products']);
         // set_user_products($user_data, $user, $options['preference_option'], $product_ids);
       }
-      if ($user->hasField('field_iq_group_branches') && array_key_exists('branches', $field_keys)) {
+      if ($user->hasField('field_iq_group_branches') && array_key_exists('branches', $fields_to_process)) {
         $ids = UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $branch_ids, 'branches', 'field_iq_group_branches', $found_user);
         $user->set('field_iq_group_branches', $ids);
-        unset($field_keys['branches']);
+        unset($fields_to_process['branches']);
         // set_user_branches($user_data, $user, $options['preference_option'], $branch_ids);
       }
 
       \Drupal::moduleHandler()
-        ->invokeAll('iq_group_reference_import', [&$user_data, $user, $options, &$field_keys, $found_user]);
+        ->invokeAll('iq_group_reference_import', [&$user_data, $user, $options, &$fields_to_process, $found_user]);
       // Go through each of the fields and map them to the appropriate keys.
       $address_info = [];
 
-      foreach ($field_keys as $field_key => $field_mapping) {
+      foreach ($fields_to_process as $field_key => $field_mapping) {
         if ($options['user_option'] == 'override_user') {
           if ($field_mapping == 'field_iq_user_base_address') {
             $address_info[$field_key] = $user_data[$field_key];
