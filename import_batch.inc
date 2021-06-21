@@ -133,7 +133,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         if (empty($context['result']['log_error'])) {
           $context['results']['log_error'] = [];
         }
-        if (empty($context['result']['log_warning'])) {
+        if (empty($context['results']['log_warning'])) {
           $context['results']['log_warning'] = [];
         }
         if ($found_import_key == 'mail') {
@@ -191,7 +191,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         override_user_tags($user_data, $user, $options['tag_option'], $existing_terms, $found_user);
         unset($fields_to_process['tags']);
       }
-      
+
       if (array_key_exists('preferences', $fields_to_process)) {
         $ids = UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences', $found_user);
         $user->set('field_iq_group_preferences', $ids);
