@@ -130,7 +130,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
       if ($conflicting_user) {
         // @TODO Decide what to do if a user is found with an import key
         // @TODO that was not specified in the import settings.
-        if (empty($context['result']['log_error'])) {
+        if (empty($context['results']['log_error'])) {
           $context['results']['log_error'] = [];
         }
         if (empty($context['results']['log_warning'])) {
