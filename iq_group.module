@@ -487,8 +487,15 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
   mb_internal_encoding("UTF-8");
   $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
   // Send a registration email and set the pending activation flag.
-  $result = mail($account->getEmail(), $mail_subject , $rendered,
-    "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");
+  $mailManager = \Drupal::service('plugin.manager.mail');
+  $module = 'iq_group';
+  $key = 'iq_group_reset_password';
+  $to = $account->getEmail();
+  $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+  $params['subject'] = $mail_subject;
+  $params['message'] = $rendered;
+  $send = true;
+  $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
   if (!empty($result)) {
     \Drupal::logger('user')->notice('Password reset instructions mailed to %name at %email.', ['%name' => $account->getUsername(), '%email' => $account->getEmail()]);
     \Drupal::messenger()->addStatus(t('Further instructions have been sent to your e-mail address.'));
@@ -506,7 +513,6 @@ function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_stat
   $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
   $iqGroupSettings = UserController::getIqGroupSettings();
-  $account = $form_state->getValue('account');
   // Mail one time login URL and instructions using current language.
   $renderable = [
     '#theme' => 'delete_account_template',
@@ -532,11 +538,77 @@ function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_stat
   mb_internal_encoding("UTF-8");
   $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
   // Send a registration email and set the pending activation flag.
-  $result = mail($user->getEmail(), $mail_subject , $rendered,
-    "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");
+  $module = 'iq_group';
+  $key = 'iq_group_delete_account';
+  $to = $user->getEmail();
+  $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+  $params['subject'] = $mail_subject;
+  $params['message'] = $rendered;
+  $send = true;
+  $mailManager = \Drupal::service('plugin.manager.mail');
+  $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
   if (!empty($result)) {
     \Drupal::logger('user')->notice('Account deletion instructions mailed to %name at %email.', ['%name' => $user->getUsername(), '%email' => $user->getEmail()]);
     \Drupal::messenger()->addStatus(t('Further instructions to delete your account have been sent to your email address.'));
   }
   $form_state->setRedirect('user.page');
+}
+
+/**
+ * Implements hook_mail().
+ */
+function iq_group_mail($key, &$message, $params)
+{
+  $options = array(
+    'langcode' => $message['langcode'],
+  );
+  $iqGroupSettings = UserController::getIqGroupSettings();
+  $message['from'] = $iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">";
+  $message['headers']['From'] = $message['headers']['Sender'] = $iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">";
+  $message['headers']['Reply-to'] = !empty($iqGroupSettings['reply_to']) ? $iqGroupSettings['reply_to'] : \Drupal::config('system.site')->get('mail');
+
+  switch ($key) {
+    case 'iq_group_create_member':
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['message'];
+      $message['headers']['Content-Type'] = 'text/html';
+      $message['headers']['MIME-Version'] = '1.0';
+      $message['html'] = true;
+      break;
+    case 'iq_group_reset_password':
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['message'];
+      $message['headers']['Content-Type'] = 'text/html';
+      $message['headers']['MIME-Version'] = '1.0';
+      $message['html'] = true;
+      break;
+    case 'iq_group_delete_account':
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['message'];
+      $message['headers']['Content-Type'] = 'text/html';
+      $message['headers']['MIME-Version'] = '1.0';
+      $message['html'] = true;
+      break;
+    case 'iq_group_login':
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['message'];
+      $message['headers']['Content-Type'] = 'text/html';
+      $message['headers']['MIME-Version'] = '1.0';
+      $message['html'] = true;
+      break;
+    case 'iq_group_password_reset':
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['message'];
+      $message['headers']['Content-Type'] = 'text/html';
+      $message['headers']['MIME-Version'] = '1.0';
+      $message['html'] = true;
+      break;
+    default:
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['message'];
+      $message['headers']['Content-Type'] = 'text/html';
+      $message['headers']['MIME-Version'] = '1.0';
+      $message['html'] = true;
+      break;
+  }
 }

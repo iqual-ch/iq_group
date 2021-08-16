@@ -299,8 +299,19 @@ class UserController extends ControllerBase {
     mb_internal_encoding("UTF-8");
     $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
     $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-    $result = mail($user->getEmail(), $mail_subject , $rendered,
-      "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");
+    $mailManager = \Drupal::service('plugin.manager.mail');
+    $module = 'iq_group';
+    $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $key = 'iq_group_create_member';
+    $to = $user->getEmail();
+    $params = [];
+    $params['subject'] = $mail_subject;
+    $params['message'] = $rendered;
+    $send = true;
+
+    $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
+    /*$result = mail($user->getEmail(), $mail_subject , $rendered,
+      "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");*/
     if ($result !== true) {
       \Drupal::logger('iq_group')->notice('Error while sending email');
       return NULL;

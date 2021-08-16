@@ -211,8 +211,15 @@ class SignupForm extends FormBase
         $mail_subject = $this->t("Sign into your account");
         mb_internal_encoding("UTF-8");
         $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
-        $result = mail($user->getEmail(), $mail_subject , $rendered,
-          "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");
+        $mailManager = \Drupal::service('plugin.manager.mail');
+        $module = 'iq_group';
+        $key =  'iq_group_login';
+        $to = $user->getEmail();
+        $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+        $params['subject'] = $mail_subject;
+        $params['message'] = $rendered;
+        $send = true;
+        $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
       }
       // If the user does not exist
       else {
