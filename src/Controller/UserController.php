@@ -312,7 +312,7 @@ class UserController extends ControllerBase {
     $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
     /*$result = mail($user->getEmail(), $mail_subject , $rendered,
       "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");*/
-    if (!empty($result)) {
+    if (empty($result)) {
       \Drupal::logger('iq_group')->notice('Error while sending email');
       return NULL;
     }
