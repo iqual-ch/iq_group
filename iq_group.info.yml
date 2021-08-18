@@ -10,3 +10,4 @@ dependencies:
   - pagedesigner_block_adaptable:pagedesigner_block_adaptable
   - iq_user_base:iq_user_base
   - drupal:route_condition
+  - drupal:swiftmailer

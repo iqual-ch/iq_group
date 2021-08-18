@@ -295,7 +295,7 @@ class UserController extends ControllerBase {
       $renderable["#USER_PREFERENCES"] = array_filter(array_column($user->field_iq_group_preferences->getValue(), 'target_id'));
     }
 
-    $mail_subject = $renderable['#EMAIL_TITLE'];
+    $mail_subject = t('Confirm subscription');
     mb_internal_encoding("UTF-8");
     $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
     $rendered = \Drupal::service('renderer')->renderPlain($renderable);
@@ -312,7 +312,7 @@ class UserController extends ControllerBase {
     $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
     /*$result = mail($user->getEmail(), $mail_subject , $rendered,
       "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");*/
-    if ($result !== true) {
+    if (!empty($result)) {
       \Drupal::logger('iq_group')->notice('Error while sending email');
       return NULL;
     }
