@@ -76,8 +76,13 @@ class OneTimeLoginLinkForm extends FormBase {
       $params['subject'] = $this->t('Password reset');
       //$params['message'] = OfferChecker::getEmailTemplate(t('Passwort wiederherstellen'), t('Passwort wiederherstellen'), '<a href="'. $login_url .'">Hier </a> können Sie Ihr Passwort wiederherstellen.');
       $params['message'] = '<a href="'. $login_url .'">'. $this->t('Click here') .'</a> ' . $this->t(' to reset your password');
-      $result = mail($user_email_name, $params["subject"], $params['message'],
-        "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");
+      $to = $user_email_name;
+      $module = 'iq_group';
+      $key = 'iq_group_password_reset';
+      $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+      $send = true;
+      $mailManager = \Drupal::service('plugin.manager.mail');
+      $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
 
     }
   }
