@@ -151,8 +151,8 @@ msgstr "Sprache der Website"
 msgid "This account's preferred language for emails and site presentation."
 msgstr "Die bevorzugte Sprache dieses Benutzerkontos für E-Mails und die Darstellung der Website."
 
-msgid "When you create a password, you are automatically creating a login. You can then change your preferences for the newsletter directly in the user account."
-msgstr "Wenn Sie ein Passwort setzen, erstellen Sie automatisch ein Login. Sie können anschliessend Ihre Newsletter Präferenzen direkt im Benutzerkonto ändern."
+msgid "When you create a password, you are automatically creating a login."
+msgstr "Wenn Sie ein Passwort setzen, erstellen Sie automatisch ein Login."
 
 msgid "Password"
 msgstr "Passwort"

@@ -177,7 +177,7 @@ class UserEditForm extends FormBase
 
       $form['password_text'] = [
         '#type' => 'markup',
-        '#markup' => t('When you create a password, you are automatically creating a login. You can then change your preferences for the newsletter directly in the user account.'),
+        '#markup' => t('When you create a password, you are automatically creating a login.'),
         '#weight' => 60,
       ];
       $form['password'] = [
