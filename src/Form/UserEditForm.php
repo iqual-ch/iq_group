@@ -175,21 +175,6 @@ class UserEditForm extends FormBase
       }
 
 
-      $form['password_text'] = [
-        '#type' => 'markup',
-        '#markup' => t('When you create a password, you are automatically creating a login.'),
-        '#weight' => 60,
-      ];
-      $form['password'] = [
-        '#type' => 'password',
-        '#title' => $this->t('Password'),
-        '#weight' => 61,
-      ];
-      $form['password_confirm'] = [
-        '#type' => 'password',
-        '#title' => $this->t('Confirm password'),
-        '#weight' => 62,
-      ];
 
       $user_id = \Drupal::currentUser()->id();
       $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
@@ -197,12 +182,33 @@ class UserEditForm extends FormBase
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
       $groupRoles = array_keys($groupRoles);
       if (in_array('subscription-subscriber', $groupRoles)) {
-        $form['member_area_title'] = [
-          '#type' => 'markup',
-          '#markup' => t('<h1>Create a login for your @project_name account</h1>', ['@project_name' => \Drupal::config('iq_group.settings')->get('project_name')]),
-          '#weight' => 50,
-        ];
+        $member_area_title = t('Create a login for your @project_name account', ['@project_name' => \Drupal::config('iq_group.settings')->get('project_name')]);
       }
+      else {
+        $member_area_title = t('Set your password');
+      }
+      $form['member_area'] = [
+        '#type' => 'details',
+        '#title' => $member_area_title,
+        '#weight' => 50,
+        '#open' => FALSE,
+      ];
+      $form['member_area']['password_text'] = [
+        '#type' => 'markup',
+        '#markup' => t('When you create a password, you are automatically creating a login.'),
+        '#weight' => 60,
+      ];
+      $form['member_area']['password'] = [
+        '#type' => 'password',
+        '#title' => $this->t('Password'),
+        '#weight' => 61,
+      ];
+      $form['member_area']['password_confirm'] = [
+        '#type' => 'password',
+        '#title' => $this->t('Confirm password'),
+        '#weight' => 62,
+      ];
+
       // If user is a lead, show link or edit profile directly.
       if (in_array('subscription-lead', $groupRoles)) {
         if ($currentPath == '/user/edit') {
