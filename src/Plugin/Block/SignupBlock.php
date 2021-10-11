@@ -22,4 +22,11 @@ class SignupBlock extends BlockBase {
   public function build() {
     return \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\SignupForm');
   }
+
+  public function getCacheTags()
+  {
+    $cache_tags = parent::getCacheTags();
+    $cache_tags[] = 'iq_group:signup_block';
+    return $cache_tags;
+  }
 }

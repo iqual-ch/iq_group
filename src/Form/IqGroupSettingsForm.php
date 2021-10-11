@@ -156,6 +156,9 @@ class IqGroupSettingsForm extends ConfigFormBase
    */
   public function submitForm(array &$form, FormStateInterface $form_state)
   {
+    if ($this->config('iq_group.settings')->get('hidden_groups') != $form_state->getValue('hidden_groups')) {
+      \Drupal::service('cache_tags.invalidator')->invalidateTags(['iq_group:signup_block']);
+    }
     $this->config('iq_group.settings')
       ->set('default_redirection', $form_state->getValue('default_redirection'))
       ->set('general_group_id', $form_state->getValue('general_group_id'))
