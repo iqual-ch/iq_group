@@ -136,7 +136,8 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
     $user = UserController::createMember(['id' => $user->id()], $renderable, $destination, FALSE);
     $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
     $store->set($user->id().'_pending_activation', true);
-    $form_state->setRedirectUrl(Url::fromUserInput($iqGroupSettings['redirection_after_register']));
+    $url = Url::fromUserInput($iqGroupSettings['redirection_after_register']);
+    $_GET['destination'] = $url->toString();
   }
 }
 
