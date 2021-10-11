@@ -83,12 +83,14 @@ class UserEditForm extends FormBase
         ->getStorage('group')
         ->loadMultiple();
       $options = [];
+      $hidden_groups = UserController::getIqGroupSettings()['hidden_groups'];
+      $hidden_groups = explode(',', $hidden_groups);
       /**
        * @var  int $key
        * @var  \Drupal\group\Entity\Group $group
        */
       foreach ($result as $key => $group) {
-        if ($group->id()!=\Drupal::config('iq_group.settings')->get('general_group_id'))
+        if ($group->id()!=\Drupal::config('iq_group.settings')->get('general_group_id') && !in_array($group->label(), $hidden_groups))
           $options[$group->id()] = $group->label();
       }
       if ($user->hasField('field_iq_group_preferences')) {
@@ -96,7 +98,7 @@ class UserEditForm extends FormBase
           ->getValue();
         $default_value = [];
         foreach ($selected_preferences as $key => $value) {
-          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id'))
+          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')  && !in_array($group->label(), $hidden_groups))
             $default_value = array_merge($default_value, [$value['target_id']]);
         }
 
