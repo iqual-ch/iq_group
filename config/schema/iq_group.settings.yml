@@ -20,6 +20,9 @@ iq_group.settings:
     general_group_id:
       type: string
       label: 'The id of the general group for access of the content.'
+    hidden_groups:
+      type: string
+      label: 'The hidden groups that should not be shown to the user.'
     name:
       type: string
       label: 'The name of the sender in the emails.'

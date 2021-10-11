@@ -89,8 +89,11 @@ class SignupForm extends FormBase
      * @var  \Drupal\group\Entity\Group $group
      */
     foreach ($result as $key => $group) {
-      // If it is not the general group, add it.
-      if ($group->id()!=\Drupal::config('iq_group.settings')->get('general_group_id'))
+      // If it is not the general group and it is not configured as hidden, add it.
+      $hidden_groups = UserController::getIqGroupSettings()['hidden_groups'];
+      $hidden_groups = explode(',', $hidden_groups);
+
+      if ($group->id()!=\Drupal::config('iq_group.settings')->get('general_group_id') && !in_array($group->label(), $hidden_groups))
         $options[$group->id()] = $group->label();
     }
     $form['preferences'] = [
