@@ -238,6 +238,7 @@ class UserController extends ControllerBase {
       'redirection_after_signup' => $iqGroupSettingsConfig->get('redirection_after_signup') != NULL ? $iqGroupSettingsConfig->get('redirection_after_signup') : "",
       'project_address' => $iqGroupSettingsConfig->get('project_address') != NULL ? $iqGroupSettingsConfig->get('project_address') : "",
       'hidden_fields' => $iqGroupSettingsConfig->get('hidden_fields') != NULL ? $iqGroupSettingsConfig->get('hidden_fields') : "",
+      'hidden_groups' => $iqGroupSettingsConfig->get('hidden_groups') != NULL ? $iqGroupSettingsConfig->get('hidden_groups') : "",
     ];
   }
 
