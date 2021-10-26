@@ -40,6 +40,8 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
     'locality' => 'field_iq_user_base_address',
     'country_code' => 'field_iq_user_base_address',
     'mail' => 'mail',
+    'langcode' => 'langcode',
+    'preferred_langcode' => 'preferred_langcode',
     'drupal_id' => 'uid'
   ];
   if (empty($context['results'])) {
