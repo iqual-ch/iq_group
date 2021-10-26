@@ -221,7 +221,7 @@ class ImportForm extends FormBase
       }
     } catch (Exception $exception) {
       \Drupal::messenger()->addError($exception->getMessage());
-      \Drupal::messenger()->addError('The csv file was not be imported.');
+      \Drupal::messenger()->addError('The csv file was not imported.');
       return ;
     }
 
