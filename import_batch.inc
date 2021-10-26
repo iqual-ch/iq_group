@@ -215,7 +215,9 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
       \Drupal::moduleHandler()
         ->invokeAll('iq_group_reference_import', [&$user_data, $user, $options, &$fields_to_process, $found_user]);
       // Go through each of the fields and map them to the appropriate keys.
-      $address_info = [];
+      // Prefill the address info from the user.
+      $address_infos = $user->field_iq_user_base_address->getValue();
+      $address_info = reset($address_infos);
 
       foreach ($fields_to_process as $field_key => $field_mapping) {
         if ($options['user_option'] == 'override_user') {
