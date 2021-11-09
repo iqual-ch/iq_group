@@ -9,6 +9,7 @@ namespace Drupal\iq_group\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\iq_group\Controller\UserController;
+use Exception;
 use League\Csv\Reader;
 
 class ImportForm extends FormBase
@@ -53,7 +54,7 @@ class ImportForm extends FormBase
       '#description' => $this->t('Override contact data fields (e.g. name, address, ...)'),
       '#options' => [
         'override_user' => $this->t('Override all fields'),
-        'override_user_if_empty' => $this->t('Override user if the existing fields are empty'),
+        'override_user_if_empty' => $this->t('Override if the existing fields are empty'),
         'override_user_hidden_fields' => $this->t('Override hidden fields'),
         'not_override_user' => $this->t('Do not override')
       ],
@@ -214,8 +215,14 @@ class ImportForm extends FormBase
     // Batch operations.
     $operations = [];
 
-    for($i = 0; $i < $reader->count(); $i+=10) {
-      $operations[] = ['csv_import', [$import_file_url, $i, $preference_names, \Drupal::currentUser()->id(), $options, $existing_terms, $product_ids, $branch_ids]];
+    try {
+      for($i = 0; $i < $reader->count(); $i+=10) {
+        $operations[] = ['csv_import', [$import_file_url, $i, $preference_names, \Drupal::currentUser()->id(), $options, $existing_terms, $product_ids, $branch_ids]];
+      }
+    } catch (Exception $exception) {
+      \Drupal::messenger()->addError($exception->getMessage());
+      \Drupal::messenger()->addError('The csv file was not imported.');
+      return ;
     }
 
     $batch = array(
