@@ -9,12 +9,12 @@
     }
   ],
   "require": {
-    "drupal/group": "*",
-    "iqual/iq_user_base": "*",
-    "league/csv": "*",
-    "drupal/login_emailusername": "*",
-    "drupal/route_condition":"*",
-    "drupal/switch_page_theme": "*",
-    "drupal/swiftmailer": "*"
+    "drupal/group": "^1.4",
+    "iqual/iq_user_base": "^2.0",
+    "league/csv": "^9.7",
+    "drupal/login_emailusername": "^1.2",
+    "drupal/route_condition":"^2.0",
+    "drupal/switch_page_theme": "^1.0",
+    "drupal/swiftmailer": "^2.0"
   }
 }
