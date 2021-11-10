@@ -9,6 +9,7 @@ use Drupal\group\Entity\Group;
 use Drupal\iq_group\Controller\UserController;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 
 class SignupForm extends FormBase
 {
@@ -40,7 +41,7 @@ class SignupForm extends FormBase
       $form['name'] = [
         '#type' => 'hidden',
         '#title' => $this->t('Username'),
-        '#maxlength' => USERNAME_MAX_LENGTH,
+        '#maxlength' => UserInterface::USERNAME_MAX_LENGTH,
         '#description' => $this->t("Some special characters are allowed, such as space, dot (.), hyphen (-), apostrophe ('), underscore(_) and the @ character."),
         '#required' => FALSE,
         '#attributes' => [
