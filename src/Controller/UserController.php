@@ -76,6 +76,12 @@ class UserController extends ControllerBase {
       // if user ->id is same with the logged in user (check cookies)
       if (\Drupal::currentUser()->isAuthenticated()) {
         if ($user->id() == \Drupal::currentUser()->id()) {
+          // If there are additional parameters (if the user was signed up
+          // through webform), attach them to the redirect.
+          $options = [];
+          if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
+            $options['query'] = ['source_form' => $_GET['source_form']];
+          }
           // is user opt-ed in (is user subscriber or lead)  if ($user->hasRole('subscriber'))
           // If there is a destination in the URL.
           if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
@@ -134,6 +140,9 @@ class UserController extends ControllerBase {
           }
         }
         if ($destination != "") {
+          if (isset($_GET['source_form']) && $_GET['destination'] != NULL) {
+            $destination .= '&source_form=' . $_GET['source_form'];
+          }
           $resetURL .= "?destination=" . $destination;
         }
         \Drupal::messenger()->addMessage(t('Your account is now protected with password. You can login.'));
@@ -155,6 +164,9 @@ class UserController extends ControllerBase {
           }
         }
 
+        if (isset($_GET['source_form']) && $_GET['destination'] != NULL) {
+          $destination = Url::fromUserInput($destination, ['query' => ['source_form' => $_GET['source_form']]])->toString();
+        }
         return new RedirectResponse($destination);
 
         //return new RedirectResponse(Url::fromUri('internal:/node/78')->toString());

@@ -133,7 +133,7 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
           $user_data['field_iq_group_products'] = $product;
         }
       }
-      $user = UserController::createMember($user_data);
+      $user = UserController::createMember($user_data, [], '/member-area&source_form=' . rawurlencode($webform_submission->getWebform()->label()));
       $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
       $store->set($user->id().'_pending_activation', true);
       $webform_submission->setOwnerId($user->id())->save();
