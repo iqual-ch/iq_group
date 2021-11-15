@@ -89,7 +89,9 @@ class UserController extends ControllerBase {
           if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
             $destination = Url::fromUserInput($destination, ['query' => ['source_form' => $_GET['source_form']]])->toString();
           }
-          return new RedirectResponse($destination);
+          $response = new RedirectResponse($destination);
+          $response->send();
+          return ;
 
         }
         else {
@@ -167,7 +169,9 @@ class UserController extends ControllerBase {
         if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
           $destination = Url::fromUserInput($destination, ['query' => ['source_form' => $_GET['source_form']]])->toString();
         }
-        return new RedirectResponse($destination);
+        $response = new RedirectResponse($destination);
+        $response->send();
+        return ;
 
         //return new RedirectResponse(Url::fromUri('internal:/node/78')->toString());
         //$resetURL = user_pass_reset_url($user);
