@@ -85,11 +85,15 @@ class UserController extends ControllerBase {
           // is user opt-ed in (is user subscriber or lead)  if ($user->hasRole('subscriber'))
           // If there is a destination in the URL.
           if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
-            return new RedirectResponse(Url::fromUserInput($_GET['destination'])->toString());
+            $destination = $_GET['destination'];
           }
           else {
-            return new RedirectResponse(Url::fromUserInput(\Drupal::config('iq_group.settings')->get('default_redirection'))->toString());
+            $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
           }
+          if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
+            $destination = Url::fromUserInput($destination, ['query' => ['source_form' => $_GET['source_form']]])->toString();
+          }
+          return new RedirectResponse($destination);
 
         }
         else {
@@ -140,7 +144,7 @@ class UserController extends ControllerBase {
           }
         }
         if ($destination != "") {
-          if (isset($_GET['source_form']) && $_GET['destination'] != NULL) {
+          if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
             $destination .= '&source_form=' . $_GET['source_form'];
           }
           $resetURL .= "?destination=" . $destination;
@@ -164,7 +168,7 @@ class UserController extends ControllerBase {
           }
         }
 
-        if (isset($_GET['source_form']) && $_GET['destination'] != NULL) {
+        if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
           $destination = Url::fromUserInput($destination, ['query' => ['source_form' => $_GET['source_form']]])->toString();
         }
         return new RedirectResponse($destination);
