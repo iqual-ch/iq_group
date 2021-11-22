@@ -120,18 +120,20 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
 
     }
     // If user exists, but is not logged in, attribute the submission to the user.
-    if (!empty($user) && $userExists && \Drupal::currentUser()->getEmail() != $email) {
+    if (!empty($user) && $userExists) {
       $webform_submission->setOwnerId($user->id())->save();
 
       // Send login email to the user.
-      if ($send_login_email) {
-        if (!empty(\Drupal::config('iq_group.settings')->get('default_redirection'))) {
-          $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
+      if (\Drupal::currentUser()->getEmail() != $email) {
+        if ($send_login_email) {
+          if (!empty(\Drupal::config('iq_group.settings')->get('default_redirection'))) {
+            $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
+          }
+          else {
+            $destination = '/member-area';
+          }
+          UserController::sendLoginEmail($user, $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
         }
-        else {
-          $destination = '/member-area';
-        }
-        UserController::sendLoginEmail($user, $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
       }
     }
     // If the user does not exists and the user checked the newsletter,
