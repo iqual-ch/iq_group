@@ -60,7 +60,7 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
           $send_login_email = $element['#send_login_email'];
         }
         else {
-          $send_login_email = TRUE;
+          $send_login_email = FALSE;
         }
       }
       // Set the branches through the industry content type.
@@ -119,13 +119,19 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
       }
 
     }
-    // If user exists, attribute the submission to the user.
-    if (!empty($user) && $userExists) {
+    // If user exists, but is not logged in, attribute the submission to the user.
+    if (!empty($user) && $userExists && \Drupal::currentUser()->getEmail() != $email) {
       $webform_submission->setOwnerId($user->id())->save();
 
       // Send login email to the user.
       if ($send_login_email) {
-        UserController::sendLoginEmail($user);
+        if (!empty(\Drupal::config('iq_group.settings')->get('default_redirection'))) {
+          $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
+        }
+        else {
+          $destination = '/member-area';
+        }
+        UserController::sendLoginEmail($user, $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
       }
     }
     // If the user does not exists and the user checked the newsletter,

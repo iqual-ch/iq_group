@@ -350,3 +350,6 @@ msgstr "Besten Dank für Ihr Interesse. Sie erhalten in Kürze eine E-Mail mit e
 
 msgid "Download your @project_name whitepaper now"
 msgstr "Laden Sie jetzt Ihr @project_name Whitepaper herunter"
+
+msgid "An e-mail has been sent with a login link to your account."
+msgstr "Sie erhalten in Kürze von uns eine E-Mail mit einem Login-Link."

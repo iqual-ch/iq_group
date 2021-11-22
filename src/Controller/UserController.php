@@ -336,6 +336,13 @@ class UserController extends ControllerBase {
     return $user;
   }
 
+  /**
+   * Helper function to send a login link.
+   * @param $user
+   *   The user to whom a login link is sent.
+   * @param null $destination
+   *   The destination to redirect when the login link is used.
+   */
   public static function sendLoginEmail($user, $destination = NULL) {
     $iqGroupSettings = UserController::getIqGroupSettings();
     if (empty($destination)) {
@@ -375,7 +382,7 @@ class UserController extends ControllerBase {
       \Drupal::messenger()->addMessage(t('There was an error while sending login link to your email.'), 'error');
     }
     else {
-      \Drupal::messenger()->addMessage(t('An email has been sent for your login.'));
+      \Drupal::messenger()->addMessage(t('An e-mail has been sent with a login link to your account.'));
     }
   }
 
