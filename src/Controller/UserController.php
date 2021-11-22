@@ -79,11 +79,19 @@ class UserController extends ControllerBase {
           // is user opt-ed in (is user subscriber or lead)  if ($user->hasRole('subscriber'))
           // If there is a destination in the URL.
           if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
-            return new RedirectResponse(Url::fromUserInput($_GET['destination'])->toString());
+            $destination = $_GET['destination'];
           }
           else {
-            return new RedirectResponse(Url::fromUserInput(\Drupal::config('iq_group.settings')->get('default_redirection'))->toString());
+            $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
           }
+          // If there are additional parameters (if the user was signed up
+          // through webform), attach them to the redirect.
+          if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
+            $destination = Url::fromUserInput($destination, ['query' => ['source_form' => $_GET['source_form']]])->toString();
+          }
+          $response = new RedirectResponse($destination);
+          $response->send();
+          return ;
 
         }
         else {
@@ -134,6 +142,9 @@ class UserController extends ControllerBase {
           }
         }
         if ($destination != "") {
+          if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
+            $destination .= '&source_form=' . $_GET['source_form'];
+          }
           $resetURL .= "?destination=" . $destination;
         }
         \Drupal::messenger()->addMessage(t('Your account is now protected with password. You can login.'));
@@ -155,7 +166,12 @@ class UserController extends ControllerBase {
           }
         }
 
-        return new RedirectResponse($destination);
+        if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
+          $destination = Url::fromUserInput($destination, ['query' => ['source_form' => $_GET['source_form']]])->toString();
+        }
+        $response = new RedirectResponse($destination);
+        $response->send();
+        return ;
 
         //return new RedirectResponse(Url::fromUri('internal:/node/78')->toString());
         //$resetURL = user_pass_reset_url($user);
@@ -318,6 +334,56 @@ class UserController extends ControllerBase {
       return NULL;
     }
     return $user;
+  }
+
+  /**
+   * Helper function to send a login link.
+   * @param $user
+   *   The user to whom a login link is sent.
+   * @param null $destination
+   *   The destination to redirect when the login link is used.
+   */
+  public static function sendLoginEmail($user, $destination = NULL) {
+    $iqGroupSettings = UserController::getIqGroupSettings();
+    if (empty($destination)) {
+      if (!empty(\Drupal::config('iq_group.settings')->get('default_redirection'))) {
+        $destination = $iqGroupSettings['default_redirection'];
+      }
+      else {
+        $destination = '/member-area';
+      }
+    }
+    $url = 'https://' . UserController::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
+    if (isset($destination) && $destination != NULL) {
+      $url .= "?destination=" . $destination;
+    }
+    $renderable = [
+      '#theme' => 'login_template',
+      '#EMAIL_TITLE' => t("Sign into your account"),
+      '#EMAIL_PREVIEW_TEXT' => t("Sign into your @project_name account", ['@project_name' => $iqGroupSettings['project_name']]),
+      '#EMAIL_URL' => $url,
+      '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
+      '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
+    ];
+    $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+    $mail_subject = t("Sign into your account");
+    mb_internal_encoding("UTF-8");
+    $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
+    $mailManager = \Drupal::service('plugin.manager.mail');
+    $module = 'iq_group';
+    $key =  'iq_group_login';
+    $to = $user->getEmail();
+    $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $params['subject'] = $mail_subject;
+    $params['message'] = $rendered;
+    $send = true;
+    $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
+    if ($result['result'] !== TRUE) {
+      \Drupal::messenger()->addMessage(t('There was an error while sending login link to your email.'), 'error');
+    }
+    else {
+      \Drupal::messenger()->addMessage(t('An e-mail has been sent with a login link to your account.'));
+    }
   }
 
   /**

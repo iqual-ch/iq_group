@@ -56,6 +56,12 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
       }
       else if ($form_state->getValue($key) && $element['#field_id'] == 'preferences') {
         $user_data['field_iq_group_preferences'] = $element['#field_value'];
+        if (!empty($element['#send_login_email'])) {
+          $send_login_email = $element['#send_login_email'];
+        }
+        else {
+          $send_login_email = FALSE;
+        }
       }
       // Set the branches through the industry content type.
       else if ($form_state->getValue($key) && $element['#field_id'] == 'branches') {
@@ -113,9 +119,22 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
       }
 
     }
-    // If user exists, attribute the submission to the user.
+    // If user exists, but is not logged in, attribute the submission to the user.
     if (!empty($user) && $userExists) {
-        $webform_submission->setOwnerId($user->id())->save();
+      $webform_submission->setOwnerId($user->id())->save();
+
+      // Send login email to the user.
+      if (\Drupal::currentUser()->getEmail() != $email) {
+        if ($send_login_email) {
+          if (!empty(\Drupal::config('iq_group.settings')->get('default_redirection'))) {
+            $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
+          }
+          else {
+            $destination = '/member-area';
+          }
+          UserController::sendLoginEmail($user, $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
+        }
+      }
     }
     // If the user does not exists and the user checked the newsletter,
     // Create the user and attribute the submission to the user.
@@ -133,7 +152,13 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
           $user_data['field_iq_group_products'] = $product;
         }
       }
-      $user = UserController::createMember($user_data);
+      if (!empty(\Drupal::config('iq_group.settings')->get('default_redirection'))) {
+        $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
+      }
+      else {
+        $destination = '/member-area';
+      }
+      $user = UserController::createMember($user_data, [], $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
       $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
       $store->set($user->id().'_pending_activation', true);
       $webform_submission->setOwnerId($user->id())->save();
