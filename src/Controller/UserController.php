@@ -336,6 +336,49 @@ class UserController extends ControllerBase {
     return $user;
   }
 
+  public static function sendLoginEmail($user, $destination = NULL) {
+    $iqGroupSettings = UserController::getIqGroupSettings();
+    if (empty($destination)) {
+      if (!empty(\Drupal::config('iq_group.settings')->get('default_redirection'))) {
+        $destination = $iqGroupSettings['default_redirection'];
+      }
+      else {
+        $destination = '/member-area';
+      }
+    }
+    $url = 'https://' . UserController::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
+    if (isset($destination) && $destination != NULL) {
+      $url .= "?destination=" . $destination;
+    }
+    $renderable = [
+      '#theme' => 'login_template',
+      '#EMAIL_TITLE' => t("Sign into your account"),
+      '#EMAIL_PREVIEW_TEXT' => t("Sign into your @project_name account", ['@project_name' => $iqGroupSettings['project_name']]),
+      '#EMAIL_URL' => $url,
+      '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
+      '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
+    ];
+    $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+    $mail_subject = t("Sign into your account");
+    mb_internal_encoding("UTF-8");
+    $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
+    $mailManager = \Drupal::service('plugin.manager.mail');
+    $module = 'iq_group';
+    $key =  'iq_group_login';
+    $to = $user->getEmail();
+    $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $params['subject'] = $mail_subject;
+    $params['message'] = $rendered;
+    $send = true;
+    $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
+    if ($result['result'] !== TRUE) {
+      \Drupal::messenger()->addMessage(t('There was an error while sending login link to your email.'), 'error');
+    }
+    else {
+      \Drupal::messenger()->addMessage(t('An email has been sent for your login.'));
+    }
+  }
+
   /**
    * Helper function to set the reference fields when importing users.
    *

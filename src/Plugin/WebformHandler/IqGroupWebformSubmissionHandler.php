@@ -56,6 +56,12 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
       }
       else if ($form_state->getValue($key) && $element['#field_id'] == 'preferences') {
         $user_data['field_iq_group_preferences'] = $element['#field_value'];
+        if (!empty($element['#send_login_email'])) {
+          $send_login_email = $element['#send_login_email'];
+        }
+        else {
+          $send_login_email = TRUE;
+        }
       }
       // Set the branches through the industry content type.
       else if ($form_state->getValue($key) && $element['#field_id'] == 'branches') {
@@ -115,7 +121,12 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
     }
     // If user exists, attribute the submission to the user.
     if (!empty($user) && $userExists) {
-        $webform_submission->setOwnerId($user->id())->save();
+      $webform_submission->setOwnerId($user->id())->save();
+
+      // Send login email to the user.
+      if ($send_login_email) {
+        UserController::sendLoginEmail($user);
+      }
     }
     // If the user does not exists and the user checked the newsletter,
     // Create the user and attribute the submission to the user.
