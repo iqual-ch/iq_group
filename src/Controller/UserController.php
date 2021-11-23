@@ -143,7 +143,7 @@ class UserController extends ControllerBase {
         }
         if ($destination != "") {
           if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
-            $destination .= '&source_form=' . $_GET['source_form'];
+            $destination .= '%2Fsource_form=' . $_GET['source_form'];
           }
           $resetURL .= "?destination=" . $destination;
         }
