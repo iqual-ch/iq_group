@@ -348,3 +348,6 @@ msgstr "Grazie per l’interesse dimostrato. A breve riceverà un’e-mail con u
 
 msgid "Download your @project_name whitepaper now"
 msgstr "Scarica subito il tuo white paper @project_name"
+
+msgid "An e-mail has been sent with a login link to your account."
+msgstr "Ti è stata inviata un'e-mail con un link di accesso al tuo account."
