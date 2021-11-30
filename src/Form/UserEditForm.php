@@ -16,6 +16,7 @@ use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\user\UserInterface;
 
 class UserEditForm extends FormBase
 {
@@ -66,7 +67,7 @@ class UserEditForm extends FormBase
       $form['name'] = [
         '#type' => 'hidden',
         '#title' => $this->t('Username'),
-        '#maxlength' => USERNAME_MAX_LENGTH,
+        '#maxlength' => UserInterface::USERNAME_MAX_LENGTH,
         '#description' => $this->t("Some special characters are allowed, such as space, dot (.), hyphen (-), apostrophe ('), underscore(_) and the @ character."),
         '#required' => FALSE,
         '#default_value' => $default_name,
