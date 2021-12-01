@@ -136,7 +136,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
       '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
     ];
     $user = UserController::createMember(['id' => $user->id()], $renderable, $destination, FALSE);
-    $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
+    $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
     $store->set($user->id().'_pending_activation', true);
     $url = Url::fromUserInput($iqGroupSettings['redirection_after_register']);
     $_GET['destination'] = $url->toString();
@@ -366,7 +366,7 @@ function iq_group_user_presave(\Drupal\user\UserInterface $account) {
     $generalGroup = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
 
     if (!empty($generalGroup) && $generalGroup->getMember($account)) {
-      $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
+      $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
       if (empty($store->get(crc32($account->getEmail()) . '_pending_finalization'))) {
         $eventDispatcher = \Drupal::service('event_dispatcher');
         $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_UPDATE, new IqGroupEvent($account));
