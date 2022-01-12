@@ -1,0 +1,5 @@
+services:
+  http_middleware.iq_group:
+    class: Drupal\iq_group\RedirectMiddleware
+    tags:
+      - { name: http_middleware}
