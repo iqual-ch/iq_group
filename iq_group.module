@@ -166,8 +166,9 @@ function iq_group_user_login(\Drupal\user\UserInterface $account) {
     // iq group settings.
     else {
       $member_area = \Drupal::config('iq_group.settings')->get('default_redirection');
+      $middleware = \Drupal::service('http_middleware.iq_group');
       $response = new RedirectResponse(Url::fromUserInput($member_area)->toString());
-      $response->send();
+      $middleware->setRedirectResponse($response);
     }
   }
   return ;
