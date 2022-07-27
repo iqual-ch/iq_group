@@ -2,7 +2,7 @@ name: iQual Group Integration module
 description: Integration module for Group
 package: Custom
 type: module
-core: 8.x
+core_version_requirement: 8.8 - 9.4
 dependencies:
   - drupal:group
   - gnode:gnode
