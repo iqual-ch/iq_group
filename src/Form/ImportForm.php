@@ -11,7 +11,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\iq_group\Controller\UserController;
 use Exception;
 use League\Csv\Reader;
-use Drupal\Core\Extension\ExtensionPathResolver;
 
 class ImportForm extends FormBase
 {
@@ -230,7 +229,7 @@ class ImportForm extends FormBase
       'title' => t('Import...'),
       'operations' => $operations,
       'finished' => 'finished_import',
-      'file' => ExtensionPathResolver::getPath('module', 'iq_group') . '/import_batch.inc',
+      'file' => \Drupal::service('extension.list.module')->getPath('iq_group') . '/import_batch.inc',
       'init_message' => t('Starting import, this may take a while.'),
       'progress_message' => t('Processed @current out of @total.'),
       'error_message' => t('An error occurred during processing'),
