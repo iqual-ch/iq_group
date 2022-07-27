@@ -51,7 +51,7 @@ class UserController extends ControllerBase {
 
   function resetPassword($user_id, $token) {
     /** @var \Drupal\user\SharedTempStore $store */
-    $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
+    $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
 
     \Drupal::service('page_cache_kill_switch')->trigger();
     $user = User::load($user_id);

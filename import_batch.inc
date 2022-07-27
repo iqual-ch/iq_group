@@ -95,7 +95,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
       // Flag to indicate whether the user exists already.
       $found_user = FALSE;
 
-      $store = \Drupal::service('user.shared_tempstore')->get('iq_group.user_status');
+      $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
       $found_import_key = $options['import_key'];
       // Get the existing user or create a new user.
       if (!empty($checkingUser)) {
