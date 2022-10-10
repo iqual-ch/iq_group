@@ -2,7 +2,7 @@
 
 namespace Drupal\iq_group\Event;
 
-use Symfony\Component\EventDispatcher\Event;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Event that is fired when a user is handled.

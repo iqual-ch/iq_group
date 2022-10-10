@@ -6,6 +6,8 @@
  */
 namespace Drupal\iq_group\Form;
 
+use Drupal\user\Entity\User;
+use Drupal\file\Entity\File;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\iq_group\Controller\UserController;
@@ -28,7 +30,7 @@ class ImportForm extends FormBase
    */
   public function buildForm(array $form, FormStateInterface $form_state)
   {
-    $user = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    $user = User::load(\Drupal::currentUser()->id());
     $form['import_file'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Member Import'),
@@ -129,7 +131,7 @@ class ImportForm extends FormBase
   {
 
     $import = $form_state->getValue('import_file');
-    $import_file = \Drupal\file\Entity\File::load($import[0]);
+    $import_file = File::load($import[0]);
 
     // read CSV file.
     $import_file_uri = $import_file->getFileUri();
@@ -229,7 +231,7 @@ class ImportForm extends FormBase
       'title' => t('Import...'),
       'operations' => $operations,
       'finished' => 'finished_import',
-      'file' => drupal_get_path('module', 'iq_group') . '/import_batch.inc',
+      'file' => \Drupal::service('extension.list.module')->getPath('iq_group') . '/import_batch.inc',
       'init_message' => t('Starting import, this may take a while.'),
       'progress_message' => t('Processed @current out of @total.'),
       'error_message' => t('An error occurred during processing'),

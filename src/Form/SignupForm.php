@@ -2,6 +2,8 @@
 
 namespace Drupal\iq_group\Form;
 
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Site\Settings;
@@ -23,7 +25,7 @@ class SignupForm extends FormBase
   /**
    * {@inheritDoc}
    */
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
     $account = \Drupal::currentUser();
     $default_preferences = [];
     $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
@@ -174,7 +176,7 @@ class SignupForm extends FormBase
   /**
    * {@inheritDoc}
    */
-  public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     $iqGroupSettings = UserController::getIqGroupSettings();
     if (\Drupal::currentUser()->isAnonymous()) {
       $result = \Drupal::entityQuery('user')
@@ -182,7 +184,7 @@ class SignupForm extends FormBase
         ->execute();
       // If the user exists, send him an email to login.
       if (count($result) > 0) {
-        $user = \Drupal\user\Entity\User::load(reset($result));
+        $user = User::load(reset($result));
         if ($user->field_iq_group_user_token->value == NULL) {
           $data = time();
           $data .= $user->id();
@@ -197,7 +199,7 @@ class SignupForm extends FormBase
         }
         else {
           // @todo Set a destination if it is a signup form or not?
-          $destination = \Drupal\Core\Url::fromUserInput($iqGroupSettings['redirection_after_signup'])->toString();
+          $destination = Url::fromUserInput($iqGroupSettings['redirection_after_signup'])->toString();
         }
         if (isset($destination) && $destination != NULL) {
           $url .= "?destination=" . $destination . "&signup=1";
@@ -252,7 +254,7 @@ class SignupForm extends FormBase
         }
         else {
           // @todo Set a destination if it is a signup form or not?
-          $destination = \Drupal\Core\Url::fromUserInput($iqGroupSettings['redirection_after_signup'])->toString();
+          $destination = Url::fromUserInput($iqGroupSettings['redirection_after_signup'])->toString();
         }
         $user = UserController::createMember($user_data, [], $destination);
       }

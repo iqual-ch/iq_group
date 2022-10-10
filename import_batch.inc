@@ -1,5 +1,10 @@
 <?php
 
+use League\Csv\Statement;
+use Drupal\iq_group\IqGroupEvents;
+use Drupal\iq_group\Event\IqGroupEvent;
+use Drupal\Core\Render\Markup;
+use Drupal\user\UserInterface;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Site\Settings;
 use Drupal\group\Entity\Group;
@@ -14,7 +19,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
   $reader->setHeaderOffset(0);
   // From import form, when chunking the data.
   // Get user records.
-  $stmt = (new \League\Csv\Statement())
+  $stmt = (new Statement())
     ->offset($i)
     ->limit(10);
   $records = $stmt->process($reader);
@@ -181,9 +186,9 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $generalGroup);
       $groupRoles = array_keys($groupRoles);
       if (!in_array('subscription-subscriber', $groupRoles) && !in_array('subscription-lead', $groupRoles)) {
-        \Drupal\iq_group\Controller\UserController::addGroupRoleToUser($generalGroup, $user, 'subscription-subscriber');
+        UserController::addGroupRoleToUser($generalGroup, $user, 'subscription-subscriber');
         $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(\Drupal\iq_group\IqGroupEvents::USER_OPT_IN, new \Drupal\iq_group\Event\IqGroupEvent( $user));
+        $eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent( $user));
       }
 
       // Set the keys that have to be processed to the the available columns in the import
@@ -483,7 +488,7 @@ function set_user_branches(&$user_data, &$user, $option, $branch_ids) {
 
 function finished_import($success, $results, $operations) {
   $msg = '<p>Finished import, processed ' . ($results['cnt_import'] + $results['cnt_error'] + $results['cnt_update']) . ' records<p>';
-  $rendered_msg = \Drupal\Core\Render\Markup::create($msg);
+  $rendered_msg = Markup::create($msg);
   \Drupal::messenger()->addMessage($rendered_msg);
   if ($results['cnt_error'] > 0) {
     $msg = '<p>Skipped ' . $results['cnt_error'] . ' records due to errors:</p>';
@@ -492,7 +497,7 @@ function finished_import($success, $results, $operations) {
         $msg .= '<ul>' . $error['message'] . implode(', ', $error['rows']) . '</ul>';
       }
     }
-    $rendered_msg = \Drupal\Core\Render\Markup::create($msg);
+    $rendered_msg = Markup::create($msg);
     \Drupal::messenger()->addError($rendered_msg);
   }
   if ($results['cnt_warning'] > 0) {
@@ -502,12 +507,12 @@ function finished_import($success, $results, $operations) {
         $msg .= '<ul>' . $error['message'] . implode(', ', $error['rows']) . '</ul>';
       }
     }
-    $rendered_msg = \Drupal\Core\Render\Markup::create($msg);
+    $rendered_msg = Markup::create($msg);
     \Drupal::messenger()->addWarning($rendered_msg);
   }
 }
 
-function update_user_groups(\Drupal\user\UserInterface $account) {
+function update_user_groups(UserInterface $account) {
   $generalGroup = Group::load(\Drupal::config('iq_group.settings')
     ->get('general_group_id'));
   if (!empty($generalGroup)) {
@@ -536,7 +541,7 @@ function update_user_groups(\Drupal\user\UserInterface $account) {
           /** @var \Drupal\group\Entity\GroupRoleInterface $generalGroupRole */
           $generalGroupRole = reset($generalGroup->getMember($account)
             ->getRoles());
-          \Drupal\iq_group\Controller\UserController::addGroupRoleToUser($group, $account, $generalGroupRole->id());
+          UserController::addGroupRoleToUser($group, $account, $generalGroupRole->id());
         }
         else {
           $group->removeMember($account);

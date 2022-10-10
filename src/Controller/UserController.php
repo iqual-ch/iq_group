@@ -273,7 +273,7 @@ class UserController extends ControllerBase {
   public static function createMember($user_data, $renderable = [], $destination = NULL, $user_create = TRUE) {
     $iqGroupSettings = UserController::getIqGroupSettings();
     if ($user_create) {
-      $user = \Drupal\user\Entity\User::create($user_data);
+      $user = User::create($user_data);
       $user->save();
     }
     else {

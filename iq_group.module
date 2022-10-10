@@ -1,5 +1,7 @@
 <?php
 
+use Drupal\user\Entity\User;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
@@ -23,7 +25,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
-function iq_group_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_group_form_user_register_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $form['account']['name']['#type'] = 'hidden';
   $form['account']['name']['#required'] = FALSE;
   $form['actions']['submit']['#submit'][] = 'iq_group_after_register';
@@ -37,9 +39,9 @@ function iq_group_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormSt
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
-function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_group_form_user_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   // Some fields should be hidden for regular users. For admins it should be visible.
-  $loggedInUser = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+  $loggedInUser = User::load(\Drupal::currentUser()->id());
   if (!$loggedInUser->hasPermission('administer users')) {
     $form['field_iq_group_tags']['#access'] = FALSE;
     if (isset($form['field_iq_group_products'])) {
@@ -118,7 +120,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
         }
       }
     }
-    \Drupal::messenger()->deleteByType(\Drupal\Core\Messenger\MessengerInterface::TYPE_STATUS);
+    \Drupal::messenger()->deleteByType(MessengerInterface::TYPE_STATUS);
     \Drupal::messenger()->addMessage(t('Thank you very much for the registration. You will shortly receive an e-mail from us with a confirmation link.'));
     if ($form_state->getValue('destination') != "")  {
       $destination = $form_state->getValue('destination');
@@ -146,7 +148,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
 /**
  * Implements hook_user_login().
  */
-function iq_group_user_login(\Drupal\user\UserInterface $account) {
+function iq_group_user_login(UserInterface $account) {
   // If the user is resetting his/her password, prevent the redirection.
   if (strpos(\Drupal::request()->getRequestUri(), "/user/reset/") >= 0) {
     return;
@@ -206,7 +208,7 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
       '#weight' => 10,
     ];
     // Tags field should be hidden for regular users. For admins it should be visible.
-    $loggedInUser = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    $loggedInUser = User::load(\Drupal::currentUser()->id());
     if (!$loggedInUser->hasPermission('administer users')) {
       $form['field_iq_group_tags']['#access'] = FALSE;
     }
@@ -361,7 +363,7 @@ function iq_group_theme($existing, $type, $theme, $path) {
 /**
  * Implements hook_ENTITY_TYPE_presave().
  */
-function iq_group_user_presave(\Drupal\user\UserInterface $account) {
+function iq_group_user_presave(UserInterface $account) {
   if (!$account->isNew()) {
     $generalGroup = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
 
@@ -386,7 +388,7 @@ function iq_group_user_presave(\Drupal\user\UserInterface $account) {
 /**
  * Implemenets hook_ENTITY_TYPE_update().
  */
-function iq_group_user_update(\Drupal\user\UserInterface $account) {
+function iq_group_user_update(UserInterface $account) {
   if (!$account->isNew()) {
     $generalGroup = Group::load(\Drupal::config('iq_group.settings')
       ->get('general_group_id'));
@@ -427,8 +429,8 @@ function iq_group_user_update(\Drupal\user\UserInterface $account) {
 /**
  * Implements hook_ENTITY_TYPE_predelete().
  */
-function iq_group_user_predelete(\Drupal\user\UserInterface $account) {
-  $user = \Drupal\user\Entity\User::load($account->id());
+function iq_group_user_predelete(UserInterface $account) {
+  $user = User::load($account->id());
 
   $group = Group::load(\Drupal::config('iq_group.settings')
     ->get('general_group_id'));
@@ -452,7 +454,7 @@ function iq_group_page_attachments(array &$attachments)
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function iq_group_form_user_pass_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_group_form_user_pass_alter(&$form, FormStateInterface $form_state, $form_id) {
   $form['intro_title'] = [
     '#type' => 'markup',
     '#markup' => '<div class="iqbm-text"><h1>' . t('Reset password') . '</h1></div>',
@@ -511,7 +513,7 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
  */
 function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_state) {
   $account = \Drupal::currentUser();
-  $user = \Drupal\user\Entity\User::load($account->id());
+  $user = User::load($account->id());
 
   $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
 

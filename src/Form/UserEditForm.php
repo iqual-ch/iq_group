@@ -58,7 +58,7 @@ class UserEditForm extends FormBase
   /**
    * {@inheritDoc}
    */
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state) {
     $currentPath =  \Drupal::service('path.current')->getPath();;
     if (!\Drupal::currentUser()->isAnonymous()) {
       $user = User::load(\Drupal::currentUser()->id());
@@ -254,7 +254,7 @@ class UserEditForm extends FormBase
   /**
    * {@inheritDoc}
    */
-  public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
     if ($form_state->getValue('name') != NULL) {
       $name = $form_state->getValue('name');

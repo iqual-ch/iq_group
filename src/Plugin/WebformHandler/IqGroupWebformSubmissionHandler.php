@@ -2,6 +2,8 @@
 
 namespace Drupal\iq_group\Plugin\WebformHandler;
 
+use Drupal\webform\Plugin\WebformHandlerBase;
+use Drupal\node\NodeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\iq_group\Controller\UserController;
 use Drupal\user\Entity\User;
@@ -20,7 +22,7 @@ use Drupal\webform\WebformSubmissionInterface;
  * )
  * @package Drupal\iq_group\Plugin\WebformHandler
  */
-class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHandlerBase {
+class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
 
   /**
    * {@inheritDoc}
@@ -81,7 +83,7 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
     if (!empty($user) && $userExists && \Drupal::currentUser()->getEmail() == $email) {
       // Check if the user is on a branch/product page or a entity.
       $node = \Drupal::routeMatch()->getParameter('node');
-      if ($node instanceof \Drupal\node\NodeInterface) {
+      if ($node instanceof NodeInterface) {
 
         if ($node->hasField('field_iq_group_branches')) {
           // Add the branches from the entity to the user's.
@@ -141,7 +143,7 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
     else if (!empty($user_data['field_iq_group_preferences'])) {
       // Check if the user is on a branch page.
       $node = \Drupal::routeMatch()->getParameter('node');
-      if ($node instanceof \Drupal\node\NodeInterface) {
+      if ($node instanceof NodeInterface) {
         // You can get nid and anything else you need from the node object.
         if ($node->hasField('field_iq_group_branches')) {
           $branch = $node->get('field_iq_group_branches')->getValue();
