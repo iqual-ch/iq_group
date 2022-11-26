@@ -11,7 +11,6 @@ use Drupal\group\Entity\GroupRole;
 use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\IqGroupEvents;
 use Drupal\user\Entity\User;
-use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -49,7 +48,10 @@ class UserController extends ControllerBase {
     );
   }
 
-  function resetPassword($user_id, $token) {
+  /**
+   *
+   */
+  public function resetPassword($user_id, $token) {
     /** @var \Drupal\user\SharedTempStore $store */
     $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
 
@@ -61,22 +63,21 @@ class UserController extends ControllerBase {
       $user->save();
       $store->delete($user_id . '_pending_activation');
     }
-    else if ((!empty($user) && $user->status->value == 0)) {
+    elseif ((!empty($user) && $user->status->value == 0)) {
       \Drupal::messenger()->addMessage($this->t('Your account has been blocked.'), 'error');
       return new RedirectResponse(Url::fromRoute('<front>')->toString());
     }
 
-
-    // is the token valid for that user
+    // Is the token valid for that user.
     if (!empty($token) && $token === $user->field_iq_group_user_token->value) {
       if (!empty($_GET['signup'])) {
         \Drupal::messenger()->addMessage(t('Thank you very much for registration to the newsletter.'));
       }
 
-      // if user ->id is same with the logged in user (check cookies)
+      // If user ->id is same with the logged in user (check cookies)
       if (\Drupal::currentUser()->isAuthenticated()) {
         if ($user->id() == \Drupal::currentUser()->id()) {
-          // is user opt-ed in (is user subscriber or lead)  if ($user->hasRole('subscriber'))
+          // Is user opt-ed in (is user subscriber or lead)  if ($user->hasRole('subscriber'))
           // If there is a destination in the URL.
           if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
             $destination = $_GET['destination'];
@@ -91,7 +92,7 @@ class UserController extends ControllerBase {
           }
           $response = new RedirectResponse($destination);
           $response->send();
-          return ;
+          return;
 
         }
         else {
@@ -99,7 +100,7 @@ class UserController extends ControllerBase {
           user_logout();
         }
       }
-      // If user is anonymous
+      // If user is anonymous.
       else {
         // If there is anything to do when he is anonymous.
       }
@@ -112,7 +113,7 @@ class UserController extends ControllerBase {
       // If he is not opted-in (not a subscriber nor a lead).
       if (!in_array('subscription-subscriber', $groupRoles) && !in_array('subscription-lead', $groupRoles)) {
         self::addGroupRoleToUser($group, $user, 'subscription-subscriber');
-        $this->eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent( $user));
+        $this->eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent($user));
       }
       // Add member to the other groups that the user has selected in the
       // preferences field.
@@ -148,21 +149,21 @@ class UserController extends ControllerBase {
           $resetURL .= "?destination=" . $destination;
         }
         \Drupal::messenger()->addMessage(t('Your account is now protected with password. You can login.'));
-        //return new RedirectResponse($resetURL);
-         $response = new RedirectResponse($resetURL, 302);
-         $response->send();
-         return;
+        // Return new RedirectResponse($resetURL);
+        $response = new RedirectResponse($resetURL, 302);
+        $response->send();
+        return;
       }
       else {
-        // instead of redirecting the user to the one-time-login, log him in.
+        // Instead of redirecting the user to the one-time-login, log him in.
         user_login_finalize($user);
-        // it doesnt go here, because the login hook is triggered
+        // It doesnt go here, because the login hook is triggered.
         if (empty($destination)) {
           if (\Drupal::config('iq_group.settings')->get('default_redirection')) {
             $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
           }
           else {
-            $destination ="/homepage";
+            $destination = "/homepage";
           }
         }
 
@@ -171,13 +172,12 @@ class UserController extends ControllerBase {
         }
         $response = new RedirectResponse($destination);
         $response->send();
-        return ;
+        return;
 
-        //return new RedirectResponse(Url::fromUri('internal:/node/78')->toString());
-        //$resetURL = user_pass_reset_url($user);
+        // Return new RedirectResponse(Url::fromUri('internal:/node/78')->toString());
+        // $resetURL = user_pass_reset_url($user);
       }
-//      return new RedirectResponse($resetURL, 302);
-
+      // Return new RedirectResponse($resetURL, 302);.
     }
     else {
       // Redirect the user to the resource & the private resource says like u are invalid.
@@ -206,7 +206,8 @@ class UserController extends ControllerBase {
         $membership->group_roles = [$groupRoleId];
         $membership->save();
       }
-    }else {
+    }
+    else {
       if ($groupRole != NULL) {
         $group->addMember($user, ['group_roles' => [$groupRole->id()]]);
       }
@@ -224,7 +225,8 @@ class UserController extends ControllerBase {
 
         if (count($virtual_hosts) > 1) {
           $virtual_host = $virtual_hosts[1];
-        } else {
+        }
+        else {
           $virtual_host = $virtual_hosts[0];
         }
       }
@@ -258,7 +260,6 @@ class UserController extends ControllerBase {
     ];
   }
 
-
   /**
    * Helper function to sign up a member and send him confirmation email.
    *
@@ -273,7 +274,11 @@ class UserController extends ControllerBase {
   public static function createMember($user_data, $renderable = [], $destination = NULL, $user_create = TRUE) {
     $iqGroupSettings = UserController::getIqGroupSettings();
     if ($user_create) {
-      $user = \Drupal\user\Entity\User::create($user_data);
+      if (empty($user_data['name'])) {
+        \Drupal::logger('iq_group')->warn('No name set in user data');
+        return NULL;
+      }
+      $user = User::create($user_data);
       $user->save();
     }
     else {
@@ -282,7 +287,7 @@ class UserController extends ControllerBase {
     $data = time();
     $data .= $user->id();
     $data .= $user->getEmail();
-    $hash_token =  Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
+    $hash_token = Crypt::hmacBase64($data, Settings::getHashSalt() . $user->getPassword());
     $user->set('field_iq_group_user_token', $hash_token);
     $user->save();
     $url = 'https://' . UserController::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
@@ -307,14 +312,14 @@ class UserController extends ControllerBase {
     else {
       $renderable['#EMAIL_URL'] = $url;
     }
-    // Make array of user preference ids available to template
+    // Make array of user preference ids available to template.
     if (!$user->get('field_iq_group_preferences')->isEmpty()) {
       $renderable["#USER_PREFERENCES"] = array_filter(array_column($user->field_iq_group_preferences->getValue(), 'target_id'));
     }
 
     $mail_subject = t('Confirm subscription');
     mb_internal_encoding("UTF-8");
-    $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
+    $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
     $rendered = \Drupal::service('renderer')->renderPlain($renderable);
     $mailManager = \Drupal::service('plugin.manager.mail');
     $module = 'iq_group';
@@ -324,11 +329,11 @@ class UserController extends ControllerBase {
     $params = [];
     $params['subject'] = $mail_subject;
     $params['message'] = $rendered;
-    $send = true;
+    $send = TRUE;
 
-    $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
+    $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
     /*$result = mail($user->getEmail(), $mail_subject , $rendered,
-      "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");*/
+    "From: ".$iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">". "\r\nReply-to: ". $iqGroupSettings['reply_to'] . "\r\nContent-Type: text/html");*/
     if (empty($result)) {
       \Drupal::logger('iq_group')->notice('Error while sending email');
       return NULL;
@@ -338,6 +343,7 @@ class UserController extends ControllerBase {
 
   /**
    * Helper function to send a login link.
+   *
    * @param $user
    *   The user to whom a login link is sent.
    * @param null $destination
@@ -368,16 +374,16 @@ class UserController extends ControllerBase {
     $rendered = \Drupal::service('renderer')->renderPlain($renderable);
     $mail_subject = t("Sign into your account");
     mb_internal_encoding("UTF-8");
-    $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
+    $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
     $mailManager = \Drupal::service('plugin.manager.mail');
     $module = 'iq_group';
-    $key =  'iq_group_login';
+    $key = 'iq_group_login';
     $to = $user->getEmail();
     $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
     $params['subject'] = $mail_subject;
     $params['message'] = $rendered;
-    $send = true;
-    $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
+    $send = TRUE;
+    $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
     if ($result['result'] !== TRUE) {
       \Drupal::messenger()->addMessage(t('There was an error while sending login link to your email.'), 'error');
     }
@@ -390,7 +396,7 @@ class UserController extends ControllerBase {
    * Helper function to set the reference fields when importing users.
    *
    * @param $user_data
-   * @param UserInterface $user
+   * @param \Drupal\user\Entity\UserInterface $user
    * @param $option
    * @param $entity_ids
    * @param $import_key
@@ -409,7 +415,7 @@ class UserController extends ControllerBase {
     $user_data[$import_key] = explode(',', $user_data[$import_key]);
     foreach ($user_data[$import_key] as $entity) {
       if (in_array(trim($entity), $entity_ids)) {
-        $ids[] = ['target_id' => (string)array_search(trim($entity), $entity_ids)];
+        $ids[] = ['target_id' => (string) array_search(trim($entity), $entity_ids)];
       }
     }
     // Set preferences based on the preference override option.
@@ -417,13 +423,13 @@ class UserController extends ControllerBase {
       $ids = array_filter(array_column($ids, 'target_id'));
       $user_data[$import_key] = $ids;
     }
-    else if ($option == 'add_preferences') {
+    elseif ($option == 'add_preferences') {
       $existing_entities = $user->get($field_key)->getValue();
       $existing_entities = array_filter(array_column($existing_entities, 'target_id'));
       $ids = array_filter(array_column($ids, 'target_id'));
       $ids = array_merge($existing_entities, $ids);
     }
-    else if ($option == 'remove_preferences') {
+    elseif ($option == 'remove_preferences') {
       $existing_entities = $user->get($field_key)->getValue();
       $existing_entities = array_filter(array_column($existing_entities, 'target_id'));
       $ids = array_filter(array_column($ids, 'target_id'));
@@ -436,13 +442,16 @@ class UserController extends ControllerBase {
     return array_unique($ids);
   }
 
+  /**
+   *
+   */
   public static function userImportKeyOptions() {
     $user_import_key_options = [];
     $user_fields = \Drupal::service('entity_field.manager')->getFieldDefinitions('user', 'user');
-    foreach($user_fields as $user_field) {
+    foreach ($user_fields as $user_field) {
       $field_name = $user_field->getName();
       $field_label = $user_field->getLabel();
-      if (substr($field_name,-3) =='_id' || $field_name == 'mail') {
+      if (substr($field_name, -3) == '_id' || $field_name == 'mail') {
         $user_import_key_options[$field_name] = $field_label;
       }
       if ($field_name == 'uid') {
@@ -451,4 +460,5 @@ class UserController extends ControllerBase {
     }
     return $user_import_key_options;
   }
+
 }
