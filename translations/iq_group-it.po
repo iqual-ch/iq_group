@@ -351,3 +351,6 @@ msgstr "Scarica subito il tuo white paper @project_name"
 
 msgid "An e-mail has been sent with a login link to your account."
 msgstr "Ti è stata inviata un'e-mail con un link di accesso al tuo account."
+
+msgid 'If the download did not start automatically, click <a href="@link">here</a>.'
+msgstr 'Se il download non si è avviato automaticamente, clicca <a href="@link">qui</a>.'

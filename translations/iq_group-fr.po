@@ -360,3 +360,6 @@ msgstr "Téléchargez votre livre blanc @project_name maintenant"
 
 msgid "An e-mail has been sent with a login link to your account."
 msgstr "Un e-mail a été envoyé avec un lien d'accès à votre compte."
+
+msgid 'If the download did not start automatically, click <a href="@link">here</a>.'
+msgstr 'Si le téléchargement n\'a pas démarré automatiquement, cliquez <a href="@link">ici</a>.'
