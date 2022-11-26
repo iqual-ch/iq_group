@@ -171,19 +171,15 @@ class UserController extends ControllerBase {
           $destination = Url::fromUserInput($destination, ['query' => ['source_form' => $_GET['source_form']]])->toString();
         }
         $response = new RedirectResponse($destination);
-        $response->send();
-        return;
-
-        // Return new RedirectResponse(Url::fromUri('internal:/node/78')->toString());
-        // $resetURL = user_pass_reset_url($user);
+        return $response;
       }
-      // Return new RedirectResponse($resetURL, 302);.
     }
     else {
       // Redirect the user to the resource & the private resource says like u are invalid.
       \Drupal::messenger()->addMessage($this->t('This link is invalid or has expired.'), 'error');
       return new RedirectResponse(Url::fromRoute('user.register')->toString());
     }
+    return new RedirectResponse(Url::fromRoute('user.register')->toString());
   }
 
   /**
@@ -274,10 +270,6 @@ class UserController extends ControllerBase {
   public static function createMember($user_data, $renderable = [], $destination = NULL, $user_create = TRUE) {
     $iqGroupSettings = UserController::getIqGroupSettings();
     if ($user_create) {
-      if (empty($user_data['name'])) {
-        \Drupal::logger('iq_group')->warn('No name set in user data');
-        return NULL;
-      }
       $user = User::create($user_data);
       $user->save();
     }
