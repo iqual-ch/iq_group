@@ -2,9 +2,10 @@
 
 namespace Drupal\iq_group\Plugin\WebformHandler;
 
+use Drupal\node\NodeInterface;
+use Drupal\webform\Plugin\WebformHandlerBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\iq_group\Controller\UserController;
-use Drupal\user\Entity\User;
 use Drupal\webform\WebformSubmissionInterface;
 
 /**
@@ -20,7 +21,7 @@ use Drupal\webform\WebformSubmissionInterface;
  * )
  * @package Drupal\iq_group\Plugin\WebformHandler
  */
-class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHandlerBase {
+class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
 
   /**
    * {@inheritDoc}
@@ -29,23 +30,24 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
 
     $user_data = [];
     $userExists = TRUE;
-    $values = $webform_submission->getData();
 
     $email = '';
     $user = NULL;
     foreach ($form['elements'] as $key => $element) {
-      if ($element['#field_id'] == 'email') {
+      if (empty($element['#field_id'])) {
+        continue;
+      }
+      if ($element['#field_id'] == 'email' && ($email = $form_state->getValue($key))) {
         $user = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties(
           [
-            'mail' => $form_state->getValue($key)
+            'mail' => $email,
           ]
         );
-        if (count($user) == 0){
+        if (count($user) == 0) {
           $userExists = FALSE;
 
-          $user_data['name'] = $form_state->getValue($key);
-          $user_data['mail'] = $user_data['name'];
-          $currentLanguage = $language = \Drupal::languageManager()->getCurrentLanguage()->getId();;
+          $user_data['mail'] = $user_data['name'] = $email;
+          $currentLanguage = \Drupal::languageManager()->getCurrentLanguage()->getId();
           $user_data['preferred_langcode'] = $currentLanguage;
           $user_data['langcode'] = $currentLanguage;
         }
@@ -54,7 +56,7 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
           $email = $user->getEmail();
         }
       }
-      else if ($form_state->getValue($key) && $element['#field_id'] == 'preferences') {
+      elseif ($element['#field_id'] == 'preferences' && $form_state->getValue($key)) {
         $user_data['field_iq_group_preferences'] = $element['#field_value'];
         if (!empty($element['#send_login_email'])) {
           $send_login_email = $element['#send_login_email'];
@@ -64,13 +66,12 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
         }
       }
       // Set the branches through the industry content type.
-      else if ($form_state->getValue($key) && $element['#field_id'] == 'branches') {
-        $industry_id = $form_state->getValue($key);
+      elseif ($element['#field_id'] == 'branches' && ($industry_id = $form_state->getValue($key))) {
         $industry = \Drupal::entityTypeManager()->getStorage('node')->load($industry_id);
         $branch = $industry->get('field_iq_group_branches')->getValue();
         $user_data['field_iq_group_branches'] = $branch;
       }
-      else if (isset($element['#field_id']) && !empty($element['#field_id'])) {
+      else {
         $user_data['field_iq_user_base_address'][$element['#field_id']] = $form_state->getValue($key);
       }
     }
@@ -81,7 +82,7 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
     if (!empty($user) && $userExists && \Drupal::currentUser()->getEmail() == $email) {
       // Check if the user is on a branch/product page or a entity.
       $node = \Drupal::routeMatch()->getParameter('node');
-      if ($node instanceof \Drupal\node\NodeInterface) {
+      if ($node instanceof NodeInterface) {
 
         if ($node->hasField('field_iq_group_branches')) {
           // Add the branches from the entity to the user's.
@@ -138,10 +139,10 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
     }
     // If the user does not exists and the user checked the newsletter,
     // Create the user and attribute the submission to the user.
-    else if (!empty($user_data['field_iq_group_preferences'])) {
+    elseif (!empty($user_data['field_iq_group_preferences'])) {
       // Check if the user is on a branch page.
       $node = \Drupal::routeMatch()->getParameter('node');
-      if ($node instanceof \Drupal\node\NodeInterface) {
+      if ($node instanceof NodeInterface) {
         // You can get nid and anything else you need from the node object.
         if ($node->hasField('field_iq_group_branches')) {
           $branch = $node->get('field_iq_group_branches')->getValue();
@@ -160,8 +161,9 @@ class IqGroupWebformSubmissionHandler extends \Drupal\webform\Plugin\WebformHand
       }
       $user = UserController::createMember($user_data, [], $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
       $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
-      $store->set($user->id().'_pending_activation', true);
+      $store->set($user->id() . '_pending_activation', TRUE);
       $webform_submission->setOwnerId($user->id())->save();
     }
   }
+
 }
