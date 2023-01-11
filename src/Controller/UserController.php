@@ -91,8 +91,7 @@ class UserController extends ControllerBase {
             $destination = Url::fromUserInput($destination, ['query' => ['source_form' => $_GET['source_form']]])->toString();
           }
           $response = new RedirectResponse($destination);
-          $response->send();
-          return;
+          return $response;
 
         }
         else {
@@ -100,9 +99,8 @@ class UserController extends ControllerBase {
           user_logout();
         }
       }
-      // If user is anonymous.
       else {
-        // If there is anything to do when he is anonymous.
+        // If there is anything to do when user is anonymous.
       }
       // Load General group (id=5) and get the roles for the user.
       $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
@@ -115,6 +113,7 @@ class UserController extends ControllerBase {
         self::addGroupRoleToUser($group, $user, 'subscription-subscriber');
         $this->eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent($user));
       }
+      
       // Add member to the other groups that the user has selected in the
       // preferences field.
       if (!in_array('subscription-lead', $groupRoles)) {
@@ -151,8 +150,7 @@ class UserController extends ControllerBase {
         \Drupal::messenger()->addMessage(t('Your account is now protected with password. You can login.'));
         // Return new RedirectResponse($resetURL);
         $response = new RedirectResponse($resetURL, 302);
-        $response->send();
-        return;
+        return $response;
       }
       else {
         // Instead of redirecting the user to the one-time-login, log him in.
@@ -174,11 +172,8 @@ class UserController extends ControllerBase {
         return $response;
       }
     }
-    else {
-      // Redirect the user to the resource & the private resource says like u are invalid.
-      \Drupal::messenger()->addMessage($this->t('This link is invalid or has expired.'), 'error');
-      return new RedirectResponse(Url::fromRoute('user.register')->toString());
-    }
+    // Redirect the user to the resource & the private resource says like u are invalid.
+    \Drupal::messenger()->addMessage($this->t('This link is invalid or has expired.'), 'error');
     return new RedirectResponse(Url::fromRoute('user.register')->toString());
   }
 
