@@ -1,45 +1,43 @@
 <?php
 
-use Drupal\Component\Utility\Crypt;
+/**
+ * @file
+ */
+
+use Drupal\user\UserInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\user\Entity\User;
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
-use Drupal\file\FileInterface;
 use Drupal\iq_group\Controller\UserController;
-use Drupal\node\Entity\Node;
 use Drupal\group\Entity\Group;
-use Drupal\group\Entity\GroupContent;
 use Drupal\iq_group\IqGroupEvents;
 use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\node\NodeInterface;
-use Drupal\user\UserInterface;
-use Drupal\views\ViewExecutable;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
-function iq_group_form_user_register_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_group_form_user_register_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   $form['account']['name']['#type'] = 'hidden';
   $form['account']['name']['#required'] = FALSE;
   $form['actions']['submit']['#submit'][] = 'iq_group_after_register';
   $form['#validate'][] = 'iq_group_register_validation';
   $form['#validate'] = array_reverse($form['#validate']);
-  //var_dump($form['#validate']);
-  //var_dump(array_keys($form['account']));
-  //die();
+  // var_dump($form['#validate']);
+  // var_dump(array_keys($form['account']));
+  // die();
 }
 
 /**
  * Implements hook_form_BASE_FORM_ID_alter().
  */
-function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_group_form_user_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   // Some fields should be hidden for regular users. For admins it should be visible.
-  $loggedInUser = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+  $loggedInUser = User::load(\Drupal::currentUser()->id());
   if (!$loggedInUser->hasPermission('administer users')) {
     $form['field_iq_group_tags']['#access'] = FALSE;
     if (isset($form['field_iq_group_products'])) {
@@ -61,7 +59,7 @@ function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterf
   $form['language']['#type'] = 'markup';
   $form['account']['name']['#type'] = 'hidden';
   $form['account']['mail']['#description'] = '';
-  //$form['actions']['submit']['#submit'][] = 'iq_group_after_register';
+  // $form['actions']['submit']['#submit'][] = 'iq_group_after_register';
   if (!empty($form['field_iq_group_preferences'])) {
     $hidden_groups = UserController::getIqGroupSettings()['hidden_groups'];
     $hidden_groups = explode(',', $hidden_groups);
@@ -74,6 +72,9 @@ function iq_group_form_user_form_alter(&$form, \Drupal\Core\Form\FormStateInterf
 
 }
 
+/**
+ *
+ */
 function iq_group_register_validation(&$form, FormStateInterface $form_state) {
   $form_state->setValue('name', $form_state->getValue('mail'));
   $form['account']['name']['#value'] = $form_state->getValue('mail');
@@ -84,10 +85,10 @@ function iq_group_register_validation(&$form, FormStateInterface $form_state) {
  */
 function iq_group_after_register(&$form, FormStateInterface $form_state) {
   $iqGroupSettings = UserController::getIqGroupSettings();
-  // email exists
+  // Email exists.
   $mail = $form_state->getValue('mail');
   @$user = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties([
-    'mail' => $mail
+    'mail' => $mail,
   ]);
   /** @var \Drupal\user\Entity\User $user */
   $user = reset($user);
@@ -113,19 +114,20 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
       if ($groups != NULL && !empty($groups)) {
         foreach ($groups as $key => $otherGroup) {
           $otherGroup = Group::load($otherGroup);
-          if ($otherGroup != NULL)
+          if ($otherGroup != NULL) {
             UserController::addGroupRoleToUser($otherGroup, $user, 'subscription-lead');
+          }
         }
       }
     }
-    \Drupal::messenger()->deleteByType(\Drupal\Core\Messenger\MessengerInterface::TYPE_STATUS);
+    \Drupal::messenger()->deleteByType(MessengerInterface::TYPE_STATUS);
     \Drupal::messenger()->addMessage(t('Thank you very much for the registration. You will shortly receive an e-mail from us with a confirmation link.'));
-    if ($form_state->getValue('destination') != "")  {
+    if ($form_state->getValue('destination') != "") {
       $destination = $form_state->getValue('destination');
     }
     else {
       // @todo Set a destination if it is a signup form or not?
-      //$destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
+      // $destination = \Drupal\Core\Url::fromRoute('<current>')->toString();
     }
     $renderable = [
       '#theme' => 'register_template',
@@ -137,7 +139,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
     ];
     $user = UserController::createMember(['id' => $user->id()], $renderable, $destination, FALSE);
     $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
-    $store->set($user->id().'_pending_activation', true);
+    $store->set($user->id() . '_pending_activation', TRUE);
     $url = Url::fromUserInput($iqGroupSettings['redirection_after_register']);
     $_GET['destination'] = $url->toString();
   }
@@ -146,7 +148,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
 /**
  * Implements hook_user_login().
  */
-function iq_group_user_login(\Drupal\user\UserInterface $account) {
+function iq_group_user_login(UserInterface $account) {
   // If the user is resetting his/her password, prevent the redirection.
   if (strpos(\Drupal::request()->getRequestUri(), "/user/reset/") >= 0) {
     return;
@@ -157,12 +159,12 @@ function iq_group_user_login(\Drupal\user\UserInterface $account) {
   $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
   $groupRoles = array_keys($groupRoles);
   if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
-    // redirect to destination if there is 1
+    // Redirect to destination if there is 1.
     if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
       $destination = $_GET['destination'];
-      header("Location:".$destination);
+      header("Location:" . $destination);
     }
-    // if not, he will be redirect to the set default redirect from
+    // If not, he will be redirect to the set default redirect from
     // iq group settings.
     else {
       $member_area = \Drupal::config('iq_group.settings')->get('default_redirection');
@@ -171,25 +173,28 @@ function iq_group_user_login(\Drupal\user\UserInterface $account) {
       $middleware->setRedirectResponse($response);
     }
   }
-  return ;
+  return;
 }
 
+/**
+ *
+ */
 function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
   // Disable cancel methods for non-admin users.
   if ($form_id == 'user_cancel_form' && \Drupal::currentUser()->id() != '1') {
-      unset($form['user_cancel_method']['#options']['user_cancel_block_unpublish']);
-      unset($form['user_cancel_method']['user_cancel_block_unpublish']);
-      unset($form['user_cancel_method']['#options']['user_cancel_block']);
-      unset($form['user_cancel_method']['user_cancel_block']);
-      $form['user_cancel_method']['#default_value'] = 'user_cancel_reassign';
+    unset($form['user_cancel_method']['#options']['user_cancel_block_unpublish']);
+    unset($form['user_cancel_method']['user_cancel_block_unpublish']);
+    unset($form['user_cancel_method']['#options']['user_cancel_block']);
+    unset($form['user_cancel_method']['user_cancel_block']);
+    $form['user_cancel_method']['#default_value'] = 'user_cancel_reassign';
 
-      // If needed, the description can be changed with the following text.
-      $form['user_cancel_method']['#options']['user_cancel_reassign'] = t('I confirm that I would like to delete my account.');
-      $form['user_cancel_method']['#title'] = t('Account deletion');
+    // If needed, the description can be changed with the following text.
+    $form['user_cancel_method']['#options']['user_cancel_reassign'] = t('I confirm that I would like to delete my account.');
+    $form['user_cancel_method']['#title'] = t('Account deletion');
 
-      unset($form['description']);
-      $form['actions']['submit']['#submit'] = ['iq_group_user_cancel_submit'];
+    unset($form['description']);
+    $form['actions']['submit']['#submit'] = ['iq_group_user_cancel_submit'];
   }
   if ($form_id == 'iq_group_user_edit_form') {
 
@@ -202,57 +207,59 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     $form['data_privacy'] = [
       '#type' => 'checkbox',
       '#title' => t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
-      '#default_value' => false,
-      '#required' => true,
+      '#default_value' => FALSE,
+      '#required' => TRUE,
       '#weight' => 10,
     ];
     // Tags field should be hidden for regular users. For admins it should be visible.
-    $loggedInUser = \Drupal\user\Entity\User::load(\Drupal::currentUser()->id());
+    $loggedInUser = User::load(\Drupal::currentUser()->id());
     if (!$loggedInUser->hasPermission('administer users')) {
       $form['field_iq_group_tags']['#access'] = FALSE;
     }
     // The submit callback should not be here. If everything is okay,
     // remove the comment on the next line.
-    // $form['actions']['#submit'][] = '_node_field_group_add_custom_callback_group';
-/*    $result = \Drupal::entityTypeManager()
-      ->getStorage('group')
-      ->loadMultiple();
+    // $form['actions']['#submit'][] = '_node_field_group_add_custom_callback_group';.
+    /*    $result = \Drupal::entityTypeManager()
+    ->getStorage('group')
+    ->loadMultiple();
     $options = [];
     foreach ($result as $key => $group) {
-      $options[$group->id()] = $group->label();
+    $options[$group->id()] = $group->label();
     }
     $form['field_iq_group_preferences']['widget']['#options'] = $options;*/
   }
 }
 
+/**
+ *
+ */
 function iq_group_form_user_login_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
   $iqGroupSettings = UserController::getIqGroupSettings();
   $form['title'] = [
     '#type' => 'markup',
-    '#markup' => "<h1>". t($iqGroupSettings['login_intro']) ."</h1>",
-    '#weight' => -100
+    '#markup' => "<h1>" . t($iqGroupSettings['login_intro']) . "</h1>",
+    '#weight' => -100,
   ];
   $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
   $destination = '/' . $language . '/user/register';
   if (!empty($_GET['destination'])) {
-    $destination.='?destination=' . $_GET['destination'];
+    $destination .= '?destination=' . $_GET['destination'];
   }
   $form['forgot_password'] = [
     '#type' => 'markup',
-    '#markup' => '<a href="/' . $language . '/user/password">'. t('Forgotten password') . '</a> / ',
-    '#weight' => 100
+    '#markup' => '<a href="/' . $language . '/user/password">' . t('Forgotten password') . '</a> / ',
+    '#weight' => 100,
   ];
   $form['register_link'] = [
     '#type' => 'markup',
-    '#markup' => '<a href="'. $destination .  '">' . t('Create an account') . '</a>',
-    '#weight' => 100
+    '#markup' => '<a href="' . $destination . '">' . t('Create an account') . '</a>',
+    '#weight' => 100,
   ];
 }
 
 /**
  * Implements hook_node_access().
- *
  */
 function iq_group_node_access(NodeInterface $node, $op, AccountInterface $account) {
   // We do not care about create access as we have our own wizard for that. Any
@@ -304,6 +311,9 @@ function iq_group_node_access(NodeInterface $node, $op, AccountInterface $accoun
   return AccessResult::neutral();
 }
 
+/**
+ *
+ */
 function iq_group_theme($existing, $type, $theme, $path) {
   $text = '';
   return [
@@ -362,7 +372,7 @@ function iq_group_theme($existing, $type, $theme, $path) {
 /**
  * Implements hook_ENTITY_TYPE_presave().
  */
-function iq_group_user_presave(\Drupal\user\UserInterface $account) {
+function iq_group_user_presave(UserInterface $account) {
   if (!$account->isNew()) {
     $generalGroup = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
 
@@ -376,7 +386,7 @@ function iq_group_user_presave(\Drupal\user\UserInterface $account) {
       $groups = $account->get('field_iq_group_preferences')->getValue();
       $selected_preferences = array_filter(array_column($groups, 'target_id'));
       if (!in_array($generalGroup->id(), $selected_preferences)) {
-        $selected_preferences = array_merge($selected_preferences , [$generalGroup->id()]);
+        $selected_preferences = array_merge($selected_preferences, [$generalGroup->id()]);
       }
       $selected_preferences = array_values(array_unique($selected_preferences));
       $account->set('field_iq_group_preferences', $selected_preferences);
@@ -387,7 +397,7 @@ function iq_group_user_presave(\Drupal\user\UserInterface $account) {
 /**
  * Implemenets hook_ENTITY_TYPE_update().
  */
-function iq_group_user_update(\Drupal\user\UserInterface $account) {
+function iq_group_user_update(UserInterface $account) {
   if (!$account->isNew()) {
     $generalGroup = Group::load(\Drupal::config('iq_group.settings')
       ->get('general_group_id'));
@@ -409,7 +419,7 @@ function iq_group_user_update(\Drupal\user\UserInterface $account) {
       foreach ($result as $key => $group) {
         // If it is not the general group, check for updates.
         if ($group->id() != \Drupal::config('iq_group.settings')
-            ->get('general_group_id')) {
+          ->get('general_group_id')) {
           if (in_array($group->id(), $selected_preferences)) {
             $roles = $generalGroup->getMember($account)
               ->getRoles();
@@ -425,11 +435,12 @@ function iq_group_user_update(\Drupal\user\UserInterface $account) {
     }
   }
 }
+
 /**
  * Implements hook_ENTITY_TYPE_predelete().
  */
-function iq_group_user_predelete(\Drupal\user\UserInterface $account) {
-  $user = \Drupal\user\Entity\User::load($account->id());
+function iq_group_user_predelete(UserInterface $account) {
+  $user = User::load($account->id());
 
   $group = Group::load(\Drupal::config('iq_group.settings')
     ->get('general_group_id'));
@@ -443,8 +454,7 @@ function iq_group_user_predelete(\Drupal\user\UserInterface $account) {
 /**
  * Implements hook_page_attachments().
  */
-function iq_group_page_attachments(array &$attachments)
-{
+function iq_group_page_attachments(array &$attachments) {
   if (\Drupal::routeMatch()->getRouteName() == 'entity.user.canonical') {
     $attachments['#attached']['library'][] = 'ui_patterns/button_cta.button';
   }
@@ -453,11 +463,11 @@ function iq_group_page_attachments(array &$attachments)
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function iq_group_form_user_pass_alter(&$form, \Drupal\Core\Form\FormStateInterface $form_state, $form_id) {
+function iq_group_form_user_pass_alter(&$form, FormStateInterface $form_state, $form_id) {
   $form['intro_title'] = [
     '#type' => 'markup',
     '#markup' => '<div class="iqbm-text"><h1>' . t('Reset password') . '</h1></div>',
-    '#weight' => -100
+    '#weight' => -100,
   ];
   $form['actions']['submit']['#submit'] = ['iq_group_reset_pass_submit'];
 }
@@ -469,7 +479,9 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
   $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
   $iqGroupSettings = UserController::getIqGroupSettings();
+  /** @var \Drupal\user\Entity\User $account */
   $account = $form_state->getValue('account');
+  
   // Mail one time login URL and instructions using current language.
   $renderable = [
     '#theme' => 'reset_password_template',
@@ -481,7 +493,7 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
     '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
   ];
 
-  // Make array of user preference ids available to template
+  // Make array of user preference ids available to template.
   if (!$account->get('field_iq_group_preferences')->isEmpty()) {
     $renderable["#USER_PREFERENCES"] = array_filter(array_column($account->field_iq_group_preferences->getValue(), 'target_id'));
   }
@@ -489,7 +501,7 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
   $rendered = \Drupal::service('renderer')->renderPlain($renderable);
   $mail_subject = t("Reset Password");
   mb_internal_encoding("UTF-8");
-  $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
+  $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
   // Send a registration email and set the pending activation flag.
   $mailManager = \Drupal::service('plugin.manager.mail');
   $module = 'iq_group';
@@ -498,10 +510,10 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
   $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
   $params['subject'] = $mail_subject;
   $params['message'] = $rendered;
-  $send = true;
-  $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
+  $send = TRUE;
+  $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
   if (!empty($result)) {
-    \Drupal::logger('user')->notice('Password reset instructions mailed to %name at %email.', ['%name' => $account->getUsername(), '%email' => $account->getEmail()]);
+    \Drupal::logger('user')->notice('Password reset instructions mailed to %name at %email.', ['%name' => $account->getAccountName(), '%email' => $account->getEmail()]);
     \Drupal::messenger()->addStatus(t('Further instructions have been sent to your e-mail address.'));
   }
   $form_state->setRedirect('user.page');
@@ -512,7 +524,7 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
  */
 function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_state) {
   $account = \Drupal::currentUser();
-  $user = \Drupal\user\Entity\User::load($account->id());
+  $user = User::load($account->id());
 
   $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
@@ -525,14 +537,13 @@ function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_stat
     '#USER_PREFERENCES' => [],
     '#EMAIL_URL' => user_cancel_url($user, ['langcode' => 'de']) . '?destination=' . $iqGroupSettings['redirection_after_account_delete'],
     '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
-    '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address'])
+    '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
   ];
   /** @var \Drupal\user\UserDataInterface $user_data */
   $user_data = \Drupal::service('user.data');
   $user_data->set('user', $user->id(), 'cancel_method', $form_state->getValue('user_cancel_method'));
 
-
-  // Make array of user preference ids available to template
+  // Make array of user preference ids available to template.
   if (!$user->get('field_iq_group_preferences')->isEmpty()) {
     $renderable["#USER_PREFERENCES"] = array_filter(array_column($user->field_iq_group_preferences->getValue(), 'target_id'));
   }
@@ -540,7 +551,7 @@ function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_stat
   $rendered = \Drupal::service('renderer')->renderPlain($renderable);
   $mail_subject = t("Confirm account deletion");
   mb_internal_encoding("UTF-8");
-  $mail_subject  = mb_encode_mimeheader($mail_subject,'UTF-8','Q');
+  $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
   // Send a registration email and set the pending activation flag.
   $module = 'iq_group';
   $key = 'iq_group_delete_account';
@@ -548,9 +559,9 @@ function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_stat
   $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
   $params['subject'] = $mail_subject;
   $params['message'] = $rendered;
-  $send = true;
+  $send = TRUE;
   $mailManager = \Drupal::service('plugin.manager.mail');
-  $result = $mailManager->mail($module, $key, $to, $langcode, $params, null, $send);
+  $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
   if (!empty($result)) {
     \Drupal::logger('user')->notice('Account deletion instructions mailed to %name at %email.', ['%name' => $user->getUsername(), '%email' => $user->getEmail()]);
     \Drupal::messenger()->addStatus(t('Further instructions to delete your account have been sent to your email address.'));
@@ -561,14 +572,13 @@ function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_stat
 /**
  * Implements hook_mail().
  */
-function iq_group_mail($key, &$message, $params)
-{
-  $options = array(
+function iq_group_mail($key, &$message, $params) {
+  $options = [
     'langcode' => $message['langcode'],
-  );
+  ];
   $iqGroupSettings = UserController::getIqGroupSettings();
-  $message['from'] = $iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">";
-  $message['headers']['From'] = $message['headers']['Sender'] = $iqGroupSettings['name'] ." <". $iqGroupSettings['from'] .">";
+  $message['from'] = $iqGroupSettings['name'] . " <" . $iqGroupSettings['from'] . ">";
+  $message['headers']['From'] = $message['headers']['Sender'] = $iqGroupSettings['name'] . " <" . $iqGroupSettings['from'] . ">";
   $message['headers']['Reply-to'] = !empty($iqGroupSettings['reply_to']) ? $iqGroupSettings['reply_to'] : \Drupal::config('system.site')->get('mail');
 
   switch ($key) {
@@ -577,42 +587,47 @@ function iq_group_mail($key, &$message, $params)
       $message['body'][] = $params['message'];
       $message['headers']['Content-Type'] = 'text/html';
       $message['headers']['MIME-Version'] = '1.0';
-      $message['html'] = true;
+      $message['html'] = TRUE;
       break;
+
     case 'iq_group_reset_password':
       $message['subject'] = $params['subject'];
       $message['body'][] = $params['message'];
       $message['headers']['Content-Type'] = 'text/html';
       $message['headers']['MIME-Version'] = '1.0';
-      $message['html'] = true;
+      $message['html'] = TRUE;
       break;
+
     case 'iq_group_delete_account':
       $message['subject'] = $params['subject'];
       $message['body'][] = $params['message'];
       $message['headers']['Content-Type'] = 'text/html';
       $message['headers']['MIME-Version'] = '1.0';
-      $message['html'] = true;
+      $message['html'] = TRUE;
       break;
+
     case 'iq_group_login':
       $message['subject'] = $params['subject'];
       $message['body'][] = $params['message'];
       $message['headers']['Content-Type'] = 'text/html';
       $message['headers']['MIME-Version'] = '1.0';
-      $message['html'] = true;
+      $message['html'] = TRUE;
       break;
+
     case 'iq_group_password_reset':
       $message['subject'] = $params['subject'];
       $message['body'][] = $params['message'];
       $message['headers']['Content-Type'] = 'text/html';
       $message['headers']['MIME-Version'] = '1.0';
-      $message['html'] = true;
+      $message['html'] = TRUE;
       break;
+
     default:
       $message['subject'] = $params['subject'];
       $message['body'][] = $params['message'];
       $message['headers']['Content-Type'] = 'text/html';
       $message['headers']['MIME-Version'] = '1.0';
-      $message['html'] = true;
+      $message['html'] = TRUE;
       break;
   }
 }
