@@ -150,7 +150,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
  */
 function iq_group_user_login(UserInterface $account) {
   // If the user is resetting his/her password, prevent the redirection.
-  if (strpos(\Drupal::request()->getRequestUri(), "/user/reset/") >= 0) {
+  if (strpos(\Drupal::request()->getRequestUri(), "/user/reset/") !== FALSE) {
     return;
   }
 
@@ -173,7 +173,6 @@ function iq_group_user_login(UserInterface $account) {
       $middleware->setRedirectResponse($response);
     }
   }
-  return;
 }
 
 /**
