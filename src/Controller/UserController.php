@@ -79,16 +79,16 @@ class UserController extends ControllerBase {
         if ($user->id() == \Drupal::currentUser()->id()) {
           // Is user opt-ed in (is user subscriber or lead)  if ($user->hasRole('subscriber'))
           // If there is a destination in the URL.
-          if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
-            $destination = $_GET['destination'];
+          if (!empty(\Drupal::request()->get('destination'))) {
+            $destination = \Drupal::request()->get('destination');
           }
           else {
             $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
           }
           // If there are additional parameters (if the user was signed up
           // through webform), attach them to the redirect.
-          if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
-            $destination = Url::fromUserInput($destination, ['query' => ['source_form' => $_GET['source_form']]])->toString();
+          if (!empty(\Drupal::request()->get('source_form'))) {
+            $destination = Url::fromUserInput($destination, ['query' => ['source_form' => \Drupal::request()->get('source_form')]])->toString();
           }
           $response = new RedirectResponse($destination);
           return $response;
@@ -113,7 +113,7 @@ class UserController extends ControllerBase {
         self::addGroupRoleToUser($group, $user, 'subscription-subscriber');
         $this->eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent($user));
       }
-      
+
       // Add member to the other groups that the user has selected in the
       // preferences field.
       if (!in_array('subscription-lead', $groupRoles)) {
@@ -127,8 +127,8 @@ class UserController extends ControllerBase {
       }
 
       $destination = "";
-      if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
-        $destination = $_GET['destination'];
+      if (!empty(\Drupal::request()->get('destination'))) {
+        $destination = \Drupal::request()->get('destination');
       }
 
       if (in_array('subscription-lead', $groupRoles)) {
@@ -142,8 +142,8 @@ class UserController extends ControllerBase {
           }
         }
         if ($destination != "") {
-          if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
-            $destination .= '%3Fsource_form=' . $_GET['source_form'];
+          if (!empty(\Drupal::request()->get('source_form'))) {
+            $destination .= '&source_form=' . \Drupal::request()->get('source_form');
           }
           $resetURL .= "?destination=" . $destination;
         }
@@ -165,8 +165,8 @@ class UserController extends ControllerBase {
           }
         }
 
-        if (isset($_GET['source_form']) && $_GET['source_form'] != NULL) {
-          $destination = Url::fromUserInput($destination, ['query' => ['source_form' => $_GET['source_form']]])->toString();
+        if (!empty(\Drupal::request()->get('source_form'))) {
+          $destination = Url::fromUserInput($destination, ['query' => ['source_form' => \Drupal::request()->get('source_form')]])->toString();
         }
         $response = new RedirectResponse($destination);
         return $response;
