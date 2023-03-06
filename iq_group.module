@@ -45,6 +45,7 @@ function iq_group_form_user_form_alter(&$form, FormStateInterface $form_state, $
     }
   }
   $user = \Drupal::currentUser()->getAccount();
+
   // If user is subscriber, redirect him to the user edit form.
   $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
   if (!empty($group)) {
@@ -53,7 +54,9 @@ function iq_group_form_user_form_alter(&$form, FormStateInterface $form_state, $
     $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
     $groupRoles = array_keys($groupRoles);
     if (in_array('subscription-subscriber', $groupRoles)) {
-      header("Location:/user/edit");
+      $middleware = \Drupal::service('http_middleware.iq_group');
+      $response = new RedirectResponse(Url::fromRoute('user.edit')->toString());
+      $middleware->setRedirectResponse($response);
     }
   }
   $form['language']['#type'] = 'markup';
@@ -141,7 +144,9 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
     $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
     $store->set($user->id() . '_pending_activation', TRUE);
     $url = Url::fromUserInput($iqGroupSettings['redirection_after_register']);
-    $_GET['destination'] = $url->toString();
+    $middleware = \Drupal::service('http_middleware.iq_group');
+    $response = new RedirectResponse($url->toString());
+    $middleware->setRedirectResponse($response);
   }
 }
 
@@ -155,18 +160,14 @@ function iq_group_user_login(UserInterface $account) {
   }
 
   $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+
+  /** @var \Drupal\group\Entity\GroupRoleStorage $group_role_storage */
   $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
   $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
   $groupRoles = array_keys($groupRoles);
   if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
     // Redirect to destination if there is 1.
-    if (isset($_GET['destination']) && $_GET['destination'] != NULL) {
-      $destination = $_GET['destination'];
-      header("Location:" . $destination);
-    }
-    // If not, he will be redirect to the set default redirect from
-    // iq group settings.
-    else {
+    if (empty(\Drupal::request()->get('destination'))) {
       $member_area = \Drupal::config('iq_group.settings')->get('default_redirection');
       $middleware = \Drupal::service('http_middleware.iq_group');
       $response = new RedirectResponse(Url::fromUserInput($member_area)->toString());
@@ -241,10 +242,14 @@ function iq_group_form_user_login_form_alter(&$form, FormStateInterface $form_st
     '#weight' => -100,
   ];
   $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
-  $destination = '/' . $language . '/user/register';
-  if (!empty($_GET['destination'])) {
-    $destination .= '?destination=' . $_GET['destination'];
+  $options = [];
+  if (!empty(\Drupal::request()->get('destination'))) {
+    $options = ['query' => ['destination' => \Drupal::request()->get('destination')]];
   }
+  $register_url = Url::fromUserInput(
+    '/' . $language . '/user/register',
+    $options
+  );
   $form['forgot_password'] = [
     '#type' => 'markup',
     '#markup' => '<a href="/' . $language . '/user/password">' . t('Forgotten password') . '</a> / ',
@@ -252,7 +257,7 @@ function iq_group_form_user_login_form_alter(&$form, FormStateInterface $form_st
   ];
   $form['register_link'] = [
     '#type' => 'markup',
-    '#markup' => '<a href="' . $destination . '">' . t('Create an account') . '</a>',
+    '#markup' => '<a href="' . $register_url->toString() . '">' . t('Create an account') . '</a>',
     '#weight' => 100,
   ];
 }
@@ -480,7 +485,7 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
   $iqGroupSettings = UserController::getIqGroupSettings();
   /** @var \Drupal\user\Entity\User $account */
   $account = $form_state->getValue('account');
-  
+
   // Mail one time login URL and instructions using current language.
   $renderable = [
     '#theme' => 'reset_password_template',
