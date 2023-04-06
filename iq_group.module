@@ -87,6 +87,7 @@ function iq_group_register_validation(&$form, FormStateInterface $form_state) {
  * Additional submit function after user register.
  */
 function iq_group_after_register(&$form, FormStateInterface $form_state) {
+  $destination = NULL;
   $iqGroupSettings = UserController::getIqGroupSettings();
   // Email exists.
   $mail = $form_state->getValue('mail');
@@ -203,7 +204,7 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     $form['user_picture']['widget'][0]['#description'] = t('Available file types: ') . str_replace(' ', ', ', trim(reset($form['user_picture']['widget'][0]['#upload_validators']['file_validate_extensions'])));
   }
   if ($form_id == 'user_register_form') {
-    $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ? \Drupal::config('iq_group.settings')->get('terms_and_conditions') : "https://www.sqs.ch/de/datenschutzbestimmungen";
+    $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ?: "https://www.sqs.ch/de/datenschutzbestimmungen";
     $form['data_privacy'] = [
       '#type' => 'checkbox',
       '#title' => t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
@@ -480,6 +481,7 @@ function iq_group_form_user_pass_alter(&$form, FormStateInterface $form_state, $
  * Submit function to send mail for password reset.
  */
 function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state) {
+  $params = [];
   $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
   $iqGroupSettings = UserController::getIqGroupSettings();
@@ -527,6 +529,7 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
  * Submit function to send confirmation mail for deletion of account.
  */
 function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_state) {
+  $params = [];
   $account = \Drupal::currentUser();
   $user = User::load($account->id());
 

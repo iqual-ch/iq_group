@@ -9,7 +9,6 @@ use Drupal\group\Entity\Group;
 use Drupal\iq_group\Controller\UserController;
 use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\IqGroupEvents;
-use Drupal\node\Entity\Node;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\user\Entity\User;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
@@ -18,8 +17,10 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\user\UserInterface;
 
-class UserEditForm extends FormBase
-{
+/**
+ *
+ */
+class UserEditForm extends FormBase {
 
   /**
    * The Event dispatcher.
@@ -59,8 +60,9 @@ class UserEditForm extends FormBase
   /**
    * {@inheritDoc}
    */
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
-    $currentPath =  \Drupal::service('path.current')->getPath();;
+  public function buildForm(array $form, FormStateInterface $form_state) {
+    $currentPath = \Drupal::service('path.current')->getPath();
+    ;
     if (!\Drupal::currentUser()->isAnonymous()) {
       $user = User::load(\Drupal::currentUser()->id());
       $default_name = $user->getAccountName();
@@ -79,7 +81,7 @@ class UserEditForm extends FormBase
         ],
         '#weight' => 10,
       ];
-      // show him the link to the resource
+      // Show him the link to the resource.
       $result = \Drupal::entityTypeManager()
         ->getStorage('group')
         ->loadMultiple();
@@ -91,19 +93,21 @@ class UserEditForm extends FormBase
        * @var  \Drupal\group\Entity\Group $group
        */
       foreach ($result as $key => $group) {
-        if ($group->id()!=\Drupal::config('iq_group.settings')->get('general_group_id') && !in_array($group->label(), $hidden_groups))
+        if ($group->id() != \Drupal::config('iq_group.settings')->get('general_group_id') && !in_array($group->label(), $hidden_groups)) {
           $options[$group->id()] = $group->label();
+        }
       }
       if ($user->hasField('field_iq_group_preferences')) {
         $selected_preferences = $user->get('field_iq_group_preferences')
           ->getValue();
         $default_value = [];
         foreach ($selected_preferences as $key => $value) {
-          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')  && !in_array($group->label(), $hidden_groups))
+          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')  && !in_array($group->label(), $hidden_groups)) {
             $default_value = array_merge($default_value, [$value['target_id']]);
+          }
         }
 
-        /** @var Node $node */
+        /** @var \Drupal\node\Entity\Node $node */
         $node = \Drupal::routeMatch()->getParameter('node');
         if ($currentPath == '/user/edit') {
           $form['preferences'] = [
@@ -119,16 +123,17 @@ class UserEditForm extends FormBase
 
       if ($user->hasField('field_iq_group_branches')) {
         $vid = 'branches';
-        $terms =\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
+        $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
         $term_options = [];
-        $language =  \Drupal::languageManager()->getCurrentLanguage()->getId();
+        $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
         foreach ($terms as $term) {
           $term = Term::load($term->tid);
-          if($term->hasTranslation($language)) {
+          if ($term->hasTranslation($language)) {
             $translated_term = \Drupal::service('entity.repository')
               ->getTranslationFromContext($term, $language);
             $term_options[$translated_term->id()] = $translated_term->getName();
-          } else {
+          }
+          else {
             $term_options[$term->id()] = $term->getName();
           }
         }
@@ -136,7 +141,7 @@ class UserEditForm extends FormBase
           ->getValue();
         $default_branches = [];
         foreach ($selected_branches as $key => $value) {
-            $default_branches = array_merge($default_branches, [$value['target_id']]);
+          $default_branches = array_merge($default_branches, [$value['target_id']]);
         }
         if ($currentPath == '/user/edit') {
           $form['branches'] = [
@@ -161,7 +166,7 @@ class UserEditForm extends FormBase
           '#weight' => 40,
           // Display language selector when either creating a user on the admin
           // interface or editing a user account.
-          //'#access' => !$register || $admin,
+          // '#access' => !$register || $admin,.
         ];
 
         $form['language']['preferred_langcode'] = [
@@ -176,8 +181,6 @@ class UserEditForm extends FormBase
           '#weight' => 41,
         ];
       }
-
-
 
       $user_id = \Drupal::currentUser()->id();
       $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
@@ -215,7 +218,7 @@ class UserEditForm extends FormBase
       // If user is a lead, show link or edit profile directly.
       if (in_array('subscription-lead', $groupRoles)) {
         if ($currentPath == '/user/edit') {
-          $resetURL = 'https://' . UserController::getDomain() . '/user/' . $user_id .'/edit';
+          $resetURL = 'https://' . UserController::getDomain() . '/user/' . $user_id . '/edit';
           // @todo if there is a destination, attach it to the url
           $response = new RedirectResponse($resetURL, 302);
           $response->send();
@@ -245,6 +248,9 @@ class UserEditForm extends FormBase
     return $form;
   }
 
+  /**
+   *
+   */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
     if ($form_state->getValue('password') != $form_state->getValue('password_confirm')) {
@@ -255,7 +261,8 @@ class UserEditForm extends FormBase
   /**
    * {@inheritDoc}
    */
-  public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    $name = NULL;
     $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
     if ($form_state->getValue('name') != NULL) {
       $name = $form_state->getValue('name');
@@ -282,11 +289,12 @@ class UserEditForm extends FormBase
       $groups = $form_state->getValue('preferences');
       foreach ($groups as $key => $otherGroup) {
         $otherGroup = Group::load($otherGroup);
-        if ($otherGroup != NULL)
+        if ($otherGroup != NULL) {
           UserController::addGroupRoleToUser($otherGroup, $user, 'subscription-lead');
+        }
       }
     }
-    if ($form_state->getValue('branches')!= NULL) {
+    if ($form_state->getValue('branches') != NULL) {
       $user->set('field_iq_group_branches', $form_state->getValue('branches'));
     }
     if ($form_state->getValue('preferences') != NULL) {
@@ -299,4 +307,5 @@ class UserEditForm extends FormBase
     // Redirect after saving
     // It would be on the same page as the private resource, so no redirect.
   }
+
 }

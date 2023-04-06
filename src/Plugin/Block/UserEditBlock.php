@@ -2,6 +2,7 @@
 
 namespace Drupal\iq_group\Plugin\Block;
 
+use Drupal\iq_group\Form\UserEditForm;
 use Drupal\Core\Block\BlockBase;
 
 /**
@@ -19,17 +20,18 @@ class UserEditBlock extends BlockBase {
    * {@inheritdoc}
    */
   public function build() {
-    $currentPath =  \Drupal::service('path.current')->getPath();
+    $form = [];
+    $currentPath = \Drupal::service('path.current')->getPath();
     $user_id = \Drupal::currentUser()->id();
-    if ($currentPath == '/user/'. $user_id) {
+    if ($currentPath == '/user/' . $user_id) {
       $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
       $form['full_profile_edit'] = [
         '#type' => 'markup',
-        '#markup' => '<div class="iqbm-button iqbm-text btn btn-cta"><a href="/' . $language . '/user/' . $user_id . '/edit">' . t('Edit profile') . '</a></div>'
+        '#markup' => '<div class="iqbm-button iqbm-text btn btn-cta"><a href="/' . $language . '/user/' . $user_id . '/edit">' . t('Edit profile') . '</a></div>',
       ];
       return $form;
     }
-    return \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\UserEditForm');
+    return \Drupal::formBuilder()->getForm(UserEditForm::class);
   }
 
   /**
@@ -38,4 +40,5 @@ class UserEditBlock extends BlockBase {
   public function getCacheMaxAge() {
     return 0;
   }
+
 }

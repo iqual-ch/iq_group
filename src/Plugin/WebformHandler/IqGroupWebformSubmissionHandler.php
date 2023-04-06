@@ -28,6 +28,7 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state, WebformSubmissionInterface $webform_submission) {
 
+    $send_login_email = NULL;
     $user_data = [];
     $userExists = TRUE;
 

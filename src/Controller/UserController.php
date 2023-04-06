@@ -209,6 +209,7 @@ class UserController extends ControllerBase {
    * Helper function to get domain of the server.
    */
   public static function getDomain() {
+    $domain = NULL;
     if (!empty($_SERVER["HTTP_HOST"]) || getenv("VIRTUAL_HOSTS")) {
       $virtual_host = "";
       if (getenv("VIRTUAL_HOSTS")) {
@@ -337,6 +338,7 @@ class UserController extends ControllerBase {
    *   The destination to redirect when the login link is used.
    */
   public static function sendLoginEmail($user, $destination = NULL) {
+    $params = [];
     $iqGroupSettings = UserController::getIqGroupSettings();
     if (empty($destination)) {
       if (!empty(\Drupal::config('iq_group.settings')->get('default_redirection'))) {

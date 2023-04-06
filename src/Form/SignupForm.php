@@ -55,7 +55,7 @@ class SignupForm extends FormBase {
           'spellcheck' => 'false',
         ],
       ];
-      $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ? \Drupal::config('iq_group.settings')->get('terms_and_conditions') : "https://www.sqs.ch/de/datenschutzbestimmungen";      $form['data_privacy'] = [
+      $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ?: "https://www.sqs.ch/de/datenschutzbestimmungen";      $form['data_privacy'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
         '#default_value' => FALSE,
@@ -184,13 +184,14 @@ class SignupForm extends FormBase {
    * {@inheritDoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $params = [];
     $iqGroupSettings = UserController::getIqGroupSettings();
     if (\Drupal::currentUser()->isAnonymous()) {
       $result = \Drupal::entityQuery('user')
         ->condition('mail', $form_state->getValue('mail'), 'LIKE')
         ->execute();
       // If the user exists, send him an email to login.
-      if (count($result) > 0) {
+      if ((is_countable($result) ? count($result) : 0) > 0) {
         $user = User::load(reset($result));
         if ($user->field_iq_group_user_token->value == NULL) {
           $data = time();
