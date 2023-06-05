@@ -406,7 +406,10 @@ function iq_group_user_presave(UserInterface $account) {
  * Implemenets hook_ENTITY_TYPE_update().
  */
 function iq_group_user_update(UserInterface $account) {
-  if (!$account->isNew()) {
+  if (
+    !$account->isNew() &&
+    \Drupal::config('iq_group.settings')->get('general_group_id')
+  ) {
     $generalGroup = Group::load(\Drupal::config('iq_group.settings')
       ->get('general_group_id'));
     if (!empty($generalGroup) && $generalGroup->getMember($account)) {
