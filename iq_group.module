@@ -160,19 +160,22 @@ function iq_group_user_login(UserInterface $account) {
     return;
   }
 
-  $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-
-  /** @var \Drupal\group\Entity\GroupRoleStorage $group_role_storage */
-  $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
-  $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
-  $groupRoles = array_keys($groupRoles);
-  if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
-    // Redirect to destination if there is 1.
-    if (empty(\Drupal::request()->get('destination'))) {
-      $member_area = \Drupal::config('iq_group.settings')->get('default_redirection');
-      $middleware = \Drupal::service('http_middleware.iq_group');
-      $response = new RedirectResponse(Url::fromUserInput($member_area)->toString());
-      $middleware->setRedirectResponse($response);
+  if (\Drupal::config('iq_group.settings')->get('general_group_id')) {
+    $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+    if ($group) {
+      /** @var \Drupal\group\Entity\GroupRoleStorage $group_role_storage */
+      $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+      $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
+      $groupRoles = array_keys($groupRoles);
+      if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
+        // Redirect to destination if there is 1.
+        if (empty(\Drupal::request()->get('destination'))) {
+          $member_area = \Drupal::config('iq_group.settings')->get('default_redirection');
+          $middleware = \Drupal::service('http_middleware.iq_group');
+          $response = new RedirectResponse(Url::fromUserInput($member_area)->toString());
+          $middleware->setRedirectResponse($response);
+        }
+      }
     }
   }
 }
