@@ -2,6 +2,7 @@
 
 /**
  * @file
+ * Batch file to import group members.
  */
 
 use League\Csv\Statement;
@@ -17,9 +18,19 @@ use Drupal\user\Entity\User;
 use League\Csv\Reader;
 
 /**
- *
+ * Import users from a csv file.
  */
-function csv_import($import_file_url, $i, $preference_names, $current_user, $options, $existing_terms, $product_ids, $branch_ids, &$context) {
+function csv_import(
+  $import_file_url,
+  $i,
+  $preference_names,
+  $current_user,
+  $options,
+  $existing_terms,
+  $product_ids,
+  $branch_ids,
+  &$context
+) {
   $reader = Reader::createFromPath($import_file_url, 'r');
   $reader->setDelimiter($options['delimiter']);
   $reader->setHeaderOffset(0);
@@ -71,7 +82,10 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
 
   // Go through the 10 records.
   foreach ($records as $offset => $user_data) {
-    // Get the field keys only from the 1st user (they are the same for every user).
+    /*
+     * Get the field keys only from the 1st user
+     * (they are the same for every user).
+     */
     if ($j == 1) {
       $field_keys = [];
       $unused_keys = [];
@@ -89,7 +103,7 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
       $j++;
     }
 
-    if (validateUser($user_data, $field_keys, $offset, $context)) {
+    if (validate_user($user_data, $field_keys, $offset, $context)) {
 
       \Drupal::moduleHandler()
         ->invokeAll('iq_group_before_import', [&$user_data]);
@@ -128,8 +142,11 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
           // If it found a conflicting user.
           if (!empty($checkingUser)) {
             $check_user = reset($checkingUser);
-            // If the conflicting user is not the same as the found user before
-            // or there is an existing conflicting user when creating a new user.
+            /*
+             * If the conflicting user is not the same
+             * as the found user before or there is an existing
+             * conflicting user when creating a new user.
+             */
             if (($found_user && $check_user->id() != $user->id()) || !$found_user) {
               $conflicting_user = TRUE;
               $found_import_key = $import_key_option;
@@ -151,7 +168,9 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         }
         if ($found_import_key == 'mail') {
           if (empty($context['results']['log_error']['import_key_error' . $found_import_key]) && !isset($context['results']['log_error']['import_key_error' . $found_import_key]['message'])) {
-            $context['results']['log_error']['import_key_error' . $found_import_key]['message'] = t('Multiple users found with the same ' . $found_import_key . ' at rows: ');
+            $context['results']['log_error']['import_key_error' . $found_import_key]['message'] = t('Multiple users found with the same @key at rows:', [
+              '@key' => $found_import_key,
+            ]);
           }
           $context['results']['log_error']['import_key_error' . $found_import_key]['rows'][] = (int) $offset + 1;
           if (empty($context['results']['log_error']['conflicting_import_keys']) && !isset($context['results']['log_error']['conflicting_import_keys']['message'])) {
@@ -164,7 +183,9 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         }
         else {
           if (empty($context['results']['log_warning']['import_key_error' . $found_import_key]) && !isset($context['results']['log_warning']['import_key_error' . $found_import_key]['message'])) {
-            $context['results']['log_warning']['import_key_error' . $found_import_key]['message'] = t('Multiple users found with the same ' . $found_import_key . ' at rows: ');
+            $context['results']['log_error']['import_key_error' . $found_import_key]['message'] = t('Multiple users found with the same @key at rows:', [
+              '@key' => $found_import_key,
+            ]);
           }
           $context['results']['log_warning']['import_key_error' . $found_import_key]['rows'][] = (int) $offset + 1;
           $context['results']['cnt_warning']++;
@@ -198,36 +219,44 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
         $eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent($user));
       }
 
-      // Set the keys that have to be processed to the the available columns in the import.
+      /*
+       * Set the keys that have to be processed
+       * to the the available columns in the import.
+       */
       $fields_to_process = $field_keys;
 
       if (array_key_exists('tags', $fields_to_process)) {
         override_user_tags($user_data, $user, $options['tag_option'], $existing_terms, $found_user);
         unset($fields_to_process['tags']);
       }
-
+      // Set user preferences.
       if (array_key_exists('preferences', $fields_to_process)) {
-        $ids = UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences', $found_user);
+        $ids = UserController::setUserReferenceField($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences', $found_user);
         $user->set('field_iq_group_preferences', $ids);
         unset($fields_to_process['preferences']);
       }
-      // set_user_preferences($user_data, $user, $options['preference_option'], $preference_names);.
+      // Set user products if existing.
       if ($user->hasField('field_iq_group_products') && array_key_exists('products', $fields_to_process)) {
         $preference_option = $options['product_option'] == 'override_product' ? "override_preferences" : "not_override_preferences";
-        $ids = UserController::set_user_reference_field($user_data, $user, $preference_option, $product_ids, 'products', 'field_iq_group_products', $found_user);
+        $ids = UserController::setUserReferenceField($user_data, $user, $preference_option, $product_ids, 'products', 'field_iq_group_products', $found_user);
         $user->set('field_iq_group_products', $ids);
         unset($fields_to_process['products']);
-        // set_user_products($user_data, $user, $options['preference_option'], $product_ids);.
       }
+      // Set user branches if existing.
       if ($user->hasField('field_iq_group_branches') && array_key_exists('branches', $fields_to_process)) {
-        $ids = UserController::set_user_reference_field($user_data, $user, $options['preference_option'], $branch_ids, 'branches', 'field_iq_group_branches', $found_user);
+        $ids = UserController::setUserReferenceField($user_data, $user, $options['preference_option'], $branch_ids, 'branches', 'field_iq_group_branches', $found_user);
         $user->set('field_iq_group_branches', $ids);
         unset($fields_to_process['branches']);
-        // set_user_branches($user_data, $user, $options['preference_option'], $branch_ids);.
       }
 
       \Drupal::moduleHandler()
-        ->invokeAll('iq_group_reference_import', [&$user_data, $user, $options, &$fields_to_process, $found_user]);
+        ->invokeAll('iq_group_reference_import', [
+          &$user_data,
+          $user,
+          $options,
+          &$fields_to_process,
+          $found_user,
+        ]);
       // Go through each of the fields and map them to the appropriate keys.
       // Prefill the address info from the user.
       $address_infos = $user->field_iq_user_base_address->getValue();
@@ -320,16 +349,16 @@ function csv_import($import_file_url, $i, $preference_names, $current_user, $opt
 }
 
 /**
- *
+ * Reports unused fields.
  */
 function report_unused_fields($unused_keys, &$context) {
   \Drupal::messenger()->addMessage("Unused fields: " . json_encode($unused_keys, JSON_THROW_ON_ERROR));
 }
 
 /**
- *
+ * Check if user has all required fields filled.
  */
-function validateUser(&$user_data, $field_keys, $offset, &$context) {
+function validate_user(&$user_data, $field_keys, $offset, &$context) {
   $required_fields = ['mail'];
   $valid = TRUE;
   if (strpos($user_data['mail'], '@') < 1) {
@@ -337,7 +366,7 @@ function validateUser(&$user_data, $field_keys, $offset, &$context) {
       $context['results']['log_error'] = [];
     }
     if (empty($context['results']['log_error']['invalid_email']) && !isset($context['results']['log_error']['invalid_email']['message'])) {
-      $context['results']['log_error']['invalid_email']['message'] = t('Invalid email at rows: ');
+      $context['results']['log_error']['invalid_email']['message'] = t('Invalid email at rows:');
     }
     $context['results']['log_error']['invalid_email']['rows'][] = (int) $offset + 1;
     $context['results']['cnt_error']++;
@@ -347,7 +376,7 @@ function validateUser(&$user_data, $field_keys, $offset, &$context) {
     if (empty($user_data[$required_field])) {
       $valid = FALSE;
       if (empty($context['results']['log_error']['required_field_missing'])) {
-        $context['results']['log_error']['required_field_missing']['message'] = t('Required field missing at rows: ');
+        $context['results']['log_error']['required_field_missing']['message'] = t('Required field missing at rows:');
       }
       $context['results']['log_error']['required_field_missing']['rows'][] = (int) $offset + 1;
     }
@@ -362,7 +391,7 @@ function validateUser(&$user_data, $field_keys, $offset, &$context) {
 }
 
 /**
- *
+ * Override user tags.
  */
 function override_user_tags(&$user_data, &$user, $option, $existing_terms, $found_user) {
   $tags = explode(',', $user_data['tags']);
@@ -412,7 +441,9 @@ function override_user_tags(&$user_data, &$user, $option, $existing_terms, $foun
 }
 
 /**
+ * Set the user preferences.
  *
+ * @todo delete (not used).
  */
 function set_user_preferences(&$user_data, &$user, $option, $preference_names) {
   $ids = [];
@@ -445,7 +476,9 @@ function set_user_preferences(&$user_data, &$user, $option, $preference_names) {
 }
 
 /**
+ * Set user products.
  *
+ * @todo delete (not used)
  */
 function set_user_products(&$user_data, &$user, $option, $product_ids) {
   $ids = [];
@@ -478,7 +511,9 @@ function set_user_products(&$user_data, &$user, $option, $product_ids) {
 }
 
 /**
+ * Set user branches.
  *
+ * @todo delete (not used)
  */
 function set_user_branches(&$user_data, &$user, $option, $branch_ids) {
   $ids = [];
@@ -511,7 +546,7 @@ function set_user_branches(&$user_data, &$user, $option, $branch_ids) {
 }
 
 /**
- *
+ * Output import results once batch is finished.
  */
 function finished_import($success, $results, $operations) {
   $msg = '<p>Finished import, processed ' . ($results['cnt_import'] + $results['cnt_error'] + $results['cnt_update']) . ' records<p>';
@@ -540,30 +575,28 @@ function finished_import($success, $results, $operations) {
 }
 
 /**
- *
+ * Update user groups.
  */
 function update_user_groups(UserInterface $account) {
   $generalGroup = Group::load(\Drupal::config('iq_group.settings')
     ->get('general_group_id'));
   if (!empty($generalGroup)) {
-    /*if (!$generalGroup->getMember($account)) {
-    $generalGroup->addMember($account, ['group_roles' => ['subscription-subscriber']]);
-    }*/
     // Get the selected preferences from the user.
     $selected_preferences = [];
     if ($account->hasField('field_iq_group_preferences')) {
       $selected_preferences = array_filter(array_column($account->field_iq_group_preferences->getValue(), 'target_id'));
     }
-    // When updating the user, check for the preferences and
-    // update groups accordingly.
+    /*
+     * When updating the user, check for the preferences
+     * and update groups accordingly.
+     */
     $result = \Drupal::entityTypeManager()
       ->getStorage('group')
       ->loadMultiple();
     /**
-     * @var  int $key
      * @var  \Drupal\group\Entity\Group $group
      */
-    foreach ($result as $key => $group) {
+    foreach ($result as $group) {
       // If it is not the general group, check for updates.
       if ($group->id() != \Drupal::config('iq_group.settings')
         ->get('general_group_id')) {

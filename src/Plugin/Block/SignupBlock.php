@@ -24,7 +24,7 @@ class SignupBlock extends BlockBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function getCacheTags() {
     $cache_tags = parent::getCacheTags();

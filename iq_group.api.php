@@ -2,14 +2,15 @@
 
 /**
  * @file
+ * Hooks related to iq_group and its plugins.
  */
-
-use Drupal\user\UserInterface;
 
 /**
  * @addtogroup hooks
  * @{
  */
+
+use Drupal\user\UserInterface;
 
 /**
  * Alter the data before importing users.
@@ -36,14 +37,16 @@ function hook_iq_group_after_import(array &$data) {
  *
  * @param array $data
  *   The user data to be altered after the import.
- * @param \Drupal\user\Entity\User $user
+ * @param \Drupal\user\UserInterface $user
  *   The user that is being imported.
- * @param $option
+ * @param string $option
  *   The preference options that are chosen during the import.
  * @param array $field_keys
  *   The field mappings for the user data.
+ * @param bool $found_user
+ *   Whether a matching user was found or not.
  */
-function hook_iq_group_reference_import(array &$data, UserInterface $user, $option, array &$field_keys, $found_user) {
+function hook_iq_group_reference_import(array &$data, UserInterface $user, $option, array &$field_keys, bool $found_user) {
   // Here others will make a module that will call this to alter "$data".
 }
 

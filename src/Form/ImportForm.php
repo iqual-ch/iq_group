@@ -2,17 +2,88 @@
 
 namespace Drupal\iq_group\Form;
 
-use Drupal\user\Entity\User;
-use Drupal\file\Entity\File;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\iq_group\Controller\UserController;
 use League\Csv\Reader;
 
 /**
- *
+ * Provides an import form class to import group members.
  */
 class ImportForm extends FormBase {
+
+  /**
+   * The entityTypeManager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager = NULL;
+
+  /**
+   * Configuration for the iq_group settings.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $config;
+
+  /**
+   * Drupal language manager service.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
+   * Gets the current active user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
+
+  /**
+   * ImportForm constructor.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current active user.
+   */
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    ConfigFactoryInterface $config_factory,
+    LanguageManagerInterface $language_manager,
+    AccountProxyInterface $current_user
+  ) {
+    $this->entityTypeManager = $entity_type_manager;
+    $this->config = $config_factory->get('iq_group.settings');
+    $this->languageManager = $language_manager;
+    $this->currentUser = $current_user;
+  }
+
+  /**
+   * Creates a UserEditForm instance.
+   *
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The service container.
+   *
+   * @return \Drupal\Core\Form\FormBase|\Drupal\iq_group\Form\UserEditForm
+   *   An instance of UserEditForm.
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('event_dispatcher'),
+      $container->get('config_factory'),
+      $container->get('entity_type.manager'),
+      $container->get('language_manager'),
+      $container->get('current_user'),
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -25,7 +96,7 @@ class ImportForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $user = User::load(\Drupal::currentUser()->id());
+    $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser()->id());
     $form['import_file'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Member Import'),
@@ -121,7 +192,7 @@ class ImportForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     $import = $form_state->getValue('import_file');
-    $import_file = File::load($import[0]);
+    $import_file = $this->entityTypeManager->getStorage('file')->load($import[0]);
 
     // Read CSV file.
     $import_file_uri = $import_file->getFileUri();
@@ -139,43 +210,40 @@ class ImportForm extends FormBase {
 
     // Get preference names.
     $preference_names = [];
-    $result = \Drupal::entityTypeManager()
+    $result = $this->entityTypeManager
       ->getStorage('group')
       ->loadMultiple();
 
     /**
-     * @var  int $key
      * @var  \Drupal\group\Entity\Group $group
      */
-    foreach ($result as $key => $group) {
+    foreach ($result as $group) {
       $preference_names[$group->id()] = $group->label();
     }
 
     // Get Product IDs.
     $product_ids = [];
-    $result = \Drupal::entityTypeManager()
+    $result = $this->entityTypeManager
       ->getStorage('taxonomy_term')
       ->loadByProperties(['vid' => 'iq_group_products']);
 
     /**
-     * @var  int $key
      * @var  \Drupal\taxonomy\Entity\Term $product
      */
-    foreach ($result as $key => $product) {
+    foreach ($result as $product) {
       $product_ids[$product->id()] = $product->field_iq_group_product_id->value;
     }
 
     // Get branches IDs.
     $branch_ids = [];
-    $result = \Drupal::entityTypeManager()
+    $result = $this->entityTypeManager
       ->getStorage('taxonomy_term')
       ->loadByProperties(['vid' => 'branches']);
 
     /**
-     * @var  int $key
      * @var  \Drupal\taxonomy\Entity\Term $branch
      */
-    foreach ($result as $key => $branch) {
+    foreach ($result as $branch) {
       if ($branch->hasTranslation('en')) {
         $translated_term = \Drupal::service('entity.repository')->getTranslationFromContext($branch, 'en');
         $branch_ids[$branch->id()] = $translated_term->getName();
@@ -196,7 +264,7 @@ class ImportForm extends FormBase {
     ];
 
     // Existing tags.
-    $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(
+    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadByProperties(
       ['vid' => 'tags']
     );
     $existing_terms = [];
@@ -208,16 +276,36 @@ class ImportForm extends FormBase {
 
     try {
       for ($i = 0; $i < $reader->count(); $i += 10) {
-        $operations[] = ['csv_import', [$import_file_url, $i, $preference_names, \Drupal::currentUser()->id(), $options, $existing_terms, $product_ids, $branch_ids]];
+        $operations[] = [
+          'csv_import',
+          [
+            $import_file_url,
+            $i,
+            $preference_names,
+            $this->currentUser->id(),
+            $options,
+            $existing_terms,
+            $product_ids,
+            $branch_ids,
+          ],
+        ];
       }
     }
     catch (\Exception $exception) {
-      \Drupal::messenger()->addError($exception->getMessage());
-      \Drupal::messenger()->addError('The csv file was not imported.');
+      $this->messenger->addError($exception->getMessage());
+      $this->messenger->addError('The csv file was not imported.');
       return;
     }
 
-    $batch = ['title' => t('Import...'), 'operations' => $operations, 'finished' => 'finished_import', 'file' => \Drupal::service('extension.list.module')->getPath('iq_group') . '/import_batch.inc', 'init_message' => t('Starting import, this may take a while.'), 'progress_message' => t('Processed @current out of @total.'), 'error_message' => t('An error occurred during processing')];
+    $batch = [
+      'title' => $this->t('Import...'),
+      'operations' => $operations,
+      'finished' => 'finished_import',
+      'file' => \Drupal::service('extension.list.module')->getPath('iq_group') . '/import_batch.inc',
+      'init_message' => $this->t('Starting import, this may take a while.'),
+      'progress_message' => $this->t('Processed @current out of @total.'),
+      'error_message' => $this->t('An error occurred during processing'),
+    ];
     batch_set($batch);
   }
 

@@ -2,6 +2,7 @@
 
 /**
  * @file
+ * Assign profile and address values for existing users.
  */
 
 $users = user_load_multiple();

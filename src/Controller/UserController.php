@@ -3,7 +3,10 @@
 namespace Drupal\iq_group\Controller;
 
 use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\group\Entity\Group;
@@ -11,12 +14,14 @@ use Drupal\group\Entity\GroupRole;
 use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\IqGroupEvents;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * IQ Group controller.
+ * IQ Group member controller.
  */
 class UserController extends ControllerBase {
 
@@ -28,35 +33,95 @@ class UserController extends ControllerBase {
   protected $eventDispatcher = NULL;
 
   /**
+   * The messenger.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger = NULL;
+
+  /**
+   * The entityTypeManager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager = NULL;
+
+  /**
+   * The current request.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request
+   */
+  protected $request = NULL;
+
+  /**
+   * Configuration for the iq_group settings.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $config;
+
+  /**
    * UserController constructor.
    *
-   * @param Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher to dispatch events.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger interface.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   The entity type manager.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The symfony request stack.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
    */
-  public function __construct(EventDispatcherInterface $event_dispatcher) {
+  public function __construct(
+    EventDispatcherInterface $event_dispatcher,
+    MessengerInterface $messenger,
+    EntityTypeManagerInterface $entityTypeManager,
+    RequestStack $request_stack,
+    ConfigFactoryInterface $config_factory
+  ) {
     $this->eventDispatcher = $event_dispatcher;
+    $this->messenger = $messenger;
+    $this->entityTypeManager = $entityTypeManager;
+    $this->request = $request_stack->getCurrentRequest();
+    $this->config = $config_factory->get('iq_group.settings');
   }
 
   /**
+   * Creates a new UserController object.
+   *
    * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The service container.
    *
    * @return \Drupal\Core\Controller\ControllerBase|\Drupal\iq_group\Controller\UserController
+   *   An instance of UserController or ControllerBase
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('event_dispatcher')
+      $container->get('event_dispatcher'),
+      $container->get('messenger'),
+      $container->get('entity_type.manager'),
+      $container->get('request_stack'),
+      $container->get('tempstore.shared'),
+
     );
   }
 
   /**
+   * Handle the password reset for a group user.
    *
+   * @param int $user_id
+   *   The id of the user.
+   * @param string $token
+   *   The authentication token.
    */
-  public function resetPassword($user_id, $token) {
+  public function resetPassword(int $user_id, $token) {
     /** @var \Drupal\user\SharedTempStore $store */
     $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
 
     \Drupal::service('page_cache_kill_switch')->trigger();
-    $user = User::load($user_id);
+    $user = $this->entityTypeManager->getStorage('user')->load($user_id);
 
     if (!empty($store->get($user_id . '_pending_activation')) && !empty($user)) {
       $user->set('status', 1);
@@ -64,31 +129,32 @@ class UserController extends ControllerBase {
       $store->delete($user_id . '_pending_activation');
     }
     elseif ((!empty($user) && $user->status->value == 0)) {
-      \Drupal::messenger()->addMessage($this->t('Your account has been blocked.'), 'error');
+      $this->messenger->addMessage($this->t('Your account has been blocked.'), 'error');
       return new RedirectResponse(Url::fromRoute('<front>')->toString());
     }
 
     // Is the token valid for that user.
     if (!empty($token) && $token === $user->field_iq_group_user_token->value) {
-      if (!empty($_GET['signup'])) {
-        \Drupal::messenger()->addMessage(t('Thank you very much for registration to the newsletter.'));
+      if (!empty($this->request->query->get('signup'))) {
+        $this->messenger->addMessage($this->t('Thank you very much for registration to the newsletter.'));
       }
 
       // If user ->id is same with the logged in user (check cookies)
-      if (\Drupal::currentUser()->isAuthenticated()) {
-        if ($user->id() == \Drupal::currentUser()->id()) {
-          // Is user opt-ed in (is user subscriber or lead)  if ($user->hasRole('subscriber'))
+      $current_user = \Drupal::currentUser();
+      if ($current_user->isAuthenticated()) {
+        if ($user->id() == $current_user->id()) {
           // If there is a destination in the URL.
-          if (!empty(\Drupal::request()->get('destination'))) {
-            $destination = \Drupal::request()->get('destination');
+          if (!empty($this->request->get('destination'))) {
+            $destination = $this->request->get('destination');
           }
           else {
-            $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
+            $destination = $this->config->get('default_redirection');
           }
-          // If there are additional parameters (if the user was signed up
-          // through webform), attach them to the redirect.
-          if (!empty(\Drupal::request()->get('source_form'))) {
-            $destination = Url::fromUserInput($destination, ['query' => ['source_form' => \Drupal::request()->get('source_form')]])->toString();
+          /* If there are additional parameters (if the user was signed up
+           * through webform), attach them to the redirect.
+           */
+          if (!empty($this->request->get('source_form'))) {
+            $destination = Url::fromUserInput($destination, ['query' => ['source_form' => $this->request->get('source_form')]])->toString();
           }
           $response = new RedirectResponse($destination);
           return $response;
@@ -102,23 +168,24 @@ class UserController extends ControllerBase {
       else {
         // If there is anything to do when user is anonymous.
       }
-      // Load General group (id=5) and get the roles for the user.
-      $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-      $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+      $group = Group::load($this->config->get('general_group_id'));
+      $group_role_storage = $this->entityTypeManager->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
       $groupRoles = array_keys($groupRoles);
 
-      // If he is not opted-in (not a subscriber nor a lead).
+      // If the user is not opted-in (not a subscriber nor a lead).
       if (!in_array('subscription-subscriber', $groupRoles) && !in_array('subscription-lead', $groupRoles)) {
         self::addGroupRoleToUser($group, $user, 'subscription-subscriber');
         $this->eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent($user));
       }
 
-      // Add member to the other groups that the user has selected in the
-      // preferences field.
+      /*
+       * Add member to the other groups that the user has selected in the
+       * preferences field.
+       */
       if (!in_array('subscription-lead', $groupRoles)) {
         $groups = $user->get('field_iq_group_preferences')->getValue();
-        foreach ($groups as $key => $otherGroup) {
+        foreach ($groups as $otherGroup) {
           $otherGroup = Group::load($otherGroup['target_id']);
           if ($otherGroup != NULL) {
             self::addGroupRoleToUser($otherGroup, $user, 'subscription-subscriber');
@@ -127,67 +194,82 @@ class UserController extends ControllerBase {
       }
 
       $destination = "";
-      if (!empty(\Drupal::request()->get('destination'))) {
-        $destination = \Drupal::request()->get('destination');
+      if (!empty($this->request->get('destination'))) {
+        $destination = $this->request->get('destination');
       }
 
       if (in_array('subscription-lead', $groupRoles)) {
 
-        // Redirect him to the login page with the destination.
+        // Redirect the user to the login page with the destination.
         $resetURL = 'https://' . UserController::getDomain() . '/user/login';
         // @todo if there is a destination, attach it to the url
         if (empty($destination)) {
-          if (\Drupal::config('iq_group.settings')->get('default_redirection')) {
-            $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
+          if ($this->config->get('default_redirection')) {
+            $destination = $this->config->get('default_redirection');
           }
         }
         if ($destination != "") {
-          if (!empty(\Drupal::request()->get('source_form'))) {
-            $destination .= '&source_form=' . \Drupal::request()->get('source_form');
+          if (!empty($this->request->get('source_form'))) {
+            $destination .= '&source_form=' . $this->request->get('source_form');
           }
           $resetURL .= "?destination=" . $destination;
         }
-        \Drupal::messenger()->addMessage(t('Your account is now protected with password. You can login.'));
+        $this->messenger->addMessage($this->t('Your account is now protected with password. You can login.'));
         // Return new RedirectResponse($resetURL);
         $response = new RedirectResponse($resetURL, 302);
         return $response;
       }
       else {
-        // Instead of redirecting the user to the one-time-login, log him in.
+        /*
+         * Instead of redirecting the user to the one-time-login,
+         * log the user in.
+         */
         user_login_finalize($user);
         // It doesnt go here, because the login hook is triggered.
         if (empty($destination)) {
-          if (\Drupal::config('iq_group.settings')->get('default_redirection')) {
-            $destination = \Drupal::config('iq_group.settings')->get('default_redirection');
+          if ($this->config->get('default_redirection')) {
+            $destination = $this->config->get('default_redirection');
           }
           else {
             $destination = "/homepage";
           }
         }
 
-        if (!empty(\Drupal::request()->get('source_form'))) {
-          $destination = Url::fromUserInput($destination, ['query' => ['source_form' => \Drupal::request()->get('source_form')]])->toString();
+        if (!empty($this->request->get('source_form'))) {
+          $destination = Url::fromUserInput($destination,
+            [
+              'query' => [
+                'source_form' => $this->request->get('source_form'),
+              ],
+            ]
+          )->toString();
         }
         $response = new RedirectResponse($destination);
         return $response;
       }
     }
-    // Redirect the user to the resource & the private resource says like u are invalid.
-    \Drupal::messenger()->addMessage($this->t('This link is invalid or has expired.'), 'error');
+    /*
+     * Redirect the user to the resource &
+     * the private resource says like u are invalid.
+     */
+    $this->messenger->addMessage(
+      $this->t('This link is invalid or has expired.'),
+      'error'
+    );
     return new RedirectResponse(Url::fromRoute('user.register')->toString());
   }
 
   /**
    * Helper function assign group to a user.
    *
-   * @param $group
+   * @param \Drupal\group\Entity\Group $group
    *   The group that is being assigned to the user.
-   * @param $user
+   * @param \Drupal\user\Entity\User $user
    *   The user to whom the group is assigned to.
-   * @param $groupRoleId
+   * @param string $groupRoleId
    *   The group role id that the user will have in the group.
    */
-  public static function addGroupRoleToUser($group, $user, $groupRoleId) {
+  public static function addGroupRoleToUser(Group $group, User $user, $groupRoleId) {
     // Add the subscriber role to the user in general (id=5) group.
     $groupRole = GroupRole::load($groupRoleId);
 
@@ -233,7 +315,7 @@ class UserController extends ControllerBase {
    * Helper function to get the iq_group settings.
    */
   public static function getIqGroupSettings() {
-    $iqGroupSettingsConfig = \Drupal::config('iq_group.settings');
+    $iqGroupSettingsConfig = $this->config;
     return [
       'project_name' => $iqGroupSettingsConfig->get('project_name') != NULL ? $iqGroupSettingsConfig->get('project_name') : "",
       'default_redirection' => $iqGroupSettingsConfig->get('default_redirection') != NULL ? $iqGroupSettingsConfig->get('default_redirection') : "",
@@ -253,24 +335,28 @@ class UserController extends ControllerBase {
   }
 
   /**
-   * Helper function to sign up a member and send him confirmation email.
+   * Helper function to sign up a member and send a confirmation email.
    *
-   * @param $user_data
+   * @param array $user_data
    *   The user data.
-   * @param $renderable
+   * @param array $renderable
    *   The email renderable array.
+   * @param string $destination
+   *   The URL to redirect the user to.
+   * @param bool $user_create
+   *   Whether to create the user entity or not.
    *
    * @return \Drupal\user\UserInterface|null
    *   The user entity.
    */
-  public static function createMember($user_data, $renderable = [], $destination = NULL, $user_create = TRUE) {
+  public static function createMember(array $user_data, array $renderable = [], $destination = NULL, $user_create = TRUE) {
     $iqGroupSettings = UserController::getIqGroupSettings();
     if ($user_create) {
-      $user = User::create($user_data);
+      $user = $this->entityTypeManager->getStorage('user')->create($user_data);
       $user->save();
     }
     else {
-      $user = User::load($user_data['id']);
+      $user = $this->entityTypeManager->getStorage('user')->load($user_data['id']);
     }
     $data = time();
     $data .= $user->id();
@@ -332,12 +418,12 @@ class UserController extends ControllerBase {
   /**
    * Helper function to send a login link.
    *
-   * @param $user
+   * @param \Drupal\user\Entity\User $user
    *   The user to whom a login link is sent.
-   * @param null $destination
+   * @param string $destination
    *   The destination to redirect when the login link is used.
    */
-  public static function sendLoginEmail($user, $destination = NULL) {
+  public static function sendLoginEmail(User $user, $destination = NULL) {
     $params = [];
     $iqGroupSettings = UserController::getIqGroupSettings();
     if (empty($destination)) {
@@ -374,24 +460,32 @@ class UserController extends ControllerBase {
     $send = TRUE;
     $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
     if ($result['result'] !== TRUE) {
-      \Drupal::messenger()->addMessage(t('There was an error while sending login link to your email.'), 'error');
+      $this->messenger->addMessage(t('There was an error while sending login link to your email.'), 'error');
     }
     else {
-      \Drupal::messenger()->addMessage(t('An e-mail has been sent with a login link to your account.'));
+      $this->messenger->addMessage(t('An e-mail has been sent with a login link to your account.'));
     }
   }
 
   /**
    * Helper function to set the reference fields when importing users.
    *
-   * @param $user_data
+   * @param array $user_data
+   *   The user data.
    * @param \Drupal\user\Entity\UserInterface $user
-   * @param $option
-   * @param $entity_ids
-   * @param $import_key
-   * @param $field_key
+   *   The user entity.
+   * @param string $option
+   *   The reference field option.
+   * @param array $entity_ids
+   *   An array of entity ids.
+   * @param string $import_key
+   *   A string specifying the current import key (field).
+   * @param string $field_key
+   *   A string specifying the corresponding field name.
+   * @param bool $found_user
+   *   Whether a matching user was found or not.
    */
-  public static function set_user_reference_field(&$user_data, &$user, $option, $entity_ids, $import_key, $field_key, $found_user) {
+  public static function setUserReferenceField(array &$user_data, UserInterface &$user, $option, array $entity_ids, $import_key, $field_key, bool $found_user) {
 
     // If the preferences do not need to be overidden, just return.
     if ($option == 'not_override_preferences' && $found_user) {
@@ -432,7 +526,10 @@ class UserController extends ControllerBase {
   }
 
   /**
+   * Prepares an array of keys to be imported.
    *
+   * @return array
+   *   An array of fields to be imported.
    */
   public static function userImportKeyOptions() {
     $user_import_key_options = [];

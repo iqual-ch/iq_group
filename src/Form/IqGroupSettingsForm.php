@@ -7,7 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\iq_group\Controller\UserController;
 
 /**
- * Class IqGroupSettingsForm.
+ * Provides a form for the iq_group module settings.
  *
  * @package Drupal\iq_group\Form
  */

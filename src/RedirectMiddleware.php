@@ -26,8 +26,7 @@ class RedirectMiddleware implements HttpKernelInterface {
   protected $redirectResponse;
 
   /**
-   * Constructs a RedirectMiddleware
-   * object.
+   * Constructs a RedirectMiddleware object.
    *
    * @param \Symfony\Component\HttpKernel\HttpKernelInterface $http_kernel
    *   The decorated kernel.

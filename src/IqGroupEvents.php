@@ -3,7 +3,7 @@
 namespace Drupal\iq_group;
 
 /**
- *
+ * Contains all events thrown in the iq_group module.
  */
 final class IqGroupEvents {
 

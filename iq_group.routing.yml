@@ -4,6 +4,7 @@ iq_group.reset_password:
     _title: 'Reset password'
     _controller: '\Drupal\iq_group\Controller\UserController::resetPassword'
   requirements:
+    # Allows access to anonymous user to reset their password
     _access: 'TRUE'
 
 iq_group.user_edit_form:
@@ -20,6 +21,7 @@ iq_group.onetime_loginlink_form:
     _form: 'Drupal\iq_group\Form\OneTimeLoginLinkForm'
     _title: 'Create Onetime LoginLink'
   requirements:
+    # Allows access to anonymous user to use onetime login link
     _access: 'TRUE'
 
 iq_group.iq_group_settings:

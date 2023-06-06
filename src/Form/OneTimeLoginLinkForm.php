@@ -4,10 +4,9 @@ namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\iq_group\Controller\UserController;
 
 /**
- * Class OneTimeLoginLinkForm.
+ * Provides a form for the one-time login settings of iq_group module.
  *
  * @package Drupal\iq_group\Form
  */
@@ -71,19 +70,24 @@ class OneTimeLoginLinkForm extends FormBase {
     $login_url = user_pass_reset_url($user_account);
 
     if ($login_url) {
-      $iqGroupSettings = UserController::getIqGroupSettings();
-      \Drupal::messenger()->addMessage($user_email_name . ' wurde eine Email gesendet zur Passwortwiederherstellung.');
+      $this->messenger->addMessage($user_email_name . ' wurde eine Email gesendet zur Passwortwiederherstellung.');
       $params['subject'] = $this->t('Password reset');
-      // $params['message'] = OfferChecker::getEmailTemplate(t('Passwort wiederherstellen'), t('Passwort wiederherstellen'), '<a href="'. $login_url .'">Hier </a> können Sie Ihr Passwort wiederherstellen.');
-      $params['message'] = '<a href="' . $login_url . '">' . $this->t('Click here') . '</a> ' . $this->t(' to reset your password');
+      /*
+       * $params['message'] =
+       * OfferChecker::getEmailTemplate(t('Passwort wiederherstellen'),
+       * t('Passwort wiederherstellen'), '<a href="'. $login_url .'">Hier </a>
+       * können Sie Ihr Passwort wiederherstellen.');
+       */
+      $params['message'] = $this->t('<a href="@login_url">Click here</a> to reset your password', [
+        '@login_url' => $login_url,
+      ]);
       $to = $user_email_name;
       $module = 'iq_group';
       $key = 'iq_group_password_reset';
       $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
       $send = TRUE;
       $mailManager = \Drupal::service('plugin.manager.mail');
-      $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
-
+      $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
     }
   }
 

@@ -2,21 +2,93 @@
 
 namespace Drupal\iq_group\Form;
 
-use Drupal\Core\Url;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\group\Entity\Group;
+use Drupal\Core\Url;
 use Drupal\iq_group\Controller\UserController;
-use Drupal\taxonomy\Entity\Term;
-use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- *
+ * Provides a signup form for the iq_grou module.
  */
 class SignupForm extends FormBase {
+
+  /**
+   * The entityTypeManager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager = NULL;
+
+  /**
+   * Configuration for the iq_group settings.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $config;
+
+  /**
+   * Drupal language manager service.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
+   * Gets the current active user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
+
+  /**
+   * SignupForm constructor.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current active user.
+   */
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    ConfigFactoryInterface $config_factory,
+    LanguageManagerInterface $language_manager,
+    AccountProxyInterface $current_user
+  ) {
+    $this->entityTypeManager = $entity_type_manager;
+    $this->config = $config_factory->get('iq_group.settings');
+    $this->languageManager = $language_manager;
+    $this->currentUser = $current_user;
+  }
+
+  /**
+   * Creates a SignupForm instance.
+   *
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The service container.
+   *
+   * @return \Drupal\iq_group\Form\SignupForm
+   *   An instance of SignupForm.
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config_factory'),
+      $container->get('entity_type.manager'),
+      $container->get('language_manager'),
+      $container->get('current_user'),
+    );
+  }
 
   /**
    * {@inheritDoc}
@@ -29,10 +101,10 @@ class SignupForm extends FormBase {
    * {@inheritDoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $account = \Drupal::currentUser();
+    $account = $this->currentUser;
     $default_preferences = [];
-    $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-    $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+    $group = $this->entityTypeManager->getStorage('group')->load($this->config->get('general_group_id'));
+    $group_role_storage = $this->entityTypeManager->getStorage('group_role');
     $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
     $groupRoles = array_keys($groupRoles);
     if ($account->isAnonymous()) {
@@ -55,7 +127,7 @@ class SignupForm extends FormBase {
           'spellcheck' => 'false',
         ],
       ];
-      $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ?: "https://www.sqs.ch/de/datenschutzbestimmungen";      $form['data_privacy'] = [
+      $termsAndConditions = $this->config->get('terms_and_conditions') ?: "https://www.sqs.ch/de/datenschutzbestimmungen";      $form['data_privacy'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
         '#default_value' => FALSE,
@@ -63,44 +135,52 @@ class SignupForm extends FormBase {
         '#weight' => 100,
         '#required' => TRUE,
       ];
-      $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
+      $language = $this->languageManager->getCurrentLanguage()->getId();
       $destination = \Drupal::service('path.current')->getPath();
       $form['register_link'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="/' . $language . '/user/register?destination=' . $destination . '">' . t('Create an account') . '</a> / ',
+        '#markup' => $this->t('<a href="/@language/user/register?destination=@destination">Create an account</a> /', [
+          '@language' => $language,
+          '@destination' => $destination,
+        ]),
         '#weight' => 101,
       ];
       $form['login_link'] = [
         '#type' => 'markup',
-        '#markup' => '<a href="/' . $language . '/user/login?destination=' . $destination . '">' . t('Login') . '</a>',
+        '#markup' => $this->t('<a href="/@language/user/login?destination=@destination">Login</a>', [
+          '@language' => $language,
+          '@destination' => $destination,
+        ]),
         '#weight' => 101,
       ];
 
     }
     else {
       if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
-        $user = User::load($account->id());
+        $user = $this->entityTypeManager->getStorage('user')->load($account->id());
         $selected_preferences = $user->get('field_iq_group_preferences')->getValue();
-        foreach ($selected_preferences as $key => $value) {
+        foreach ($selected_preferences as $value) {
           // If it is not the general group, add it.
-          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')) {
+          if ($value['target_id'] != $this->config->get('general_group_id')) {
             $default_preferences = array_merge($default_preferences, [$value['target_id']]);
           }
         }
       }
     }
-    $result = \Drupal::entityTypeManager()->getStorage('group')->loadMultiple();
+    $result = $this->entityTypeManager->getStorage('group')->loadMultiple();
     $options = [];
     /**
-     * @var  int $key
      * @var  \Drupal\group\Entity\Group $group
      */
-    foreach ($result as $key => $group) {
-      // If it is not the general group and it is not configured as hidden, add it.
+    foreach ($result as $group) {
+      /*
+       * If it is not the general group
+       * and it is not configured as hidden, add it.
+       */
       $hidden_groups = UserController::getIqGroupSettings()['hidden_groups'];
       $hidden_groups = explode(',', $hidden_groups);
 
-      if ($group->id() != \Drupal::config('iq_group.settings')->get('general_group_id') && !in_array($group->label(), $hidden_groups)) {
+      if ($group->id() != $this->config->get('general_group_id') && !in_array($group->label(), $hidden_groups)) {
         $options[$group->id()] = $group->label();
       }
     }
@@ -113,11 +193,11 @@ class SignupForm extends FormBase {
     ];
 
     $vid = 'branches';
-    $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
+    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree($vid);
     $term_options = [];
-    $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $language = $this->languageManager->getCurrentLanguage()->getId();
     foreach ($terms as $term) {
-      $term = Term::load($term->tid);
+      $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($term->tid);
       if ($term->hasTranslation($language)) {
         $translated_term = \Drupal::service('entity.repository')
           ->getTranslationFromContext($term, $language);
@@ -129,22 +209,22 @@ class SignupForm extends FormBase {
     }
 
     /** @var \Drupal\user\Entity\User $example_user */
-    $example_user = User::load(\Drupal::currentUser()->id());
+    $example_user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
 
     if ($example_user->hasField('field_iq_group_branches')) {
       $default_branches = [];
       if ($account->isAuthenticated()) {
-        $user = User::load($account->id());
+        $user = $this->entityTypeManager->getStorage('user')->load($account->id());
         $selected_branches = $user->get('field_iq_group_branches')
           ->getValue();
-        foreach ($selected_branches as $key => $value) {
+        foreach ($selected_branches as $value) {
           $default_branches = array_merge($default_branches, [$value['target_id']]);
         }
       }
 
       $form['branches_settings'] = [
         '#type' => 'details',
-        '#title' => t('Branches options'),
+        '#title' => $this->t('Branches options'),
         '#open' => FALSE,
         '#optional' => FALSE,
       ];
@@ -186,13 +266,13 @@ class SignupForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $params = [];
     $iqGroupSettings = UserController::getIqGroupSettings();
-    if (\Drupal::currentUser()->isAnonymous()) {
+    if ($this->currentUser->isAnonymous()) {
       $result = \Drupal::entityQuery('user')
         ->condition('mail', $form_state->getValue('mail'), 'LIKE')
         ->execute();
-      // If the user exists, send him an email to login.
+      // If the user exists, send an email to login.
       if ((is_countable($result) ? count($result) : 0) > 0) {
-        $user = User::load(reset($result));
+        $user = $this->entityTypeManager->getStorage('user')->load(reset($result));
         if ($user->field_iq_group_user_token->value == NULL) {
           $data = time();
           $data .= $user->id();
@@ -228,7 +308,7 @@ class SignupForm extends FormBase {
         $module = 'iq_group';
         $key = 'iq_group_login';
         $to = $user->getEmail();
-        $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+        $langcode = $this->languageManager->getCurrentLanguage()->getId();
         $params['subject'] = $mail_subject;
         $params['message'] = $rendered;
         $send = TRUE;
@@ -243,7 +323,7 @@ class SignupForm extends FormBase {
         else {
           $name = $form_state->getValue('mail');
         }
-        $currentLanguage = $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
+        $currentLanguage = $language = $this->languageManager->getCurrentLanguage()->getId();
         ;
         $user_data = [
           'mail' => $form_state->getValue('mail'),
@@ -270,7 +350,7 @@ class SignupForm extends FormBase {
       \Drupal::messenger()->addMessage($this->t('Thanks for signing up. You will receive an e-mail with further information about the registration.'));
     }
     else {
-      $user = User::load(\Drupal::currentUser()->id());
+      $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
       if ($form_state->getValue('preferences') != NULL) {
         $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
       }

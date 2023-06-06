@@ -2,15 +2,16 @@
 
 namespace Drupal\iq_group\Form;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
-use Drupal\group\Entity\Group;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\iq_group\Controller\UserController;
 use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\IqGroupEvents;
-use Drupal\taxonomy\Entity\Term;
-use Drupal\user\Entity\User;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -18,7 +19,7 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Drupal\user\UserInterface;
 
 /**
- *
+ * Custom user edit form for the iq_group module.
  */
 class UserEditForm extends FormBase {
 
@@ -30,23 +31,77 @@ class UserEditForm extends FormBase {
   protected $eventDispatcher = NULL;
 
   /**
-   * UserController constructor.
+   * The entityTypeManager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager = NULL;
+
+  /**
+   * Configuration for the iq_group settings.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $config;
+
+  /**
+   * Drupal language manager service.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
+   * Gets the current active user.
+   *
+   * @var \Drupal\Core\Session\AccountProxyInterface
+   */
+  protected $currentUser;
+
+  /**
+   * UserEditForm constructor.
    *
    * @param Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   The event dispatcher to dispatch events.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
+   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   *   The current active user.
    */
-  public function __construct(EventDispatcherInterface $event_dispatcher) {
+  public function __construct(
+    EventDispatcherInterface $event_dispatcher,
+    EntityTypeManagerInterface $entity_type_manager,
+    ConfigFactoryInterface $config_factory,
+    LanguageManagerInterface $language_manager,
+    AccountProxyInterface $current_user
+  ) {
     $this->eventDispatcher = $event_dispatcher;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->config = $config_factory->get('iq_group.settings');
+    $this->languageManager = $language_manager;
+    $this->currentUser = $current_user;
   }
 
   /**
-   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   * Creates a UserEditForm instance.
    *
-   * @return \Drupal\Core\Controller\ControllerBase|\Drupal\iq_group\Controller\UserController
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The service container.
+   *
+   * @return \Drupal\Core\Form\FormBase|\Drupal\iq_group\Form\UserEditForm
+   *   An instance of UserEditForm.
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('event_dispatcher')
+      $container->get('event_dispatcher'),
+      $container->get('config_factory'),
+      $container->get('entity_type.manager'),
+      $container->get('language_manager'),
+      $container->get('current_user'),
     );
   }
 
@@ -62,9 +117,8 @@ class UserEditForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $currentPath = \Drupal::service('path.current')->getPath();
-    ;
-    if (!\Drupal::currentUser()->isAnonymous()) {
-      $user = User::load(\Drupal::currentUser()->id());
+    if (!$this->currentUser->isAnonymous()) {
+      $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
       $default_name = $user->getAccountName();
       $form['name'] = [
         '#type' => 'hidden',
@@ -81,8 +135,8 @@ class UserEditForm extends FormBase {
         ],
         '#weight' => 10,
       ];
-      // Show him the link to the resource.
-      $result = \Drupal::entityTypeManager()
+      // Show user the link to the resource.
+      $result = $this->entityTypeManager
         ->getStorage('group')
         ->loadMultiple();
       $options = [];
@@ -92,8 +146,8 @@ class UserEditForm extends FormBase {
        * @var  int $key
        * @var  \Drupal\group\Entity\Group $group
        */
-      foreach ($result as $key => $group) {
-        if ($group->id() != \Drupal::config('iq_group.settings')->get('general_group_id') && !in_array($group->label(), $hidden_groups)) {
+      foreach ($result as $group) {
+        if ($group->id() != $this->config->get('general_group_id') && !in_array($group->label(), $hidden_groups)) {
           $options[$group->id()] = $group->label();
         }
       }
@@ -101,14 +155,12 @@ class UserEditForm extends FormBase {
         $selected_preferences = $user->get('field_iq_group_preferences')
           ->getValue();
         $default_value = [];
-        foreach ($selected_preferences as $key => $value) {
-          if ($value['target_id'] != \Drupal::config('iq_group.settings')->get('general_group_id')  && !in_array($group->label(), $hidden_groups)) {
+        foreach ($selected_preferences as $value) {
+          if ($value['target_id'] != $this->config->get('general_group_id')  && !in_array($group->label(), $hidden_groups)) {
             $default_value = array_merge($default_value, [$value['target_id']]);
           }
         }
 
-        /** @var \Drupal\node\Entity\Node $node */
-        $node = \Drupal::routeMatch()->getParameter('node');
         if ($currentPath == '/user/edit') {
           $form['preferences'] = [
             '#type' => 'checkboxes',
@@ -123,11 +175,11 @@ class UserEditForm extends FormBase {
 
       if ($user->hasField('field_iq_group_branches')) {
         $vid = 'branches';
-        $terms = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid);
+        $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree($vid);
         $term_options = [];
-        $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
+        $language = $this->languageManager->getCurrentLanguage()->getId();
         foreach ($terms as $term) {
-          $term = Term::load($term->tid);
+          $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($term->tid);
           if ($term->hasTranslation($language)) {
             $translated_term = \Drupal::service('entity.repository')
               ->getTranslationFromContext($term, $language);
@@ -140,7 +192,7 @@ class UserEditForm extends FormBase {
         $selected_branches = $user->get('field_iq_group_branches')
           ->getValue();
         $default_branches = [];
-        foreach ($selected_branches as $key => $value) {
+        foreach ($selected_branches as $value) {
           $default_branches = array_merge($default_branches, [$value['target_id']]);
         }
         if ($currentPath == '/user/edit') {
@@ -156,17 +208,23 @@ class UserEditForm extends FormBase {
       }
 
       if ($currentPath == '/user/edit') {
-        $negotiator = \Drupal::languageManager()->getNegotiator();
-        $user_language_added = $negotiator && $negotiator->isNegotiationMethodEnabled(LanguageNegotiationUser::METHOD_ID, LanguageInterface::TYPE_INTERFACE);
+        $negotiator = $this->languageManager->getNegotiator();
+        $user_language_added =
+          $negotiator &&
+          $negotiator->isNegotiationMethodEnabled(
+            LanguageNegotiationUser::METHOD_ID,
+             LanguageInterface::TYPE_INTERFACE
+          );
         $user_preferred_langcode = $user->getPreferredLangcode();
         $form['language'] = [
-          '#type' => \Drupal::languageManager()->isMultilingual() ? 'details' : 'container',
+          '#type' => $this->languageManager->isMultilingual() ? 'details' : 'container',
           '#title' => $this->t('Language settings'),
           '#open' => TRUE,
           '#weight' => 40,
-          // Display language selector when either creating a user on the admin
-          // interface or editing a user account.
-          // '#access' => !$register || $admin,.
+          /* Display language selector when either creating a user on the admin
+           * interface or editing a user account.
+           * '#access' => !$register || $admin,.
+           */
         ];
 
         $form['language']['preferred_langcode'] = [
@@ -174,24 +232,28 @@ class UserEditForm extends FormBase {
           '#title' => $this->t('Website language'),
           '#languages' => LanguageInterface::STATE_CONFIGURABLE,
           '#default_value' => $user_preferred_langcode,
-          '#description' => $user_language_added ? $this->t("The preferred language of this user account for e-mails and the presentation of the website.") : $this->t("This account's preferred language for emails."),
-          // This is used to explain that user preferred language and entity
-          // language are synchronized. It can be removed if a different behavior is
-          // desired.
+          '#description' => $user_language_added ?
+          $this->t("The preferred language of this user account for e-mails and the presentation of the website.") :
+          $this->t("This account's preferred language for emails."),
+          /*
+           * This is used to explain that user preferred language and entity
+           * language are synchronized. It can be removed
+           * if a different behavior is desired.
+           */
           '#weight' => 41,
         ];
       }
 
-      $user_id = \Drupal::currentUser()->id();
-      $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-      $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+      $user_id = $this->currentUser->id();
+      $group = $this->entityTypeManager->getStorage('group')->load($this->config->get('general_group_id'));
+      $group_role_storage = $this->entityTypeManager->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
       $groupRoles = array_keys($groupRoles);
       if (in_array('subscription-subscriber', $groupRoles)) {
-        $member_area_title = t('Create a login for your @project_name account', ['@project_name' => \Drupal::config('iq_group.settings')->get('project_name')]);
+        $member_area_title = $this->t('Create a login for your @project_name account', ['@project_name' => $this->config->get('project_name')]);
       }
       else {
-        $member_area_title = t('Set your password');
+        $member_area_title = $this->t('Set your password');
       }
       $form['member_area'] = [
         '#type' => 'details',
@@ -201,7 +263,7 @@ class UserEditForm extends FormBase {
       ];
       $form['member_area']['password_text'] = [
         '#type' => 'markup',
-        '#markup' => t('When you create a password, you are automatically creating a login.'),
+        '#markup' => $this->t('When you create a password, you are automatically creating a login.'),
         '#weight' => 60,
       ];
       $form['member_area']['password'] = [
@@ -228,10 +290,10 @@ class UserEditForm extends FormBase {
           unset($form['password']);
           unset($form['password_confirm']);
           unset($form['password_text']);
-          $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
+          $language = $this->languageManager->getCurrentLanguage()->getId();
           $form['full_profile_edit'] = [
             '#type' => 'markup',
-            '#markup' => '</br><a href="/' . $language . '/user/' . $user_id . '/edit">' . t('Edit profile') . '</a>',
+            '#markup' => '</br><a href="/' . $language . '/user/' . $user_id . '/edit">' . $this->t('Edit profile') . '</a>',
             '#weight' => 70,
           ];
         }
@@ -249,12 +311,12 @@ class UserEditForm extends FormBase {
   }
 
   /**
-   *
+   * {@inheritDoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     parent::validateForm($form, $form_state);
     if ($form_state->getValue('password') != $form_state->getValue('password_confirm')) {
-      $form_state->setError($form['password'], t('The submitted passwords do not match.'));
+      $form_state->setError($form['password'], $this->t('The submitted passwords do not match.'));
     }
   }
 
@@ -263,7 +325,7 @@ class UserEditForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $name = NULL;
-    $user = \Drupal::entityTypeManager()->getStorage('user')->load(\Drupal::currentUser()->id());
+    $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
     if ($form_state->getValue('name') != NULL) {
       $name = $form_state->getValue('name');
     }
@@ -276,8 +338,8 @@ class UserEditForm extends FormBase {
       $user->setPassword($form_state->getValue('password'));
 
       // Add the role in general (id=5) group.
-      $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-      $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+      $group = $this->entityTypeManager->getStorage('group')->load($this->config->get('general_group_id'));
+      $group_role_storage = $this->entityTypeManager->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
       $groupRoles = array_keys($groupRoles);
       if (!in_array('subscription-lead', $groupRoles)) {
@@ -287,8 +349,8 @@ class UserEditForm extends FormBase {
       // Add member to the other groups that the user has selected in the
       // preferences field.
       $groups = $form_state->getValue('preferences');
-      foreach ($groups as $key => $otherGroup) {
-        $otherGroup = Group::load($otherGroup);
+      foreach ($groups as $otherGroup) {
+        $otherGroup = $this->entityTypeManager->getStorage('group')->load($otherGroup);
         if ($otherGroup != NULL) {
           UserController::addGroupRoleToUser($otherGroup, $user, 'subscription-lead');
         }
@@ -301,7 +363,7 @@ class UserEditForm extends FormBase {
       $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
     }
 
-    \Drupal::messenger()->addMessage(t('Your profile has been saved.'));
+    $this->messenger->addMessage($this->t('Your profile has been saved.'));
     $user->save();
     $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
     // Redirect after saving

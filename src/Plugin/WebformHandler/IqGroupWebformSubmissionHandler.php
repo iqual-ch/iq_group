@@ -121,7 +121,10 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
       }
 
     }
-    // If user exists, but is not logged in, attribute the submission to the user.
+    /*
+     * If user exists, but is not logged in,
+     * attribute the submission to the user.
+     */
     if (!empty($user) && $userExists) {
       $webform_submission->setOwnerId($user->id())->save();
 
@@ -150,7 +153,12 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
           $user_data['field_iq_group_branches'] = $branch;
         }
         if ($node->hasField('field_iq_group_products')) {
-          $product = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['name' => $node->getTitle(), 'vid' => 'iq_group_products']);
+          $product = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(
+            [
+              'name' => $node->getTitle(),
+              'vid' => 'iq_group_products',
+            ]
+          );
           $user_data['field_iq_group_products'] = $product;
         }
       }
