@@ -12,7 +12,6 @@ use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\iq_group\Controller\UserController;
 use Drupal\group\Entity\Group;
 use Drupal\iq_group\IqGroupEvents;
 use Drupal\iq_group\Event\IqGroupEvent;
@@ -48,7 +47,7 @@ function iq_group_form_user_form_alter(&$form, FormStateInterface $form_state, $
   $user = \Drupal::currentUser()->getAccount();
 
   // If user is subscriber, redirect to the user edit form.
-  $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+  $group = \Drupal::service('iq_group.user_manager')->getGeneralGroup();
   if (!empty($group)) {
     $group_role_storage = \Drupal::entityTypeManager()
       ->getStorage('group_role');
@@ -65,7 +64,7 @@ function iq_group_form_user_form_alter(&$form, FormStateInterface $form_state, $
   $form['account']['mail']['#description'] = '';
   // $form['actions']['submit']['#submit'][] = 'iq_group_after_register';
   if (!empty($form['field_iq_group_preferences'])) {
-    $hidden_groups = UserController::getIqGroupSettings()['hidden_groups'];
+    $hidden_groups = \Drupal::service('iq_group.user_manager')->getIqGroupSettings()['hidden_groups'];
     $hidden_groups = explode(',', $hidden_groups);
     foreach ($form['field_iq_group_preferences']['widget']['#options'] as $key => $value) {
       if (reset($value) == 'General' || in_array(reset($value), $hidden_groups)) {
@@ -89,7 +88,8 @@ function iq_group_register_validation(&$form, FormStateInterface $form_state) {
  */
 function iq_group_after_register(&$form, FormStateInterface $form_state) {
   $destination = NULL;
-  $iqGroupSettings = UserController::getIqGroupSettings();
+  $user_manager = \Drupal::service('iq_group.user_manager');
+  $iqGroupSettings = $user_manager->getIqGroupSettings();
   // Email exists.
   $mail = $form_state->getValue('mail');
   @$user = \Drupal::entityTypeManager()->getStorage('user')->loadByProperties([
@@ -100,14 +100,14 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
 
   if ($user != FALSE) {
     if ($form_state->getValue('pass') != NULL) {
-      // Add the role in general (id=5) group.
-      $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+      // Add the role in general group.
+      $group = $user_manager->getGeneralGroup();
       if (!empty($group)) {
         $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
         $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
         $groupRoles = array_keys($groupRoles);
         if (!in_array('subscription-lead', $groupRoles)) {
-          UserController::addGroupRoleToUser($group, $user, 'subscription-lead');
+          $user_manager->addGroupRoleToUser($group, $user, 'subscription-lead');
           $eventDispatcher = \Drupal::service('event_dispatcher');
           $eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
         }
@@ -120,7 +120,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
         foreach ($groups as $otherGroup) {
           $otherGroup = Group::load($otherGroup);
           if ($otherGroup != NULL) {
-            UserController::addGroupRoleToUser($otherGroup, $user, 'subscription-lead');
+            $user_manager->addGroupRoleToUser($otherGroup, $user, 'subscription-lead');
           }
         }
       }
@@ -142,7 +142,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
       '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
       '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
     ];
-    $user = UserController::createMember(['id' => $user->id()], $renderable, $destination, FALSE);
+    $user = \Drupal::service('iq_group.user_manager')->createMember(['id' => $user->id()], $renderable, $destination, FALSE);
     $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
     $store->set($user->id() . '_pending_activation', TRUE);
     $url = Url::fromUserInput($iqGroupSettings['redirection_after_register']);
@@ -160,22 +160,19 @@ function iq_group_user_login(UserInterface $account) {
   if (strpos(\Drupal::request()->getRequestUri(), "/user/reset/") !== FALSE) {
     return;
   }
-
-  if (\Drupal::config('iq_group.settings')->get('general_group_id')) {
-    $group = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-    if ($group) {
-      /** @var \Drupal\group\Entity\GroupRoleStorage $group_role_storage */
-      $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
-      $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
-      $groupRoles = array_keys($groupRoles);
-      if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
-        // Redirect to destination if there is 1.
-        if (empty(\Drupal::request()->get('destination'))) {
-          $member_area = \Drupal::config('iq_group.settings')->get('default_redirection');
-          $middleware = \Drupal::service('http_middleware.iq_group');
-          $response = new RedirectResponse(Url::fromUserInput($member_area)->toString());
-          $middleware->setRedirectResponse($response);
-        }
+  $group = \Drupal::service('iq_group.user_manager')->getGeneralGroup();
+  if ($group) {
+    /** @var \Drupal\group\Entity\GroupRoleStorage $group_role_storage */
+    $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
+    $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
+    $groupRoles = array_keys($groupRoles);
+    if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
+      // Redirect to destination if there is 1.
+      if (empty(\Drupal::request()->get('destination'))) {
+        $member_area = \Drupal::config('iq_group.settings')->get('default_redirection');
+        $middleware = \Drupal::service('http_middleware.iq_group');
+        $response = new RedirectResponse(Url::fromUserInput($member_area)->toString());
+        $middleware->setRedirectResponse($response);
       }
     }
   }
@@ -240,7 +237,7 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
  */
 function iq_group_form_user_login_form_alter(&$form, FormStateInterface $form_state, $form_id) {
 
-  $iqGroupSettings = UserController::getIqGroupSettings();
+  $iqGroupSettings = \Drupal::service('iq_group.user_manager')->getIqGroupSettings();
   $form['title'] = [
     '#type' => 'markup',
     '#markup' => t('<h1>@login_into</h1>', [
@@ -390,7 +387,7 @@ function iq_group_theme($existing, $type, $theme, $path) {
  */
 function iq_group_user_presave(UserInterface $account) {
   if (!$account->isNew()) {
-    $generalGroup = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
+    $generalGroup = \Drupal::service('iq_group.user_manager')->getGeneralGroup();
 
     if (!empty($generalGroup) && $generalGroup->getMember($account)) {
       $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
@@ -415,11 +412,10 @@ function iq_group_user_presave(UserInterface $account) {
  */
 function iq_group_user_update(UserInterface $account) {
   if (
-    !$account->isNew() &&
-    \Drupal::config('iq_group.settings')->get('general_group_id')
+    !$account->isNew()
   ) {
-    $generalGroup = Group::load(\Drupal::config('iq_group.settings')
-      ->get('general_group_id'));
+    $user_manager = \Drupal::service('iq_group.user_manager');
+    $generalGroup = $user_manager->getGeneralGroup();
     if (!empty($generalGroup) && $generalGroup->getMember($account)) {
       // Get the selected preferences from the user.
       $selected_preferences = [];
@@ -436,14 +432,13 @@ function iq_group_user_update(UserInterface $account) {
        */
       foreach ($result as $group) {
         // If it is not the general group, check for updates.
-        if ($group->id() != \Drupal::config('iq_group.settings')
-          ->get('general_group_id')) {
+        if ($group->id() != $generalGroup->id()) {
           if (in_array($group->id(), $selected_preferences)) {
             $roles = $generalGroup->getMember($account)
               ->getRoles();
             /** @var \Drupal\group\Entity\GroupRoleInterface $generalGroupRole */
             $generalGroupRole = reset($roles);
-            UserController::addGroupRoleToUser($group, $account, $generalGroupRole->id());
+            $user_manager->addGroupRoleToUser($group, $account, $generalGroupRole->id());
           }
           else {
             $group->removeMember($account);
@@ -460,8 +455,7 @@ function iq_group_user_update(UserInterface $account) {
 function iq_group_user_predelete(UserInterface $account) {
   $user = User::load($account->id());
 
-  $group = Group::load(\Drupal::config('iq_group.settings')
-    ->get('general_group_id'));
+  $group = \Drupal::service('iq_group.user_manager')->getGeneralGroup();
 
   if (!empty($group) && $group->getMember($user)) {
     $eventDispatcher = \Drupal::service('event_dispatcher');
@@ -497,7 +491,7 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
   $params = [];
   $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
-  $iqGroupSettings = UserController::getIqGroupSettings();
+  $iqGroupSettings = \Drupal::service('iq_group.user_manager')->getIqGroupSettings();
   /** @var \Drupal\user\Entity\User $account */
   $account = $form_state->getValue('account');
 
@@ -554,7 +548,7 @@ function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_stat
 
   $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
 
-  $iqGroupSettings = UserController::getIqGroupSettings();
+  $iqGroupSettings = \Drupal::service('iq_group.user_manager')->getIqGroupSettings();
   // Mail one time login URL and instructions using current language.
   $renderable = [
     '#theme' => 'delete_account_template',
@@ -606,7 +600,7 @@ function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_stat
  * Implements hook_mail().
  */
 function iq_group_mail($key, &$message, $params) {
-  $iqGroupSettings = UserController::getIqGroupSettings();
+  $iqGroupSettings = \Drupal::service('iq_group.user_manager')->getIqGroupSettings();
   $message['from'] = $iqGroupSettings['name'] . " <" . $iqGroupSettings['from'] . ">";
   $message['headers']['From'] = $message['headers']['Sender'] = $iqGroupSettings['name'] . " <" . $iqGroupSettings['from'] . ">";
   $message['headers']['Reply-to'] = !empty($iqGroupSettings['reply_to']) ? $iqGroupSettings['reply_to'] : \Drupal::config('system.site')->get('mail');

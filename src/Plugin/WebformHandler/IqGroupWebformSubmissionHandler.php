@@ -5,7 +5,6 @@ namespace Drupal\iq_group\Plugin\WebformHandler;
 use Drupal\node\NodeInterface;
 use Drupal\webform\Plugin\WebformHandlerBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\iq_group\Controller\UserController;
 use Drupal\webform\WebformSubmissionInterface;
 
 /**
@@ -137,7 +136,7 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
           else {
             $destination = '/member-area';
           }
-          UserController::sendLoginEmail($user, $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
+          \Drupal::service('iq_group.user_manager')->sendLoginEmail($user, $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
         }
       }
     }
@@ -168,7 +167,7 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
       else {
         $destination = '/member-area';
       }
-      $user = UserController::createMember($user_data, [], $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
+      $user = \Drupal::service('iq_group.user_manager')->createMember($user_data, [], $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
       $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
       $store->set($user->id() . '_pending_activation', TRUE);
       $webform_submission->setOwnerId($user->id())->save();

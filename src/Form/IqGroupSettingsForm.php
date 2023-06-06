@@ -4,7 +4,6 @@ namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\iq_group\Controller\UserController;
 
 /**
  * Provides a form for the iq_group module settings.
@@ -24,7 +23,7 @@ class IqGroupSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $iqGroupSettings = UserController::getIqGroupSettings();
+    $iqGroupSettings = \Drupal::service('iq_group.user_manager')->getIqGroupSettings();
 
     $form['default_redirection'] = [
       '#type' => 'textfield',

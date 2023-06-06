@@ -6,8 +6,9 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\iq_group\Controller\UserController;
+use Drupal\Core\Session\AccountProxyInterface;
 use League\Csv\Reader;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides an import form class to import group members.
@@ -29,13 +30,6 @@ class ImportForm extends FormBase {
   protected $config;
 
   /**
-   * Drupal language manager service.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected $languageManager;
-
-  /**
    * Gets the current active user.
    *
    * @var \Drupal\Core\Session\AccountProxyInterface
@@ -49,20 +43,16 @@ class ImportForm extends FormBase {
    *   The entity type manager.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
-   *   The language manager.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current active user.
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     ConfigFactoryInterface $config_factory,
-    LanguageManagerInterface $language_manager,
     AccountProxyInterface $current_user
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->config = $config_factory->get('iq_group.settings');
-    $this->languageManager = $language_manager;
     $this->currentUser = $current_user;
   }
 
@@ -80,7 +70,6 @@ class ImportForm extends FormBase {
       $container->get('event_dispatcher'),
       $container->get('config_factory'),
       $container->get('entity_type.manager'),
-      $container->get('language_manager'),
       $container->get('current_user'),
     );
   }
@@ -96,7 +85,7 @@ class ImportForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser()->id());
+    $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
     $form['import_file'] = [
       '#type' => 'managed_file',
       '#title' => $this->t('Member Import'),
@@ -106,7 +95,7 @@ class ImportForm extends FormBase {
       '#upload_validators' => ['file_validate_extensions' => ['csv']],
     ];
     // Choose to update user by an email field or the ID fields.
-    $user_import_key_options = UserController::userImportKeyOptions();
+    $user_import_key_options = \Drupal::service('iq_group.user_manager')->userImportKeyOptions();
     $form['import_key'] = [
       '#type' => 'select',
       '#title' => $this->t('Import key'),

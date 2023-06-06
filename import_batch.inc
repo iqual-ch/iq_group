@@ -12,8 +12,6 @@ use Drupal\Core\Render\Markup;
 use Drupal\user\UserInterface;
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Site\Settings;
-use Drupal\group\Entity\Group;
-use Drupal\iq_group\Controller\UserController;
 use Drupal\user\Entity\User;
 use League\Csv\Reader;
 
@@ -31,6 +29,7 @@ function csv_import(
   $branch_ids,
   &$context
 ) {
+  $user_manager = \Drupal::service('iq_group.user_manager');
   $reader = Reader::createFromPath($import_file_url, 'r');
   $reader->setDelimiter($options['delimiter']);
   $reader->setHeaderOffset(0);
@@ -42,7 +41,7 @@ function csv_import(
   $records = $stmt->process($reader);
   $j = 1;
 
-  $iqGroupSettings = UserController::getIqGroupSettings();
+  $iqGroupSettings = $user_manager->getIqGroupSettings();
   $hidden_fields = $iqGroupSettings['hidden_fields'];
   $hidden_fields = array_map('trim', explode(',', $hidden_fields));
 
@@ -111,7 +110,7 @@ function csv_import(
       // Check if user already exists by the import key.
       $import_key = $options['import_key'];
       if (!empty($import_key) && !empty($user_data[$import_key])) {
-        $checkingUser = \Drupal::entityTypeManager()
+        $checkingUser = $user_manager
           ->getStorage('user')
           ->loadByProperties([
             $import_key => $user_data[$import_key],
@@ -129,12 +128,12 @@ function csv_import(
         $context['results']['cnt_update']++;
       }
       // Make sure that there is no other user associated with the import keys.
-      $user_import_key_options = UserController::userImportKeyOptions();
+      $user_import_key_options = $user_manager->userImportKeyOptions();
       unset($user_import_key_options[$options['import_key']]);
       $conflicting_user = FALSE;
       foreach ($user_import_key_options as $import_key_option => $import_value_option) {
         if (!empty($user_data[$import_key_option])) {
-          $checkingUser = \Drupal::entityTypeManager()
+          $checkingUser = $user_manager
             ->getStorage('user')
             ->loadByProperties([
               $import_key_option => $user_data[$import_key_option],
@@ -208,15 +207,17 @@ function csv_import(
         $user->save();
       }
 
-      // Load General group (id=5) and get the roles for the user.
-      $generalGroup = Group::load(\Drupal::config('iq_group.settings')->get('general_group_id'));
-      $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
-      $groupRoles = $group_role_storage->loadByUserAndGroup($user, $generalGroup);
-      $groupRoles = array_keys($groupRoles);
-      if (!in_array('subscription-subscriber', $groupRoles) && !in_array('subscription-lead', $groupRoles)) {
-        UserController::addGroupRoleToUser($generalGroup, $user, 'subscription-subscriber');
-        $eventDispatcher = \Drupal::service('event_dispatcher');
-        $eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent($user));
+      // Load General group and get the roles for the user.
+      $generalGroup = $user_manager->getGeneralGroup();
+      if ($generalGroup) {
+        $group_role_storage = $user_manager->entityTypeManager->getStorage('group_role');
+        $groupRoles = $group_role_storage->loadByUserAndGroup($user, $generalGroup);
+        $groupRoles = array_keys($groupRoles);
+        if (!in_array('subscription-subscriber', $groupRoles) && !in_array('subscription-lead', $groupRoles)) {
+          $user_manager->addGroupRoleToUser($generalGroup, $user, 'subscription-subscriber');
+          $eventDispatcher = \Drupal::service('event_dispatcher');
+          $eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent($user));
+        }
       }
 
       /*
@@ -231,20 +232,20 @@ function csv_import(
       }
       // Set user preferences.
       if (array_key_exists('preferences', $fields_to_process)) {
-        $ids = UserController::setUserReferenceField($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences', $found_user);
+        $ids = $user_manager->setUserReferenceField($user_data, $user, $options['preference_option'], $preference_names, 'preferences', 'field_iq_group_preferences', $found_user);
         $user->set('field_iq_group_preferences', $ids);
         unset($fields_to_process['preferences']);
       }
       // Set user products if existing.
       if ($user->hasField('field_iq_group_products') && array_key_exists('products', $fields_to_process)) {
         $preference_option = $options['product_option'] == 'override_product' ? "override_preferences" : "not_override_preferences";
-        $ids = UserController::setUserReferenceField($user_data, $user, $preference_option, $product_ids, 'products', 'field_iq_group_products', $found_user);
+        $ids = $user_manager->setUserReferenceField($user_data, $user, $preference_option, $product_ids, 'products', 'field_iq_group_products', $found_user);
         $user->set('field_iq_group_products', $ids);
         unset($fields_to_process['products']);
       }
       // Set user branches if existing.
       if ($user->hasField('field_iq_group_branches') && array_key_exists('branches', $fields_to_process)) {
-        $ids = UserController::setUserReferenceField($user_data, $user, $options['preference_option'], $branch_ids, 'branches', 'field_iq_group_branches', $found_user);
+        $ids = $user_manager->setUserReferenceField($user_data, $user, $options['preference_option'], $branch_ids, 'branches', 'field_iq_group_branches', $found_user);
         $user->set('field_iq_group_branches', $ids);
         unset($fields_to_process['branches']);
       }
@@ -578,8 +579,8 @@ function finished_import($success, $results, $operations) {
  * Update user groups.
  */
 function update_user_groups(UserInterface $account) {
-  $generalGroup = Group::load(\Drupal::config('iq_group.settings')
-    ->get('general_group_id'));
+  $user_manager = \Drupal::service('iq_group.user_manager');
+  $generalGroup = $user_manager->getGeneralGroup();
   if (!empty($generalGroup)) {
     // Get the selected preferences from the user.
     $selected_preferences = [];
@@ -590,7 +591,7 @@ function update_user_groups(UserInterface $account) {
      * When updating the user, check for the preferences
      * and update groups accordingly.
      */
-    $result = \Drupal::entityTypeManager()
+    $result = $user_manager->entityTypeManager
       ->getStorage('group')
       ->loadMultiple();
     /**
@@ -598,13 +599,12 @@ function update_user_groups(UserInterface $account) {
      */
     foreach ($result as $group) {
       // If it is not the general group, check for updates.
-      if ($group->id() != \Drupal::config('iq_group.settings')
-        ->get('general_group_id')) {
+      if ($group->id() != $generalGroup->id()) {
         if (in_array($group->id(), $selected_preferences)) {
           /** @var \Drupal\group\Entity\GroupRoleInterface $generalGroupRole */
           $generalGroupRole = reset($generalGroup->getMember($account)
             ->getRoles());
-          UserController::addGroupRoleToUser($group, $account, $generalGroupRole->id());
+          $user_manager->addGroupRoleToUser($group, $account, $generalGroupRole->id());
         }
         else {
           $group->removeMember($account);

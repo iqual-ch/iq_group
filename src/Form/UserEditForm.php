@@ -9,7 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\iq_group\Controller\UserController;
+use Drupal\Core\Url;
 use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\IqGroupEvents;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
@@ -59,6 +59,13 @@ class UserEditForm extends FormBase {
   protected $currentUser;
 
   /**
+   * Gets the iq group user manager.
+   *
+   * @var \Drupal\iq_group\Service\IqGroupUserManager
+   */
+  protected $userManager;
+
+  /**
    * UserEditForm constructor.
    *
    * @param Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
@@ -71,19 +78,23 @@ class UserEditForm extends FormBase {
    *   The language manager.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current active user.
+   * @param \Drupal\iq_group\Service\IqGroupUserManager $user_manager
+   *   The iq group user manager.
    */
   public function __construct(
     EventDispatcherInterface $event_dispatcher,
     EntityTypeManagerInterface $entity_type_manager,
     ConfigFactoryInterface $config_factory,
     LanguageManagerInterface $language_manager,
-    AccountProxyInterface $current_user
+    AccountProxyInterface $current_user,
+    IqGroupUserManager $user_manager
   ) {
     $this->eventDispatcher = $event_dispatcher;
     $this->entityTypeManager = $entity_type_manager;
     $this->config = $config_factory->get('iq_group.settings');
     $this->languageManager = $language_manager;
     $this->currentUser = $current_user;
+    $this->userManager = $user_manager;
   }
 
   /**
@@ -102,6 +113,7 @@ class UserEditForm extends FormBase {
       $container->get('entity_type.manager'),
       $container->get('language_manager'),
       $container->get('current_user'),
+      $container->get('iq_group.user_manager')
     );
   }
 
@@ -140,7 +152,7 @@ class UserEditForm extends FormBase {
         ->getStorage('group')
         ->loadMultiple();
       $options = [];
-      $hidden_groups = UserController::getIqGroupSettings()['hidden_groups'];
+      $hidden_groups = $this->userManager->getIqGroupSettings()['hidden_groups'];
       $hidden_groups = explode(',', $hidden_groups);
       /**
        * @var  int $key
@@ -245,7 +257,7 @@ class UserEditForm extends FormBase {
       }
 
       $user_id = $this->currentUser->id();
-      $group = $this->entityTypeManager->getStorage('group')->load($this->config->get('general_group_id'));
+      $group = $this->userManager->getGeneralGroup();
       $group_role_storage = $this->entityTypeManager->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
       $groupRoles = array_keys($groupRoles);
@@ -280,7 +292,7 @@ class UserEditForm extends FormBase {
       // If user is a lead, show link or edit profile directly.
       if (in_array('subscription-lead', $groupRoles)) {
         if ($currentPath == '/user/edit') {
-          $resetURL = 'https://' . UserController::getDomain() . '/user/' . $user_id . '/edit';
+          $resetURL = 'https://' . $this->userManager->getDomain() . '/user/' . $user_id . '/edit';
           // @todo if there is a destination, attach it to the url
           $response = new RedirectResponse($resetURL, 302);
           $response->send();
@@ -292,8 +304,9 @@ class UserEditForm extends FormBase {
           unset($form['password_text']);
           $language = $this->languageManager->getCurrentLanguage()->getId();
           $form['full_profile_edit'] = [
-            '#type' => 'markup',
-            '#markup' => '</br><a href="/' . $language . '/user/' . $user_id . '/edit">' . $this->t('Edit profile') . '</a>',
+            '#type' => 'link',
+            '#title' => $this->t('Edit profile'),
+            '#url' => Url::fromRoute('entity.user.edit_form', ['user' => $user_id]),
             '#weight' => 70,
           ];
         }
@@ -337,22 +350,25 @@ class UserEditForm extends FormBase {
     if ($form_state->getValue('password') != NULL) {
       $user->setPassword($form_state->getValue('password'));
 
-      // Add the role in general (id=5) group.
-      $group = $this->entityTypeManager->getStorage('group')->load($this->config->get('general_group_id'));
-      $group_role_storage = $this->entityTypeManager->getStorage('group_role');
-      $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
-      $groupRoles = array_keys($groupRoles);
-      if (!in_array('subscription-lead', $groupRoles)) {
-        UserController::addGroupRoleToUser($group, $user, 'subscription-lead');
-        $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
+      // Add the role in general group.
+      $group = $this->userManager->getGeneralGroup();
+      if ($group) {
+        $group_role_storage = $this->entityTypeManager->getStorage('group_role');
+        $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
+        $groupRoles = array_keys($groupRoles);
+        if (!in_array('subscription-lead', $groupRoles)) {
+          $this->userManager->addGroupRoleToUser($group, $user, 'subscription-lead');
+          $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
+        }
       }
+
       // Add member to the other groups that the user has selected in the
       // preferences field.
       $groups = $form_state->getValue('preferences');
       foreach ($groups as $otherGroup) {
         $otherGroup = $this->entityTypeManager->getStorage('group')->load($otherGroup);
         if ($otherGroup != NULL) {
-          UserController::addGroupRoleToUser($otherGroup, $user, 'subscription-lead');
+          $this->userManager->addGroupRoleToUser($otherGroup, $user, 'subscription-lead');
         }
       }
     }

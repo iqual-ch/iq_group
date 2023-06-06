@@ -11,7 +11,7 @@ use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
-use Drupal\iq_group\Controller\UserController;
+use Drupal\iq_group\Service\IqGroupUserManager;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -49,6 +49,13 @@ class SignupForm extends FormBase {
   protected $currentUser;
 
   /**
+   * Gets the iq group user manager.
+   *
+   * @var \Drupal\iq_group\Service\IqGroupUserManager
+   */
+  protected $userManager;
+
+  /**
    * SignupForm constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -59,17 +66,21 @@ class SignupForm extends FormBase {
    *   The language manager.
    * @param \Drupal\Core\Session\AccountProxyInterface $current_user
    *   The current active user.
+   * @param \Drupal\iq_group\Service\IqGroupUserManager $user_manager
+   *   The iq group user manager.
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     ConfigFactoryInterface $config_factory,
     LanguageManagerInterface $language_manager,
-    AccountProxyInterface $current_user
+    AccountProxyInterface $current_user,
+    IqGroupUserManager $user_manager
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->config = $config_factory->get('iq_group.settings');
     $this->languageManager = $language_manager;
     $this->currentUser = $current_user;
+    $this->userManager = $user_manager;
   }
 
   /**
@@ -87,6 +98,7 @@ class SignupForm extends FormBase {
       $container->get('entity_type.manager'),
       $container->get('language_manager'),
       $container->get('current_user'),
+      $container->get('iq_group.user_manager')
     );
   }
 
@@ -103,7 +115,7 @@ class SignupForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $account = $this->currentUser;
     $default_preferences = [];
-    $group = $this->entityTypeManager->getStorage('group')->load($this->config->get('general_group_id'));
+    $group = $this->userManager->getGeneralGroup();
     $group_role_storage = $this->entityTypeManager->getStorage('group_role');
     $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
     $groupRoles = array_keys($groupRoles);
@@ -177,7 +189,7 @@ class SignupForm extends FormBase {
        * If it is not the general group
        * and it is not configured as hidden, add it.
        */
-      $hidden_groups = UserController::getIqGroupSettings()['hidden_groups'];
+      $hidden_groups = $this->userManager->getIqGroupSettings()['hidden_groups'];
       $hidden_groups = explode(',', $hidden_groups);
 
       if ($group->id() != $this->config->get('general_group_id') && !in_array($group->label(), $hidden_groups)) {
@@ -265,7 +277,7 @@ class SignupForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $params = [];
-    $iqGroupSettings = UserController::getIqGroupSettings();
+    $iqGroupSettings = $this->userManager->getIqGroupSettings();
     if ($this->currentUser->isAnonymous()) {
       $result = \Drupal::entityQuery('user')
         ->condition('mail', $form_state->getValue('mail'), 'LIKE')
@@ -281,7 +293,7 @@ class SignupForm extends FormBase {
           $user->set('field_iq_group_user_token', $hash_token);
           $user->save();
         }
-        $url = 'https://' . UserController::getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
+        $url = 'https://' . $this->userManager->getDomain() . '/auth/' . $user->id() . '/' . $user->field_iq_group_user_token->value;
         if ($form_state->getValue('destination') != "") {
           $destination = $form_state->getValue('destination');
         }
@@ -345,9 +357,9 @@ class SignupForm extends FormBase {
           // @todo Set a destination if it is a signup form or not?
           $destination = Url::fromUserInput($iqGroupSettings['redirection_after_signup'])->toString();
         }
-        $user = UserController::createMember($user_data, [], $destination);
+        $user = $this->userManager->createMember($user_data, [], $destination);
       }
-      \Drupal::messenger()->addMessage($this->t('Thanks for signing up. You will receive an e-mail with further information about the registration.'));
+      $this->userManager->messenger->addMessage($this->t('Thanks for signing up. You will receive an e-mail with further information about the registration.'));
     }
     else {
       $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
