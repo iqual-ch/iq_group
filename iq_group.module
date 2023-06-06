@@ -210,7 +210,7 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     ]);
   }
   if ($form_id == 'user_register_form') {
-    $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ?: "https://www.sqs.ch/de/datenschutzbestimmungen";
+    $termsAndConditions = \Drupal::config('iq_group.settings')->get('terms_and_conditions') ?: "/";
     $form['data_privacy'] = [
       '#type' => 'checkbox',
       '#title' => t(
