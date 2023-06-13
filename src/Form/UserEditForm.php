@@ -12,11 +12,12 @@ use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\IqGroupEvents;
+use Drupal\iq_group\Service\IqGroupUserManager;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
+use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
-use Drupal\user\UserInterface;
 
 /**
  * Custom user edit form for the iq_group module.
@@ -109,8 +110,8 @@ class UserEditForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('event_dispatcher'),
-      $container->get('config_factory'),
       $container->get('entity_type.manager'),
+      $container->get('config.factory'),
       $container->get('language_manager'),
       $container->get('current_user'),
       $container->get('iq_group.user_manager')
@@ -379,7 +380,7 @@ class UserEditForm extends FormBase {
       $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));
     }
 
-    $this->messenger->addMessage($this->t('Your profile has been saved.'));
+    $this->messenger()->addMessage($this->t('Your profile has been saved.'));
     $user->save();
     $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
     // Redirect after saving

@@ -4,6 +4,7 @@ namespace Drupal\iq_group\Plugin\Block;
 
 use Drupal\iq_group\Form\UserEditForm;
 use Drupal\Core\Block\BlockBase;
+use Drupal\Core\Url;
 
 /**
  * Provides a 'User edit' Block.
@@ -24,11 +25,12 @@ class UserEditBlock extends BlockBase {
     $currentPath = \Drupal::service('path.current')->getPath();
     $user_id = \Drupal::currentUser()->id();
     if ($currentPath == '/user/' . $user_id) {
-      $language = \Drupal::languageManager()->getCurrentLanguage()->getId();
       $form['full_profile_edit'] = [
-        '#type' => 'markup',
-        '#markup' => '<div class="iqbm-button iqbm-text btn btn-cta"><a href="/' . $language . '/user/' . $user_id . '/edit">' . $this->t('Edit profile') . '</a></div>',
+        '#type' => 'link',
+        '#title' => $this->t('Edit profile'),
+        '#url' => Url::fromRoute('entity.user.edit_form', ['user' => $user_id]),
       ];
+      $form['full_profile_edit']['#attributes']['class'][] = 'iqbm-button iqbm-text btn btn-cta';
       return $form;
     }
     return \Drupal::formBuilder()->getForm(UserEditForm::class);

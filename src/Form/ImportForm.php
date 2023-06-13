@@ -67,9 +67,8 @@ class ImportForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('event_dispatcher'),
-      $container->get('config_factory'),
       $container->get('entity_type.manager'),
+      $container->get('config.factory'),
       $container->get('current_user'),
     );
   }

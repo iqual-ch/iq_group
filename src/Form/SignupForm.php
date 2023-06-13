@@ -16,7 +16,7 @@ use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides a signup form for the iq_grou module.
+ * Provides a signup form for the iq_group module.
  */
 class SignupForm extends FormBase {
 
@@ -94,8 +94,8 @@ class SignupForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('config_factory'),
       $container->get('entity_type.manager'),
+      $container->get('config.factory'),
       $container->get('language_manager'),
       $container->get('current_user'),
       $container->get('iq_group.user_manager')
@@ -139,7 +139,8 @@ class SignupForm extends FormBase {
           'spellcheck' => 'false',
         ],
       ];
-      $termsAndConditions = $this->config->get('terms_and_conditions') ?: "https://www.sqs.ch/de/datenschutzbestimmungen";      $form['data_privacy'] = [
+      $termsAndConditions = $this->config->get('terms_and_conditions') ?: "";
+      $form['data_privacy'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> and data protection regulations and I agree.', ['@terms_and_conditions' => $termsAndConditions]),
         '#default_value' => FALSE,
@@ -150,18 +151,18 @@ class SignupForm extends FormBase {
       $language = $this->languageManager->getCurrentLanguage()->getId();
       $destination = \Drupal::service('path.current')->getPath();
       $form['register_link'] = [
-        '#type' => 'markup',
-        '#markup' => $this->t('<a href="/@language/user/register?destination=@destination">Create an account</a> /', [
-          '@language' => $language,
-          '@destination' => $destination,
+        '#type' => 'link',
+        '#title' => $this->t('Create an account'),
+        '#url' => Url::fromRoute('user.register', [
+          'destination' => $destination,
         ]),
         '#weight' => 101,
       ];
       $form['login_link'] = [
-        '#type' => 'markup',
-        '#markup' => $this->t('<a href="/@language/user/login?destination=@destination">Login</a>', [
-          '@language' => $language,
-          '@destination' => $destination,
+        '#type' => 'link',
+        '#title' => $this->t('Login'),
+        '#url' => Url::fromRoute('user.login', [
+          'destination' => $destination,
         ]),
         '#weight' => 101,
       ];
@@ -279,12 +280,15 @@ class SignupForm extends FormBase {
     $params = [];
     $iqGroupSettings = $this->userManager->getIqGroupSettings();
     if ($this->currentUser->isAnonymous()) {
-      $result = \Drupal::entityQuery('user')
-        ->condition('mail', $form_state->getValue('mail'), 'LIKE')
-        ->execute();
+      // Try to load by email.
+      $users = $this->entityTypeManager->getStorage('user')->loadByProperties(['mail' => $form_state->getValue('mail')]);
+      if (empty($users)) {
+        // No success, try to load by name.
+        $users = $this->entityTypeManager->getStorage('user')->loadByProperties(['name' => $form_state->getValue('mail')]);
+      }
+      $user = reset($users);
       // If the user exists, send an email to login.
-      if ((is_countable($result) ? count($result) : 0) > 0) {
-        $user = $this->entityTypeManager->getStorage('user')->load(reset($result));
+      if ($user) {
         if ($user->field_iq_group_user_token->value == NULL) {
           $data = time();
           $data .= $user->id();
@@ -299,7 +303,9 @@ class SignupForm extends FormBase {
         }
         else {
           // @todo Set a destination if it is a signup form or not?
-          $destination = Url::fromUserInput($iqGroupSettings['redirection_after_signup'])->toString();
+          if (!empty($iqGroupSettings['redirection_after_signup'])) {
+            $destination = Url::fromUserInput($iqGroupSettings['redirection_after_signup'])->toString();
+          }
         }
         if (isset($destination) && $destination != NULL) {
           $url .= "?destination=" . $destination . "&signup=1";
@@ -336,7 +342,6 @@ class SignupForm extends FormBase {
           $name = $form_state->getValue('mail');
         }
         $currentLanguage = $language = $this->languageManager->getCurrentLanguage()->getId();
-        ;
         $user_data = [
           'mail' => $form_state->getValue('mail'),
           'name' => $name,
@@ -355,11 +360,13 @@ class SignupForm extends FormBase {
         }
         else {
           // @todo Set a destination if it is a signup form or not?
-          $destination = Url::fromUserInput($iqGroupSettings['redirection_after_signup'])->toString();
+          if (!empty($iqGroupSettings['redirection_after_signup'])) {
+            $destination = Url::fromUserInput($iqGroupSettings['redirection_after_signup'])->toString();
+          }
         }
         $user = $this->userManager->createMember($user_data, [], $destination);
       }
-      $this->userManager->messenger->addMessage($this->t('Thanks for signing up. You will receive an e-mail with further information about the registration.'));
+      $this->messenger()->addMessage($this->t('Thanks for signing up. You will receive an e-mail with further information about the registration.'));
     }
     else {
       $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
