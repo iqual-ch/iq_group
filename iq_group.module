@@ -494,48 +494,63 @@ function iq_group_reset_pass_submit(array &$form, FormStateInterface $form_state
   $iqGroupSettings = \Drupal::service('iq_group.user_manager')->getIqGroupSettings();
   /** @var \Drupal\user\Entity\User $account */
   $account = $form_state->getValue('account');
+  if ($account) {
+    // Mail one time login URL and instructions using current language.
+    $renderable = [
+      '#theme' => 'reset_password_template',
+      '#EMAIL_TITLE' => t("Confirm password reset"),
+      '#EMAIL_PREVIEW_TEXT' => t("Confirm the password reset of your @project_name account", [
+        '@project_name' => $iqGroupSettings['project_name'],
+      ]),
+      '#USER_PREFERENCES' => [],
+      '#EMAIL_URL' => user_pass_reset_url($account),
+      '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
+      '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
+    ];
 
-  // Mail one time login URL and instructions using current language.
-  $renderable = [
-    '#theme' => 'reset_password_template',
-    '#EMAIL_TITLE' => t("Confirm password reset"),
-    '#EMAIL_PREVIEW_TEXT' => t("Confirm the password reset of your @project_name account", [
-      '@project_name' => $iqGroupSettings['project_name'],
-    ]),
-    '#USER_PREFERENCES' => [],
-    '#EMAIL_URL' => user_pass_reset_url($account),
-    '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
-    '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
-  ];
+    // Make array of user preference ids available to template.
+    if (!$account->get('field_iq_group_preferences')->isEmpty()) {
+      $renderable["#USER_PREFERENCES"] = array_filter(array_column($account->field_iq_group_preferences->getValue(), 'target_id'));
+    }
 
-  // Make array of user preference ids available to template.
-  if (!$account->get('field_iq_group_preferences')->isEmpty()) {
-    $renderable["#USER_PREFERENCES"] = array_filter(array_column($account->field_iq_group_preferences->getValue(), 'target_id'));
+    $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+    $mail_subject = t("Reset Password");
+    mb_internal_encoding("UTF-8");
+    $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
+    // Send a registration email and set the pending activation flag.
+    $mailManager = \Drupal::service('plugin.manager.mail');
+    $module = 'iq_group';
+    $key = 'iq_group_reset_password';
+    $to = $account->getEmail();
+    $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $params['subject'] = $mail_subject;
+    $params['message'] = $rendered;
+    $send = TRUE;
+    $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+    if (!empty($result)) {
+      \Drupal::logger('user')->notice('Password reset instructions mailed to %name at %email.',
+      [
+        '%name' => $account->getAccountName(),
+        '%email' => $account->getEmail(),
+      ]);
+      \Drupal::messenger()->addStatus(t('Further instructions have been sent to your e-mail address.'));
+    }
+    $form_state->setRedirect('user.page');
   }
-
-  $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-  $mail_subject = t("Reset Password");
-  mb_internal_encoding("UTF-8");
-  $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
-  // Send a registration email and set the pending activation flag.
-  $mailManager = \Drupal::service('plugin.manager.mail');
-  $module = 'iq_group';
-  $key = 'iq_group_reset_password';
-  $to = $account->getEmail();
-  $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
-  $params['subject'] = $mail_subject;
-  $params['message'] = $rendered;
-  $send = TRUE;
-  $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
-  if (!empty($result)) {
-    \Drupal::logger('user')->notice('Password reset instructions mailed to %name at %email.',
-    [
-      '%name' => $account->getAccountName(),
-      '%email' => $account->getEmail(),
-    ]);
-    \Drupal::messenger()->addStatus(t('Further instructions have been sent to your e-mail address.'));
+  else {
+    \Drupal::logger('user')
+      ->notice('Password reset form was submitted with an unknown or inactive account: %name.', [
+        '%name' => $form_state->getValue('name'),
+      ]);
   }
-  $form_state->setRedirect('user.page');
+  // Make sure the status text is displayed even if no email was sent. This
+  // message is deliberately the same as the success message for privacy.
+  \Drupal::messenger()
+    ->addStatus(t('If %identifier is a valid account, an email will be sent with instructions to reset your password.', [
+      '%identifier' => $form_state->getValue('name'),
+    ]));
+
+  $form_state->setRedirect('<front>');
 }
 
 /**
