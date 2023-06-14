@@ -68,6 +68,7 @@ function csv_import(
   if (empty($context['results'])) {
     $context['sandbox'] = ['set' => 'now it is set'];
     $context['sandbox']['progress'] = 0;
+    $context['sandbox']['max'] = min(10, count($records));
     $context['results'] = [];
     $context['results']['log_error'] = '';
     $context['results']['log_warning'] = '';
@@ -210,7 +211,7 @@ function csv_import(
       // Load General group and get the roles for the user.
       $generalGroup = $user_manager->getGeneralGroup();
       if ($generalGroup) {
-        $group_role_storage = $user_manager->entityTypeManager->getStorage('group_role');
+        $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
         $groupRoles = $group_role_storage->loadByUserAndGroup($user, $generalGroup);
         $groupRoles = array_keys($groupRoles);
         if (!in_array('subscription-subscriber', $groupRoles) && !in_array('subscription-lead', $groupRoles)) {
