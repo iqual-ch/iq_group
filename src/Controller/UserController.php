@@ -191,7 +191,6 @@ class UserController extends ControllerBase {
 
         // Redirect the user to the login page with the destination.
         $resetURL = 'https://' . $this->userManager->getDomain() . '/user/login';
-        // @todo if there is a destination, attach it to the url
         if (empty($destination)) {
           if ($this->config->get('default_redirection')) {
             $destination = $this->config->get('default_redirection');
