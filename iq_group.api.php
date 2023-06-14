@@ -46,7 +46,7 @@ function hook_iq_group_after_import(array &$data) {
  * @param bool $found_user
  *   Whether a matching user was found or not.
  */
-function hook_iq_group_reference_import(array &$data, UserInterface $user, $option, array &$field_keys, bool $found_user) {
+function hook_iq_group_reference_import(array &$data, UserInterface $user, string $option, array &$field_keys, bool $found_user) {
   // Here others will make a module that will call this to alter "$data".
 }
 
