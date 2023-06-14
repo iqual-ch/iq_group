@@ -330,7 +330,7 @@ class SignupForm extends FormBase {
         $params['subject'] = $mail_subject;
         $params['message'] = $rendered;
         $send = TRUE;
-        $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+        $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
       }
       // If the user does not exist.
       else {
