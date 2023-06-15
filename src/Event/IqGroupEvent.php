@@ -2,7 +2,8 @@
 
 namespace Drupal\iq_group\Event;
 
-use Symfony\Component\EventDispatcher\Event;
+use Drupal\user\UserInterface;
+use Symfony\Contracts\EventDispatcher\Event;
 
 /**
  * Event that is fired when a user is handled.
@@ -19,17 +20,18 @@ class IqGroupEvent extends Event {
   /**
    * Constructs the object.
    *
-   * @param \Drupal\user\Entity\User $user
-   *   The user data.
+   * @param \Drupal\user\UserInterface $user
+   *   The user entity.
    */
-  public function __construct(&$user) {
+  public function __construct(UserInterface &$user) {
     $this->user = &$user;
   }
 
   /**
    * Returns the event data for the user.
    *
-   * @return mixed
+   * @return \Drupal\user\UserInterface
+   *   The user entity.
    */
   public function &getUser() {
     return $this->user;

@@ -5,7 +5,6 @@ namespace Drupal\iq_group\Plugin\WebformHandler;
 use Drupal\node\NodeInterface;
 use Drupal\webform\Plugin\WebformHandlerBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\iq_group\Controller\UserController;
 use Drupal\webform\WebformSubmissionInterface;
 
 /**
@@ -28,6 +27,7 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state, WebformSubmissionInterface $webform_submission) {
 
+    $send_login_email = NULL;
     $user_data = [];
     $userExists = TRUE;
 
@@ -120,7 +120,10 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
       }
 
     }
-    // If user exists, but is not logged in, attribute the submission to the user.
+    /*
+     * If user exists, but is not logged in,
+     * attribute the submission to the user.
+     */
     if (!empty($user) && $userExists) {
       $webform_submission->setOwnerId($user->id())->save();
 
@@ -133,7 +136,7 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
           else {
             $destination = '/member-area';
           }
-          UserController::sendLoginEmail($user, $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
+          \Drupal::service('iq_group.user_manager')->sendLoginEmail($user, $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
         }
       }
     }
@@ -149,7 +152,12 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
           $user_data['field_iq_group_branches'] = $branch;
         }
         if ($node->hasField('field_iq_group_products')) {
-          $product = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(['name' => $node->getTitle(), 'vid' => 'iq_group_products']);
+          $product = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadByProperties(
+            [
+              'name' => $node->getTitle(),
+              'vid' => 'iq_group_products',
+            ]
+          );
           $user_data['field_iq_group_products'] = $product;
         }
       }
@@ -159,7 +167,7 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
       else {
         $destination = '/member-area';
       }
-      $user = UserController::createMember($user_data, [], $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
+      $user = \Drupal::service('iq_group.user_manager')->createMember($user_data, [], $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
       $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
       $store->set($user->id() . '_pending_activation', TRUE);
       $webform_submission->setOwnerId($user->id())->save();

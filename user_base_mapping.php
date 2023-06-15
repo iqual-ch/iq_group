@@ -1,4 +1,10 @@
 <?php
+
+/**
+ * @file
+ * Assign profile and address values for existing users.
+ */
+
 $users = user_load_multiple();
 
 foreach ($users as $user) {
@@ -7,8 +13,8 @@ foreach ($users as $user) {
   $user->set('field_iq_user_base_profile', $user->get('field_iq_group_profile_picture')->getValue());
   $user->set('field_iq_user_base_address', [
     'country_code' => 'CH',
-    'given_name' => $user->field_iq_group_first_name->value ? $user->field_iq_group_first_name->value : "",
-    'family_name' => $user->field_iq_group_last_name->value ? $user->field_iq_group_last_name->value : "",
+    'given_name' => $user->field_iq_group_first_name->value ?: "",
+    'family_name' => $user->field_iq_group_last_name->value ?: "",
   ]);
   $user->save();
 }

@@ -2,8 +2,8 @@
 
 namespace Drupal\iq_group\Plugin\Block;
 
+use Drupal\iq_group\Form\SignupForm;
 use Drupal\Core\Block\BlockBase;
-use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Provides a 'Signup' Block.
@@ -20,13 +20,16 @@ class SignupBlock extends BlockBase {
    * {@inheritdoc}
    */
   public function build() {
-    return \Drupal::formBuilder()->getForm('Drupal\iq_group\Form\SignupForm');
+    return \Drupal::formBuilder()->getForm(SignupForm::class);
   }
 
-  public function getCacheTags()
-  {
+  /**
+   * {@inheritdoc}
+   */
+  public function getCacheTags() {
     $cache_tags = parent::getCacheTags();
     $cache_tags[] = 'iq_group:signup_block';
     return $cache_tags;
   }
+
 }
