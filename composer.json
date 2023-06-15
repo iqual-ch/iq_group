@@ -10,7 +10,7 @@
   ],
   "require": {
     "league/csv": "^9.7",
-    "drupal/group": "^2.0",
+    "drupal/group": "^1.0",
     "iqual/iq_user_base": "^2.0",
     "drupal/login_emailusername": "^2.0",
     "drupal/route_condition": "^2.0",
