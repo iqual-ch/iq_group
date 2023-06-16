@@ -606,7 +606,7 @@ function iq_group_user_cancel_submit(array &$form, FormStateInterface $form_stat
   $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
   if (!empty($result)) {
     \Drupal::logger('user')->notice('Account deletion instructions mailed to %name at %email.', [
-      '%name' => $user->getUsername(),
+      '%name' => $user->getDisplayName(),
       '%email' => $user->getEmail(),
     ]);
     \Drupal::messenger()->addStatus(t('Further instructions to delete your account have been sent to your email address.'));
