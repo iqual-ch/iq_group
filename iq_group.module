@@ -146,10 +146,12 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
     $user = \Drupal::service('iq_group.user_manager')->createMember(['id' => $user->id()], $renderable, $destination, FALSE);
     $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
     $store->set($user->id() . '_pending_activation', TRUE);
-    $url = Url::fromUserInput($iqGroupSettings['redirection_after_register']);
-    $middleware = \Drupal::service('http_middleware.iq_group');
-    $response = new RedirectResponse($url->toString());
-    $middleware->setRedirectResponse($response);
+    if (!empty($iqGroupSettings['redirection_after_register'])) {
+      $url = Url::fromUserInput($iqGroupSettings['redirection_after_register']);
+      $middleware = \Drupal::service('http_middleware.iq_group');
+      $response = new RedirectResponse($url->toString());
+      $middleware->setRedirectResponse($response);
+    }
   }
 }
 
