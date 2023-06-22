@@ -211,11 +211,11 @@ msgstr "Le mot de passe actuel manque ou est incorrect. Celui-ci est obligatoire
 msgid "%name is not recognized as a username or an email address."
 msgstr "%name n'est pas reconnu comme nom d'utilisateur ou adresse e-mail."
 
-msgid "Enter your username or email address"
+msgid "Enter your username or email address."
 msgstr "Entrez ici votre adresse e-mail."
 
-msgid "Username or email address."
-msgstr "Entrez ici votre adresse e-mail."
+msgid "Username or email address"
+msgstr "Adresse e-mail ou nom d'utilisateur"
 
 msgid "Please enter your e-mail address here."
 msgstr "Entrez ici votre adresse e-mail."

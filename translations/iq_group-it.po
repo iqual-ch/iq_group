@@ -1,11 +1,11 @@
 msgid "Thank you very much for your interest. You will shortly receive an e-mail with a link to the desired whitepaper."
 msgstr "Grazie per l’interesse dimostrato. A breve riceverà un’e-mail con un link per accedere al white paper desiderato."
 
-msgid "Enter your username or email address"
-msgstr "Inserisci il tuo nome utente o indirizzo email"
+msgid "Enter your username or email address."
+msgstr "Inserisci il tuo nome utente o indirizzo e-mail"
 
-msgid "Username or email address."
-msgstr "Inserisci il tuo nome utente o indirizzo email"
+msgid "Username or email address"
+msgstr "Nome o indirizzo e-mail"
 
 msgid "Invalid Email Address"
 msgstr "Indirizzo e-mail non valido"
