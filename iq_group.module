@@ -216,7 +216,7 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
     $form['data_privacy'] = [
       '#type' => 'checkbox',
       '#title' => t(
-        'I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> \
+        'I have read the <a href="@terms_and_conditions" target="_blank">terms and conditions</a> 
         and data protection regulations and I agree.',
         [
           '@terms_and_conditions' => $termsAndConditions,
