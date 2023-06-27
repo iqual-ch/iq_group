@@ -393,7 +393,7 @@ class IqGroupUserManager {
       $ids = $existing_entities;
     }
     unset($user_data[$import_key]);
-    return array_unique($ids);
+    return array_unique($ids, SORT_REGULAR);
   }
 
   /**
