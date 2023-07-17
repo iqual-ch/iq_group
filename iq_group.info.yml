@@ -2,7 +2,7 @@ name: iQual Group Integration module
 description: Integration module for Group
 package: Custom
 type: module
-core_version_requirement: ^8.8 || ^9
+core_version_requirement: ^9.5 || ^10
 dependencies:
   - group:group
   - iq_user_base:iq_user_base
