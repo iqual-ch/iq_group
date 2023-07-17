@@ -43,7 +43,7 @@ class OneTimeLoginLinkForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $user_email_name_id = $form_state->getValue('user_email_name');
-    if (preg_match('/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/si', $user_email_name_id)) {
+    if (preg_match('/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/si', (string) $user_email_name_id)) {
       $account = user_load_by_mail($user_email_name_id);
     }
     else {
@@ -60,7 +60,7 @@ class OneTimeLoginLinkForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $params = [];
     $user_email_name = $form_state->getValue('user_email_name');
-    if (preg_match('/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/si', $user_email_name)) {
+    if (preg_match('/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/si', (string) $user_email_name)) {
       $user_account = user_load_by_mail($user_email_name);
     }
     else {

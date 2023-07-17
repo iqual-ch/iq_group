@@ -2,8 +2,8 @@
 
 namespace Drupal\iq_group\Plugin\Block;
 
-use Drupal\iq_group\Form\SignupForm;
 use Drupal\Core\Block\BlockBase;
+use Drupal\iq_group\Form\SignupForm;
 
 /**
  * Provides a 'Signup' Block.

@@ -175,7 +175,7 @@ class SignupForm extends FormBase {
         foreach ($selected_preferences as $value) {
           // If it is not the general group, add it.
           if ($value['target_id'] != $this->config->get('general_group_id')) {
-            $default_preferences = array_merge($default_preferences, [$value['target_id']]);
+            $default_preferences = [...$default_preferences, $value['target_id']];
           }
         }
       }
@@ -191,7 +191,7 @@ class SignupForm extends FormBase {
        * and it is not configured as hidden, add it.
        */
       $hidden_groups = $this->userManager->getIqGroupSettings()['hidden_groups'];
-      $hidden_groups = explode(',', $hidden_groups);
+      $hidden_groups = explode(',', (string) $hidden_groups);
 
       if ($group->id() != $this->config->get('general_group_id') && !in_array($group->label(), $hidden_groups)) {
         $options[$group->id()] = $group->label();
@@ -231,7 +231,7 @@ class SignupForm extends FormBase {
         $selected_branches = $user->get('field_iq_group_branches')
           ->getValue();
         foreach ($selected_branches as $value) {
-          $default_branches = array_merge($default_branches, [$value['target_id']]);
+          $default_branches = [...$default_branches, $value['target_id']];
         }
       }
 
@@ -316,7 +316,7 @@ class SignupForm extends FormBase {
           '#EMAIL_PREVIEW_TEXT' => $this->t("Sign into your @project_name account", ['@project_name' => $iqGroupSettings['project_name']]),
           '#EMAIL_URL' => $url,
           '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
-          '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
+          '#EMAIL_FOOTER' => nl2br((string) $iqGroupSettings['project_address']),
         ];
         $rendered = \Drupal::service('renderer')->renderPlain($renderable);
         $mail_subject = $this->t("Sign into your account");

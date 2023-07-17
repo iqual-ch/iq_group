@@ -154,7 +154,7 @@ class UserEditForm extends FormBase {
         ->loadMultiple();
       $options = [];
       $hidden_groups = $this->userManager->getIqGroupSettings()['hidden_groups'];
-      $hidden_groups = explode(',', $hidden_groups);
+      $hidden_groups = explode(',', (string) $hidden_groups);
       /**
        * @var  int $key
        * @var  \Drupal\group\Entity\Group $group
@@ -170,7 +170,7 @@ class UserEditForm extends FormBase {
         $default_value = [];
         foreach ($selected_preferences as $value) {
           if ($value['target_id'] != $this->config->get('general_group_id')  && !in_array($group->label(), $hidden_groups)) {
-            $default_value = array_merge($default_value, [$value['target_id']]);
+            $default_value = [...$default_value, $value['target_id']];
           }
         }
 
@@ -206,7 +206,7 @@ class UserEditForm extends FormBase {
           ->getValue();
         $default_branches = [];
         foreach ($selected_branches as $value) {
-          $default_branches = array_merge($default_branches, [$value['target_id']]);
+          $default_branches = [...$default_branches, $value['target_id']];
         }
         if ($currentPath == '/user/edit') {
           $form['branches'] = [

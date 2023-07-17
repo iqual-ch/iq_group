@@ -2,9 +2,9 @@
 
 namespace Drupal\iq_group\Plugin\WebformHandler;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\NodeInterface;
 use Drupal\webform\Plugin\WebformHandlerBase;
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\webform\WebformSubmissionInterface;
 
 /**
@@ -91,12 +91,12 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
           // User branches.
           $selected_branches = $user->get('field_iq_group_branches')->getValue();
           foreach ($selected_branches as $key => $value) {
-            $default_branches = array_merge($default_branches, [$value['target_id']]);
+            $default_branches = [...$default_branches, $value['target_id']];
           }
           // Entity branches.
           $entity_branches = $node->get('field_iq_group_branches')->getValue();
           foreach ($entity_branches as $key => $value) {
-            $default_branches = array_merge($default_branches, [$value['target_id']]);
+            $default_branches = [...$default_branches, $value['target_id']];
           }
           $user->set('field_iq_group_branches', $default_branches);
         }
@@ -106,13 +106,13 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
           $default_products = [];
           $selected_products = $user->get('field_iq_group_products')->getValue();
           foreach ($selected_products as $key => $value) {
-            $default_products = array_merge($default_products, [$value['target_id']]);
+            $default_products = [...$default_products, $value['target_id']];
           }
 
           // Entity products.
           $entity_products = $node->get('field_iq_group_products')->getValue();
           foreach ($entity_products as $key => $value) {
-            $default_products = array_merge($default_products, [$value['target_id']]);
+            $default_products = [...$default_products, $value['target_id']];
           }
           $user->set('field_iq_group_products', $default_products);
         }

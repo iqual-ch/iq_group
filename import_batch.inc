@@ -5,15 +5,15 @@
  * Batch file to import group members.
  */
 
-use League\Csv\Statement;
-use Drupal\iq_group\IqGroupEvents;
-use Drupal\iq_group\Event\IqGroupEvent;
-use Drupal\Core\Render\Markup;
-use Drupal\user\UserInterface;
 use Drupal\Component\Utility\Crypt;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Site\Settings;
+use Drupal\iq_group\Event\IqGroupEvent;
+use Drupal\iq_group\IqGroupEvents;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 use League\Csv\Reader;
+use League\Csv\Statement;
 
 /**
  * Import users from a csv file.
@@ -43,7 +43,7 @@ function csv_import(
 
   $iqGroupSettings = $user_manager->getIqGroupSettings();
   $hidden_fields = $iqGroupSettings['hidden_fields'];
-  $hidden_fields = array_map('trim', explode(',', $hidden_fields));
+  $hidden_fields = array_map('trim', explode(',', (string) $hidden_fields));
 
   // Field mapping.
   $field_mappings = [
@@ -68,7 +68,7 @@ function csv_import(
   if (empty($context['results'])) {
     $context['sandbox'] = ['set' => 'now it is set'];
     $context['sandbox']['progress'] = 0;
-    $context['sandbox']['max'] = min(10, count($records));
+    $context['sandbox']['max'] = min(10, is_countable($records) ? count($records) : 0);
     $context['results'] = [];
     $context['results']['log_error'] = '';
     $context['results']['log_warning'] = '';
@@ -90,7 +90,7 @@ function csv_import(
       $field_keys = [];
       $unused_keys = [];
       foreach ($user_data as $key => $value) {
-        if (strpos($key, 'field_') > -1) {
+        if (strpos((string) $key, 'field_') > -1) {
           $field_keys[$key] = $key;
         }
         elseif (!empty($field_mappings[$key])) {
@@ -198,7 +198,7 @@ function csv_import(
           'name' => $user_data['mail'],
           'status' => 1,
         ]);
-        $store->set(crc32($user_data['mail']) . '_pending_finalization', TRUE);
+        $store->set(crc32((string) $user_data['mail']) . '_pending_finalization', TRUE);
         $user->save();
         $data = time();
         $data .= $user->id();
@@ -217,7 +217,7 @@ function csv_import(
         if (!in_array('subscription-subscriber', $groupRoles) && !in_array('subscription-lead', $groupRoles)) {
           $user_manager->addGroupRoleToUser($generalGroup, $user, 'subscription-subscriber');
           $eventDispatcher = \Drupal::service('event_dispatcher');
-          $eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent($user));
+          $eventDispatcher->dispatch(new IqGroupEvent($user), IqGroupEvents::USER_OPT_IN);
         }
       }
 
@@ -311,7 +311,7 @@ function csv_import(
           if ($field_mapping == 'field_iq_user_base_address') {
             $real_address = $user->get('field_iq_user_base_address')
               ->getValue();
-            $address_info[$field_key] = strlen(trim($real_address[$field_key])) == 0 ? $user_data[$field_key] : $real_address[$field_key];
+            $address_info[$field_key] = strlen(trim((string) $real_address[$field_key])) == 0 ? $user_data[$field_key] : $real_address[$field_key];
           }
           else {
             if (empty($user->get($field_mapping)->getValue())) {
@@ -326,7 +326,7 @@ function csv_import(
         }
         $user->set('field_iq_user_base_address', $address_info);
       }
-      $store->delete(crc32($user_data['mail']) . '_pending_finalization');
+      $store->delete(crc32((string) $user_data['mail']) . '_pending_finalization');
       $user->save();
       // update_user_groups($user);
       \Drupal::moduleHandler()->invokeAll('iq_group_after_import', [&$user]);
@@ -363,7 +363,7 @@ function report_unused_fields($unused_keys, &$context) {
 function validate_user(&$user_data, $field_keys, $offset, &$context) {
   $required_fields = ['mail'];
   $valid = TRUE;
-  if (strpos($user_data['mail'], '@') < 1) {
+  if (strpos((string) $user_data['mail'], '@') < 1) {
     if (empty($context['result']['log_error'])) {
       $context['results']['log_error'] = [];
     }
@@ -396,7 +396,7 @@ function validate_user(&$user_data, $field_keys, $offset, &$context) {
  * Override user tags.
  */
 function override_user_tags(&$user_data, &$user, $option, $existing_terms, $found_user) {
-  $tags = explode(',', $user_data['tags']);
+  $tags = explode(',', (string) $user_data['tags']);
   if ($option == 'not_override_tags' && $found_user) {
     unset($user_data['tags']);
     return;
@@ -428,7 +428,7 @@ function override_user_tags(&$user_data, &$user, $option, $existing_terms, $foun
       $existing_tags = $user->get('field_iq_group_tags')->getValue();
       $existing_tags = array_filter(array_column($existing_tags, 'target_id'));
       $user_tags = array_filter(array_column($user_tags, 'target_id'));
-      $user_data['tags'] = array_unique(array_merge($existing_tags, $user_tags));
+      $user_data['tags'] = array_unique([...$existing_tags, ...$user_tags]);
     }
     elseif ($option == 'remove_tags') {
       // Remove the tags that are listed in the import.
@@ -449,7 +449,7 @@ function override_user_tags(&$user_data, &$user, $option, $existing_terms, $foun
  */
 function set_user_preferences(&$user_data, &$user, $option, $preference_names) {
   $ids = [];
-  $user_data['preferences'] = explode(',', $user_data['preferences']);
+  $user_data['preferences'] = explode(',', (string) $user_data['preferences']);
   foreach ($user_data['preferences'] as $preference) {
     if (in_array(trim($preference), $preference_names)) {
       $ids[] = ['target_id' => (string) array_search(trim($preference), $preference_names)];
@@ -484,7 +484,7 @@ function set_user_preferences(&$user_data, &$user, $option, $preference_names) {
  */
 function set_user_products(&$user_data, &$user, $option, $product_ids) {
   $ids = [];
-  $user_data['products'] = explode(',', $user_data['products']);
+  $user_data['products'] = explode(',', (string) $user_data['products']);
   foreach ($user_data['products'] as $product) {
     if (in_array(trim($product), $product_ids)) {
       $ids[] = ['target_id' => (string) array_search(trim($product), $product_ids)];
@@ -519,7 +519,7 @@ function set_user_products(&$user_data, &$user, $option, $product_ids) {
  */
 function set_user_branches(&$user_data, &$user, $option, $branch_ids) {
   $ids = [];
-  $user_data['branches'] = explode(',', $user_data['branches']);
+  $user_data['branches'] = explode(',', (string) $user_data['branches']);
   foreach ($user_data['branches'] as $branch) {
     if (in_array(trim($branch), $branch_ids)) {
       $ids[] = ['target_id' => (string) array_search(trim($branch), $branch_ids)];
