@@ -3,11 +3,13 @@
 namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Path\CurrentPathStack;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\iq_group\Event\IqGroupEvent;
@@ -67,6 +69,20 @@ class UserEditForm extends FormBase {
   protected $userManager;
 
   /**
+   * The current path.
+   *
+   * @var \Drupal\Core\Path\CurrentPathStack
+   */
+  protected $currentPath;
+
+  /**
+   * The entity repository service.
+   *
+   * @var \Drupal\Core\Entity\EntityRepositoryInterface
+   */
+  protected $entityRepository;
+
+  /**
    * UserEditForm constructor.
    *
    * @param Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
@@ -81,6 +97,10 @@ class UserEditForm extends FormBase {
    *   The current active user.
    * @param \Drupal\iq_group\Service\IqGroupUserManager $user_manager
    *   The iq group user manager.
+   * @param \Drupal\Core\Path\CurrentPathStack $current_path
+   *   The current path.
+   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
+   *   The entity repository service.
    */
   public function __construct(
     EventDispatcherInterface $event_dispatcher,
@@ -88,7 +108,9 @@ class UserEditForm extends FormBase {
     ConfigFactoryInterface $config_factory,
     LanguageManagerInterface $language_manager,
     AccountProxyInterface $current_user,
-    IqGroupUserManager $user_manager
+    IqGroupUserManager $user_manager,
+    CurrentPathStack $current_path,
+    EntityRepositoryInterface $entity_repository
   ) {
     $this->eventDispatcher = $event_dispatcher;
     $this->entityTypeManager = $entity_type_manager;
@@ -96,6 +118,8 @@ class UserEditForm extends FormBase {
     $this->languageManager = $language_manager;
     $this->currentUser = $current_user;
     $this->userManager = $user_manager;
+    $this->currentPath = $current_path;
+    $this->entityRepository = $entity_repository;
   }
 
   /**
@@ -114,7 +138,9 @@ class UserEditForm extends FormBase {
       $container->get('config.factory'),
       $container->get('language_manager'),
       $container->get('current_user'),
-      $container->get('iq_group.user_manager')
+      $container->get('iq_group.user_manager'),
+      $container->get('path.current'),
+      $container->get('entity.repository')
     );
   }
 
@@ -129,7 +155,7 @@ class UserEditForm extends FormBase {
    * {@inheritDoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $currentPath = \Drupal::service('path.current')->getPath();
+    $currentPath = $this->currentPath->getPath();
     if (!$this->currentUser->isAnonymous()) {
       $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
       $default_name = $user->getAccountName();
@@ -194,7 +220,7 @@ class UserEditForm extends FormBase {
         foreach ($terms as $term) {
           $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($term->tid);
           if ($term->hasTranslation($language)) {
-            $translated_term = \Drupal::service('entity.repository')
+            $translated_term = $this->entityRepository
               ->getTranslationFromContext($term, $language);
             $term_options[$translated_term->id()] = $translated_term->getName();
           }
