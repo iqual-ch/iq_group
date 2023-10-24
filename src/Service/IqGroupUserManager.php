@@ -7,6 +7,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -81,6 +82,13 @@ class IqGroupUserManager {
   protected $entityFieldManager;
 
   /**
+   * The logger channel.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $logger;
+
+  /**
    * UserController constructor.
    *
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
@@ -99,6 +107,8 @@ class IqGroupUserManager {
    *   The mail manager.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The entity field manager.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   The logger channel factory.
    */
   public function __construct(
     MessengerInterface $messenger,
@@ -108,7 +118,8 @@ class IqGroupUserManager {
     ConfigFactoryInterface $config_factory,
     RendererInterface $renderer,
     MailManagerInterface $mail_manager,
-    EntityFieldManagerInterface $entity_field_manager
+    EntityFieldManagerInterface $entity_field_manager,
+    LoggerChannelFactoryInterface $logger_factory
   ) {
     $this->messenger = $messenger;
     $this->entityTypeManager = $entity_type_manager;
@@ -118,6 +129,7 @@ class IqGroupUserManager {
     $this->renderer = $renderer;
     $this->mailManager = $mail_manager;
     $this->entityFieldManager = $entity_field_manager;
+    $this->logger = $logger_factory->get('iq_group');
   }
 
   /**
@@ -315,7 +327,7 @@ class IqGroupUserManager {
     $result = $this->mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
 
     if (empty($result)) {
-      \Drupal::logger('iq_group')->notice('Error while sending email');
+      $this->logger->notice('Error while sending email');
       return NULL;
     }
     return $user;
