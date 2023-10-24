@@ -2,8 +2,11 @@
 
 namespace Drupal\iq_group\Form;
 
+use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\iq_group\Service\IqGroupUserManager;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a form for the iq_group module settings.
@@ -11,6 +14,43 @@ use Drupal\Core\Form\FormStateInterface;
  * @package Drupal\iq_group\Form
  */
 class IqGroupSettingsForm extends ConfigFormBase {
+
+  /**
+   * The `iq_group.user_manager` service.
+   *
+   * @var \Drupal\iq_group\Service\IqGroupUserManager
+   */
+  protected $userManager;
+
+  /**
+   * The cache tag invalidator.
+   *
+   * @var \Drupal\Core\Cache\CacheTagsInvalidatorInterface
+   */
+  protected $cacheTagsInvalidator;
+
+  /**
+   * Constructs a new `IqGroupSettingsForm` object.
+   *
+   * @param \Drupal\iq_group\Service\IqGroupUserManager $user_manager
+   *   The Drupal service container.
+   * @param \Drupal\Core\Cache\CacheTagsInvalidatorInterface $cache_tag_invalidator
+   *   The cache tag invalidator.
+   */
+  public function __construct(IqGroupUserManager $user_manager, CacheTagsInvalidatorInterface $cache_tag_invalidator) {
+    $this->userManager = $user_manager;
+    $this->cacheTagsInvalidator = $cache_tag_invalidator;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('iq_group.user_manager'),
+      $container->get('cache_tags.invalidator')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -23,7 +63,7 @@ class IqGroupSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $iqGroupSettings = \Drupal::service('iq_group.user_manager')->getIqGroupSettings();
+    $iqGroupSettings = $this->userManager->getIqGroupSettings();
 
     $form['default_redirection'] = [
       '#type' => 'textfield',
@@ -149,7 +189,7 @@ class IqGroupSettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     if ($this->config('iq_group.settings')->get('hidden_groups') != $form_state->getValue('hidden_groups')) {
-      \Drupal::service('cache_tags.invalidator')->invalidateTags(['iq_group:signup_block']);
+      $this->cacheTagsInvalidator->invalidateTags(['iq_group:signup_block']);
     }
     $this->config('iq_group.settings')
       ->set('default_redirection', $form_state->getValue('default_redirection'))
