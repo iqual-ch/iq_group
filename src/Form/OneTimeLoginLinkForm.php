@@ -4,6 +4,9 @@ namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Mail\MailManagerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a form for the one-time login settings of iq_group module.
@@ -11,6 +14,52 @@ use Drupal\Core\Form\FormStateInterface;
  * @package Drupal\iq_group\Form
  */
 class OneTimeLoginLinkForm extends FormBase {
+
+  /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
+   * The mail manager.
+   *
+   * @var \Drupal\Core\Mail\MailManagerInterface
+   */
+  protected $mailManager;
+
+  /**
+   * One Time Login Link Form constructor.
+   *
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
+   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
+   *   The mail manager.
+   */
+  public function __construct(
+    LanguageManagerInterface $language_manager,
+    MailManagerInterface $mail_manager
+  ) {
+    $this->languageManager = $language_manager;
+    $this->mailManager = $mail_manager;
+  }
+
+  /**
+   * Creates a OneTimeLoginLinkForm instance.
+   *
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The service container.
+   *
+   * @return \Drupal\iq_group\Form\OneTimeLoginLinkForm
+   *   An instance of OneTimeLoginLinkForm.
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('language_manager'),
+      $container->get('plugin.manager.mail')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -84,10 +133,9 @@ class OneTimeLoginLinkForm extends FormBase {
       $to = $user_email_name;
       $module = 'iq_group';
       $key = 'iq_group_password_reset';
-      $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+      $langcode = $this->languageManager->getCurrentLanguage()->getId();
       $send = TRUE;
-      $mailManager = \Drupal::service('plugin.manager.mail');
-      $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+      $this->mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
     }
   }
 
