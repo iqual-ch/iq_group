@@ -7,6 +7,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\group\Entity\Group;
@@ -57,6 +58,13 @@ class IqGroupUserManager {
   protected $config;
 
   /**
+   * The renderer.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
    * UserController constructor.
    *
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
@@ -69,19 +77,23 @@ class IqGroupUserManager {
    *   The symfony request stack.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer.
    */
   public function __construct(
     MessengerInterface $messenger,
     EntityTypeManagerInterface $entity_type_manager,
     LanguageManagerInterface $language_manager,
     RequestStack $request_stack,
-    ConfigFactoryInterface $config_factory
+    ConfigFactoryInterface $config_factory,
+    RendererInterface $renderer
   ) {
     $this->messenger = $messenger;
     $this->entityTypeManager = $entity_type_manager;
     $this->languageManager = $language_manager;
     $this->request = $request_stack->getCurrentRequest();
     $this->config = $config_factory->get('iq_group.settings');
+    $this->renderer = $renderer;
   }
 
   /**
@@ -266,7 +278,7 @@ class IqGroupUserManager {
     $mail_subject = $this->t('Confirm subscription');
     mb_internal_encoding("UTF-8");
     $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
-    $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+    $rendered = $this->renderer->renderPlain($renderable);
     $mailManager = \Drupal::service('plugin.manager.mail');
     $module = 'iq_group';
     $langcode = $this->languageManager->getCurrentLanguage()->getId();
@@ -317,7 +329,7 @@ class IqGroupUserManager {
       '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
       '#EMAIL_FOOTER' => nl2br((string) $iqGroupSettings['project_address']),
     ];
-    $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+    $rendered = $this->renderer->renderPlain($renderable);
     $mail_subject = $this->t("Sign into your account");
     mb_internal_encoding("UTF-8");
     $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
