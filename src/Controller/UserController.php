@@ -4,6 +4,8 @@ namespace Drupal\iq_group\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
+use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\group\Entity\Group;
 use Drupal\iq_group\Event\IqGroupEvent;
@@ -55,6 +57,20 @@ class UserController extends ControllerBase {
   protected $userManager;
 
   /**
+   * The temp store factory.
+   *
+   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
+   */
+  protected $tempStoreFactory;
+
+  /**
+   * Kill Switch for page caching.
+   *
+   * @var \Drupal\Core\PageCache\ResponsePolicy\KillSwitch
+   */
+  protected $killSwitch;
+
+  /**
    * UserController constructor.
    *
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
@@ -65,18 +81,26 @@ class UserController extends ControllerBase {
    *   The symfony request stack.
    * @param \Drupal\iq_group\Service\IqGroupUserManager $user_manager
    *   The iq group user manager.
+   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $temp_store_factory
+   *   The factory for the temp store object.
+   * @param \Drupal\Core\PageCache\ResponsePolicy\KillSwitch $kill_switch
+   *   The page cache kill switch.
    */
   public function __construct(
     EventDispatcherInterface $event_dispatcher,
     MessengerInterface $messenger,
     RequestStack $request_stack,
-    IqGroupUserManager $user_manager
+    IqGroupUserManager $user_manager,
+    SharedTempStoreFactory $temp_store_factory,
+    KillSwitch $kill_switch
   ) {
     $this->eventDispatcher = $event_dispatcher;
     $this->messenger = $messenger;
     $this->request = $request_stack->getCurrentRequest();
     $this->config = $this->config('iq_group.settings');
     $this->userManager = $user_manager;
+    $this->tempStoreFactory = $temp_store_factory;
+    $this->killSwitch = $kill_switch;
   }
 
   /**
@@ -94,6 +118,8 @@ class UserController extends ControllerBase {
       $container->get('messenger'),
       $container->get('request_stack'),
       $container->get('iq_group.user_manager'),
+      $container->get('tempstore.shared'),
+      $container->get('page_cache_kill_switch'),
     );
   }
 
@@ -107,9 +133,9 @@ class UserController extends ControllerBase {
    */
   public function resetPassword(int $user_id, $token) {
     /** @var \Drupal\user\SharedTempStore $store */
-    $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
+    $store = $this->tempStoreFactory->get('iq_group.user_status');
 
-    \Drupal::service('page_cache_kill_switch')->trigger();
+    $this->killSwitch->trigger();
     $user = $this->entityTypeManager()->getStorage('user')->load($user_id);
 
     if (!empty($store->get($user_id . '_pending_activation')) && !empty($user)) {
