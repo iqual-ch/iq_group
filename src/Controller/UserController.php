@@ -149,7 +149,7 @@ class UserController extends ControllerBase {
     }
 
     // Is the token valid for that user.
-    if (!empty($token) && $token === $user->field_iq_group_user_token->value) {
+    if ($user && !empty($token) && $token === $user->field_iq_group_user_token->value) {
       if (!empty($this->request->query->get('signup'))) {
         $this->messenger->addMessage($this->t('Thank you very much for registration to the newsletter.'));
       }
