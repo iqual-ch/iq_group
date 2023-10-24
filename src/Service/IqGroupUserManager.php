@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Site\Settings;
@@ -65,6 +66,13 @@ class IqGroupUserManager {
   protected $renderer;
 
   /**
+   * The mail manager.
+   *
+   * @var \Drupal\Core\Mail\MailManagerInterface
+   */
+  protected $mailManager;
+
+  /**
    * UserController constructor.
    *
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
@@ -79,6 +87,8 @@ class IqGroupUserManager {
    *   The config factory.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
+   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
+   *   The mail manager.
    */
   public function __construct(
     MessengerInterface $messenger,
@@ -86,7 +96,8 @@ class IqGroupUserManager {
     LanguageManagerInterface $language_manager,
     RequestStack $request_stack,
     ConfigFactoryInterface $config_factory,
-    RendererInterface $renderer
+    RendererInterface $renderer,
+    MailManagerInterface $mail_manager
   ) {
     $this->messenger = $messenger;
     $this->entityTypeManager = $entity_type_manager;
@@ -94,6 +105,7 @@ class IqGroupUserManager {
     $this->request = $request_stack->getCurrentRequest();
     $this->config = $config_factory->get('iq_group.settings');
     $this->renderer = $renderer;
+    $this->mailManager = $mail_manager;
   }
 
   /**
@@ -279,7 +291,6 @@ class IqGroupUserManager {
     mb_internal_encoding("UTF-8");
     $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
     $rendered = $this->renderer->renderPlain($renderable);
-    $mailManager = \Drupal::service('plugin.manager.mail');
     $module = 'iq_group';
     $langcode = $this->languageManager->getCurrentLanguage()->getId();
     $key = 'iq_group_create_member';
@@ -289,7 +300,7 @@ class IqGroupUserManager {
     $params['message'] = $rendered;
     $send = TRUE;
 
-    $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+    $result = $this->mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
 
     if (empty($result)) {
       \Drupal::logger('iq_group')->notice('Error while sending email');
@@ -333,7 +344,6 @@ class IqGroupUserManager {
     $mail_subject = $this->t("Sign into your account");
     mb_internal_encoding("UTF-8");
     $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
-    $mailManager = \Drupal::service('plugin.manager.mail');
     $module = 'iq_group';
     $key = 'iq_group_login';
     $to = $user->getEmail();
@@ -341,7 +351,7 @@ class IqGroupUserManager {
     $params['subject'] = $mail_subject;
     $params['message'] = $rendered;
     $send = TRUE;
-    $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+    $result = $this->mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
     if ($result['result'] !== TRUE) {
       $this->messenger->addMessage($this->t('There was an error while sending login link to your email.'), 'error');
     }

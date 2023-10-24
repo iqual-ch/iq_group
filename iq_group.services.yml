@@ -5,4 +5,4 @@ services:
       - { name: http_middleware}
   iq_group.user_manager:
     class: Drupal\iq_group\Service\IqGroupUserManager
-    arguments: ['@messenger', '@entity_type.manager', '@language_manager', '@request_stack', '@config.factory', '@renderer']
+    arguments: ['@messenger', '@entity_type.manager', '@language_manager', '@request_stack', '@config.factory', '@renderer', '@plugin.manager.mail']
