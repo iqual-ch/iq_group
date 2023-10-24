@@ -4,10 +4,14 @@ namespace Drupal\iq_group\Form;
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Mail\MailManagerInterface;
+use Drupal\Core\Path\CurrentPathStack;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
@@ -56,6 +60,34 @@ class SignupForm extends FormBase {
   protected $userManager;
 
   /**
+   * The current path.
+   *
+   * @var \Drupal\Core\Path\CurrentPathStack
+   */
+  protected $currentPath;
+
+  /**
+   * The entity repository service.
+   *
+   * @var \Drupal\Core\Entity\EntityRepositoryInterface
+   */
+  protected $entityRepository;
+
+  /**
+   * The renderer.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
+   * The mail manager.
+   *
+   * @var \Drupal\Core\Mail\MailManagerInterface
+   */
+  protected $mailManager;
+
+  /**
    * SignupForm constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -68,19 +100,35 @@ class SignupForm extends FormBase {
    *   The current active user.
    * @param \Drupal\iq_group\Service\IqGroupUserManager $user_manager
    *   The iq group user manager.
+   * @param \Drupal\Core\Path\CurrentPathStack $current_path
+   *   The current path.
+   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
+   *   The entity repository service.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer.
+   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
+   *   The mail manager.
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     ConfigFactoryInterface $config_factory,
     LanguageManagerInterface $language_manager,
     AccountProxyInterface $current_user,
-    IqGroupUserManager $user_manager
+    IqGroupUserManager $user_manager,
+    CurrentPathStack $current_path,
+    EntityRepositoryInterface $entity_repository,
+    RendererInterface $renderer,
+    MailManagerInterface $mail_manager
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->config = $config_factory->get('iq_group.settings');
     $this->languageManager = $language_manager;
     $this->currentUser = $current_user;
     $this->userManager = $user_manager;
+    $this->currentPath = $current_path;
+    $this->entityRepository = $entity_repository;
+    $this->renderer = $renderer;
+    $this->mailManager = $mail_manager;
   }
 
   /**
@@ -98,7 +146,11 @@ class SignupForm extends FormBase {
       $container->get('config.factory'),
       $container->get('language_manager'),
       $container->get('current_user'),
-      $container->get('iq_group.user_manager')
+      $container->get('iq_group.user_manager'),
+      $container->get('path.current'),
+      $container->get('entity.repository'),
+      $container->get('renderer'),
+      $container->get('plugin.manager.mail')
     );
   }
 
@@ -149,7 +201,7 @@ class SignupForm extends FormBase {
         '#required' => TRUE,
       ];
       $language = $this->languageManager->getCurrentLanguage()->getId();
-      $destination = \Drupal::service('path.current')->getPath();
+      $destination = $this->currentPath->getPath();
       $form['register_link'] = [
         '#type' => 'link',
         '#title' => $this->t('Create an account'),
@@ -212,7 +264,7 @@ class SignupForm extends FormBase {
     foreach ($terms as $term) {
       $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($term->tid);
       if ($term->hasTranslation($language)) {
-        $translated_term = \Drupal::service('entity.repository')
+        $translated_term = $this->entityRepository
           ->getTranslationFromContext($term, $language);
         $term_options[$translated_term->id()] = $translated_term->getName();
       }
@@ -318,11 +370,10 @@ class SignupForm extends FormBase {
           '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
           '#EMAIL_FOOTER' => nl2br((string) $iqGroupSettings['project_address']),
         ];
-        $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+        $rendered = $this->renderer->renderPlain($renderable);
         $mail_subject = $this->t("Sign into your account");
         mb_internal_encoding("UTF-8");
         $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
-        $mailManager = \Drupal::service('plugin.manager.mail');
         $module = 'iq_group';
         $key = 'iq_group_login';
         $to = $user->getEmail();
@@ -330,7 +381,7 @@ class SignupForm extends FormBase {
         $params['subject'] = $mail_subject;
         $params['message'] = $rendered;
         $send = TRUE;
-        $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+        $this->mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
       }
       // If the user does not exist.
       else {
