@@ -4,6 +4,7 @@ namespace Drupal\iq_group\Service;
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Mail\MailManagerInterface;
@@ -73,6 +74,13 @@ class IqGroupUserManager {
   protected $mailManager;
 
   /**
+   * The entity field manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
+   */
+  protected $entityFieldManager;
+
+  /**
    * UserController constructor.
    *
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
@@ -89,6 +97,8 @@ class IqGroupUserManager {
    *   The renderer.
    * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
    *   The mail manager.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   *   The entity field manager.
    */
   public function __construct(
     MessengerInterface $messenger,
@@ -97,7 +107,8 @@ class IqGroupUserManager {
     RequestStack $request_stack,
     ConfigFactoryInterface $config_factory,
     RendererInterface $renderer,
-    MailManagerInterface $mail_manager
+    MailManagerInterface $mail_manager,
+    EntityFieldManagerInterface $entity_field_manager
   ) {
     $this->messenger = $messenger;
     $this->entityTypeManager = $entity_type_manager;
@@ -106,6 +117,7 @@ class IqGroupUserManager {
     $this->config = $config_factory->get('iq_group.settings');
     $this->renderer = $renderer;
     $this->mailManager = $mail_manager;
+    $this->entityFieldManager = $entity_field_manager;
   }
 
   /**
@@ -426,7 +438,7 @@ class IqGroupUserManager {
    */
   public function userImportKeyOptions() {
     $user_import_key_options = [];
-    $user_fields = \Drupal::service('entity_field.manager')->getFieldDefinitions('user', 'user');
+    $user_fields = $this->entityFieldManager->getFieldDefinitions('user', 'user');
     foreach ($user_fields as $user_field) {
       $field_name = $user_field->getName();
       $field_label = $user_field->getLabel();
