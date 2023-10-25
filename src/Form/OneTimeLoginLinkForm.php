@@ -119,7 +119,7 @@ class OneTimeLoginLinkForm extends FormBase {
     $login_url = user_pass_reset_url($user_account);
 
     if ($login_url) {
-      $this->messenger->addMessage($user_email_name . ' wurde eine Email gesendet zur Passwortwiederherstellung.');
+      $this->messenger()->addMessage($user_email_name . ' wurde eine Email gesendet zur Passwortwiederherstellung.');
       $params['subject'] = $this->t('Password reset');
       /*
        * $params['message'] =
