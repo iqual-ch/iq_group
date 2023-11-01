@@ -283,69 +283,72 @@ class UserEditForm extends FormBase {
         ];
       }
 
-      $user_id = $this->currentUser->id();
       $group = $this->userManager->getGeneralGroup();
-      $group_role_storage = $this->entityTypeManager->getStorage('group_role');
-      $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
-      $groupRoles = array_keys($groupRoles);
-      if (in_array('subscription-subscriber', $groupRoles)) {
-        $member_area_title = $this->t('Create a login for your @project_name account', ['@project_name' => $this->config->get('project_name')]);
-      }
-      else {
-        $member_area_title = $this->t('Set your password');
-      }
-      $form['member_area'] = [
-        '#type' => 'details',
-        '#title' => $member_area_title,
-        '#weight' => 50,
-        '#open' => FALSE,
-      ];
-      $form['member_area']['password_text'] = [
-        '#type' => 'markup',
-        '#markup' => $this->t('When you create a password, you are automatically creating a login.'),
-        '#weight' => 60,
-      ];
-      $form['member_area']['password'] = [
-        '#type' => 'password',
-        '#title' => $this->t('Password'),
-        '#weight' => 61,
-      ];
-      $form['member_area']['password_confirm'] = [
-        '#type' => 'password',
-        '#title' => $this->t('Confirm password'),
-        '#weight' => 62,
-      ];
-
-      // If user is a lead, show link or edit profile directly.
-      if (in_array('subscription-lead', $groupRoles)) {
-        if ($currentPath == '/user/edit') {
-          $resetURL = 'https://' . $this->userManager->getDomain() . '/user/' . $user_id . '/edit';
-          // @todo if there is a destination, attach it to the url
-          $response = new RedirectResponse($resetURL, 302);
-          $response->send();
-          return;
+      if ($group) {
+        $user_id = $this->currentUser->id();
+        /** @var \Drupal\group\Entity\Storage\GroupRoleStorageInterface $group_role_storage */
+        $group_role_storage = $this->entityTypeManager->getStorage('group_role');
+        $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
+        $groupRoles = array_keys($groupRoles);
+        if (in_array('subscription-subscriber', $groupRoles)) {
+          $member_area_title = $this->t('Create a login for your @project_name account', ['@project_name' => $this->config->get('project_name')]);
         }
         else {
-          unset($form['password']);
-          unset($form['password_confirm']);
-          unset($form['password_text']);
-          $language = $this->languageManager->getCurrentLanguage()->getId();
-          $form['full_profile_edit'] = [
-            '#type' => 'link',
-            '#title' => $this->t('Edit profile'),
-            '#url' => Url::fromRoute('entity.user.edit_form', ['user' => $user_id]),
-            '#weight' => 70,
-          ];
+          $member_area_title = $this->t('Set your password');
         }
-      }
+        $form['member_area'] = [
+          '#type' => 'details',
+          '#title' => $member_area_title,
+          '#weight' => 50,
+          '#open' => FALSE,
+        ];
+        $form['member_area']['password_text'] = [
+          '#type' => 'markup',
+          '#markup' => $this->t('When you create a password, you are automatically creating a login.'),
+          '#weight' => 60,
+        ];
+        $form['member_area']['password'] = [
+          '#type' => 'password',
+          '#title' => $this->t('Password'),
+          '#weight' => 61,
+        ];
+        $form['member_area']['password_confirm'] = [
+          '#type' => 'password',
+          '#title' => $this->t('Confirm password'),
+          '#weight' => 62,
+        ];
 
-      $form['actions']['#type'] = 'actions';
-      $form['actions']['submit'] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Save'),
-        '#button_type' => 'primary',
-        '#weight' => 80,
-      ];
+        // If user is a lead, show link or edit profile directly.
+        if (in_array('subscription-lead', $groupRoles)) {
+          if ($currentPath == '/user/edit') {
+            $resetURL = 'https://' . $this->userManager->getDomain() . '/user/' . $user_id . '/edit';
+            // @todo if there is a destination, attach it to the url
+            $response = new RedirectResponse($resetURL, 302);
+            $response->send();
+            return;
+          }
+          else {
+            unset($form['password']);
+            unset($form['password_confirm']);
+            unset($form['password_text']);
+            $language = $this->languageManager->getCurrentLanguage()->getId();
+            $form['full_profile_edit'] = [
+              '#type' => 'link',
+              '#title' => $this->t('Edit profile'),
+              '#url' => Url::fromRoute('entity.user.edit_form', ['user' => $user_id]),
+              '#weight' => 70,
+            ];
+          }
+        }
+
+        $form['actions']['#type'] = 'actions';
+        $form['actions']['submit'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Save'),
+          '#button_type' => 'primary',
+          '#weight' => 80,
+        ];
+      }
     }
     return $form;
   }
