@@ -26,27 +26,6 @@ class IqGroupUserManager {
   use StringTranslationTrait;
 
   /**
-   * The messenger.
-   *
-   * @var \Drupal\Core\Messenger\MessengerInterface
-   */
-  protected $messenger = NULL;
-
-  /**
-   * The entityTypeManager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager = NULL;
-
-  /**
-   * Drupal language manager service.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected $languageManager;
-
-  /**
    * The current request.
    *
    * @var \Symfony\Component\HttpFoundation\Request
@@ -61,27 +40,6 @@ class IqGroupUserManager {
   protected $config;
 
   /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * The mail manager.
-   *
-   * @var \Drupal\Core\Mail\MailManagerInterface
-   */
-  protected $mailManager;
-
-  /**
-   * The entity field manager service.
-   *
-   * @var \Drupal\Core\Entity\EntityFieldManagerInterface
-   */
-  protected $entityFieldManager;
-
-  /**
    * The logger channel.
    *
    * @var \Drupal\Core\Logger\LoggerChannelInterface
@@ -93,9 +51,9 @@ class IqGroupUserManager {
    *
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger interface.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The symfony request stack.
@@ -103,32 +61,26 @@ class IqGroupUserManager {
    *   The config factory.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
-   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
+   * @param \Drupal\Core\Mail\MailManagerInterface $mailManager
    *   The mail manager.
-   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   The entity field manager.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   The logger channel factory.
    */
   public function __construct(
-    MessengerInterface $messenger,
-    EntityTypeManagerInterface $entity_type_manager,
-    LanguageManagerInterface $language_manager,
+    protected MessengerInterface $messenger,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected LanguageManagerInterface $languageManager,
     RequestStack $request_stack,
     ConfigFactoryInterface $config_factory,
-    RendererInterface $renderer,
-    MailManagerInterface $mail_manager,
-    EntityFieldManagerInterface $entity_field_manager,
+    protected RendererInterface $renderer,
+    protected MailManagerInterface $mailManager,
+    protected EntityFieldManagerInterface $entityFieldManager,
     LoggerChannelFactoryInterface $logger_factory
   ) {
-    $this->messenger = $messenger;
-    $this->entityTypeManager = $entity_type_manager;
-    $this->languageManager = $language_manager;
     $this->request = $request_stack->getCurrentRequest();
     $this->config = $config_factory->get('iq_group.settings');
-    $this->renderer = $renderer;
-    $this->mailManager = $mail_manager;
-    $this->entityFieldManager = $entity_field_manager;
     $this->logger = $logger_factory->get('iq_group');
   }
 
