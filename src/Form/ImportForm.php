@@ -20,13 +20,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ImportForm extends FormBase {
 
   /**
-   * The entityTypeManager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager = NULL;
-
-  /**
    * Configuration for the iq_group settings.
    *
    * @var \Drupal\Core\Config\ImmutableConfig
@@ -34,74 +27,33 @@ class ImportForm extends FormBase {
   protected $config;
 
   /**
-   * Gets the current active user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $currentUser;
-
-  /**
-   * Gets the iq group user manager.
-   *
-   * @var \Drupal\iq_group\Service\IqGroupUserManager
-   */
-  protected $userManager;
-
-  /**
-   * The file system service.
-   *
-   * @var \Drupal\Core\File\FileSystemInterface
-   */
-  protected $fileSystem;
-
-  /**
-   * The entity repository service.
-   *
-   * @var \Drupal\Core\Entity\EntityRepositoryInterface
-   */
-  protected $entityRepository;
-
-  /**
-   * The module extension list.
-   *
-   * @var \Drupal\Core\Extension\ModuleExtensionList
-   */
-  protected $moduleExtensionList;
-
-  /**
    * ImportForm constructor.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
-   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
    *   The current active user.
-   * @param \Drupal\iq_group\Service\IqGroupUserManager $user_manager
+   * @param \Drupal\iq_group\Service\IqGroupUserManager $userManager
    *   The iq group user manager.
-   * @param \Drupal\Core\File\FileSystemInterface $file_system
+   * @param \Drupal\Core\File\FileSystemInterface $fileSystem
    *   The file system service.
-   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
+   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entityRepository
    *   The entity repository service.
-   * @param \Drupal\Core\Extension\ModuleExtensionList $extension_list_module
+   * @param \Drupal\Core\Extension\ModuleExtensionList $moduleExtensionList
    *   The module extension list.
    */
   public function __construct(
-    EntityTypeManagerInterface $entity_type_manager,
+    protected EntityTypeManagerInterface $entityTypeManager,
     ConfigFactoryInterface $config_factory,
-    AccountProxyInterface $current_user,
-    IqGroupUserManager $user_manager,
-    FileSystemInterface $file_system,
-    EntityRepositoryInterface $entity_repository,
-    ModuleExtensionList $extension_list_module
+    protected AccountProxyInterface $currentUser,
+    protected IqGroupUserManager $userManager,
+    protected FileSystemInterface $fileSystem,
+    protected EntityRepositoryInterface $entityRepository,
+    protected ModuleExtensionList $moduleExtensionList
   ) {
-    $this->entityTypeManager = $entity_type_manager;
     $this->config = $config_factory->get('iq_group.settings');
-    $this->currentUser = $current_user;
-    $this->userManager = $user_manager;
-    $this->fileSystem = $file_system;
-    $this->entityRepository = $entity_repository;
-    $this->moduleExtensionList = $extension_list_module;
   }
 
   /**
