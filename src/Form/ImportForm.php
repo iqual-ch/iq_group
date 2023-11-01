@@ -3,10 +3,14 @@
 namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleExtensionList;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountProxyInterface;
+use Drupal\iq_group\Service\IqGroupUserManager;
 use League\Csv\Reader;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -16,13 +20,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ImportForm extends FormBase {
 
   /**
-   * The entityTypeManager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager = NULL;
-
-  /**
    * Configuration for the iq_group settings.
    *
    * @var \Drupal\Core\Config\ImmutableConfig
@@ -30,30 +27,33 @@ class ImportForm extends FormBase {
   protected $config;
 
   /**
-   * Gets the current active user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $currentUser;
-
-  /**
    * ImportForm constructor.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
-   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
    *   The current active user.
+   * @param \Drupal\iq_group\Service\IqGroupUserManager $userManager
+   *   The iq group user manager.
+   * @param \Drupal\Core\File\FileSystemInterface $fileSystem
+   *   The file system service.
+   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entityRepository
+   *   The entity repository service.
+   * @param \Drupal\Core\Extension\ModuleExtensionList $moduleExtensionList
+   *   The module extension list.
    */
   public function __construct(
-    EntityTypeManagerInterface $entity_type_manager,
+    protected EntityTypeManagerInterface $entityTypeManager,
     ConfigFactoryInterface $config_factory,
-    AccountProxyInterface $current_user
+    protected AccountProxyInterface $currentUser,
+    protected IqGroupUserManager $userManager,
+    protected FileSystemInterface $fileSystem,
+    protected EntityRepositoryInterface $entityRepository,
+    protected ModuleExtensionList $moduleExtensionList
   ) {
-    $this->entityTypeManager = $entity_type_manager;
     $this->config = $config_factory->get('iq_group.settings');
-    $this->currentUser = $current_user;
   }
 
   /**
@@ -70,6 +70,10 @@ class ImportForm extends FormBase {
       $container->get('entity_type.manager'),
       $container->get('config.factory'),
       $container->get('current_user'),
+      $container->get('iq_group.user_manager'),
+      $container->get('file_system'),
+      $container->get('entity.repository'),
+      $container->get('extension.list.module')
     );
   }
 
@@ -94,7 +98,7 @@ class ImportForm extends FormBase {
       '#upload_validators' => ['file_validate_extensions' => ['csv']],
     ];
     // Choose to update user by an email field or the ID fields.
-    $user_import_key_options = \Drupal::service('iq_group.user_manager')->userImportKeyOptions();
+    $user_import_key_options = $this->userManager->userImportKeyOptions();
     $form['import_key'] = [
       '#type' => 'select',
       '#title' => $this->t('Import key'),
@@ -180,11 +184,12 @@ class ImportForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     $import = $form_state->getValue('import_file');
+    /** @var \Drupal\file\FileInterface $import_file */
     $import_file = $this->entityTypeManager->getStorage('file')->load($import[0]);
 
     // Read CSV file.
     $import_file_uri = $import_file->getFileUri();
-    $import_file_url = \Drupal::service('file_system')->realpath($import_file_uri);
+    $import_file_url = $this->fileSystem->realpath($import_file_uri);
     $reader = Reader::createFromPath($import_file_url, 'r');
     $delimiter = ',';
     if ($form_state->getValue('delimiter') == 'semi_colon') {
@@ -233,7 +238,8 @@ class ImportForm extends FormBase {
      */
     foreach ($result as $branch) {
       if ($branch->hasTranslation('en')) {
-        $translated_term = \Drupal::service('entity.repository')->getTranslationFromContext($branch, 'en');
+        /** @var \Drupal\taxonomy\TermInterface $translated_term */
+        $translated_term = $this->entityRepository->getTranslationFromContext($branch, 'en');
         $branch_ids[$branch->id()] = $translated_term->getName();
       }
       else {
@@ -289,7 +295,7 @@ class ImportForm extends FormBase {
       'title' => $this->t('Import...'),
       'operations' => $operations,
       'finished' => 'finished_import',
-      'file' => \Drupal::service('extension.list.module')->getPath('iq_group') . '/import_batch.inc',
+      'file' => $this->moduleExtensionList->getPath('iq_group') . '/import_batch.inc',
       'init_message' => $this->t('Starting import, this may take a while.'),
       'progress_message' => $this->t('Processed @current out of @total.'),
       'error_message' => $this->t('An error occurred during processing'),

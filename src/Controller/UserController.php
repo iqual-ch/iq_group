@@ -4,6 +4,8 @@ namespace Drupal\iq_group\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\PageCache\ResponsePolicy\KillSwitch;
+use Drupal\Core\TempStore\SharedTempStoreFactory;
 use Drupal\Core\Url;
 use Drupal\group\Entity\Group;
 use Drupal\iq_group\Event\IqGroupEvent;
@@ -18,13 +20,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * IQ Group member controller.
  */
 class UserController extends ControllerBase {
-
-  /**
-   * The Event dispatcher.
-   *
-   * @var Symfony\Component\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher = NULL;
 
   /**
    * The messenger.
@@ -48,35 +43,32 @@ class UserController extends ControllerBase {
   protected $config;
 
   /**
-   * Gets the iq group user manager.
-   *
-   * @var \Drupal\iq_group\Service\IqGroupUserManager
-   */
-  protected $userManager;
-
-  /**
    * UserController constructor.
    *
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher to dispatch events.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger interface.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The symfony request stack.
-   * @param \Drupal\iq_group\Service\IqGroupUserManager $user_manager
+   * @param \Drupal\iq_group\Service\IqGroupUserManager $userManager
    *   The iq group user manager.
+   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempStoreFactory
+   *   The factory for the temp store object.
+   * @param \Drupal\Core\PageCache\ResponsePolicy\KillSwitch $killSwitch
+   *   The page cache kill switch.
    */
   public function __construct(
-    EventDispatcherInterface $event_dispatcher,
+    protected EventDispatcherInterface $eventDispatcher,
     MessengerInterface $messenger,
     RequestStack $request_stack,
-    IqGroupUserManager $user_manager
+    protected IqGroupUserManager $userManager,
+    protected SharedTempStoreFactory $tempStoreFactory,
+    protected KillSwitch $killSwitch
   ) {
-    $this->eventDispatcher = $event_dispatcher;
     $this->messenger = $messenger;
     $this->request = $request_stack->getCurrentRequest();
     $this->config = $this->config('iq_group.settings');
-    $this->userManager = $user_manager;
   }
 
   /**
@@ -94,6 +86,8 @@ class UserController extends ControllerBase {
       $container->get('messenger'),
       $container->get('request_stack'),
       $container->get('iq_group.user_manager'),
+      $container->get('tempstore.shared'),
+      $container->get('page_cache_kill_switch'),
     );
   }
 
@@ -107,11 +101,12 @@ class UserController extends ControllerBase {
    */
   public function resetPassword(int $user_id, $token) {
     /** @var \Drupal\user\SharedTempStore $store */
-    $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
+    $store = $this->tempStoreFactory->get('iq_group.user_status');
 
-    \Drupal::service('page_cache_kill_switch')->trigger();
+    $this->killSwitch->trigger();
+
+    /** @var \Drupal\user\UserInterface $user */
     $user = $this->entityTypeManager()->getStorage('user')->load($user_id);
-
     if (!empty($store->get($user_id . '_pending_activation')) && !empty($user)) {
       $user->set('status', 1);
       $user->save();
@@ -123,7 +118,7 @@ class UserController extends ControllerBase {
     }
 
     // Is the token valid for that user.
-    if (!empty($token) && $token === $user->field_iq_group_user_token->value) {
+    if ($user && !empty($token) && $token === $user->field_iq_group_user_token->value) {
       if (!empty($this->request->query->get('signup'))) {
         $this->messenger->addMessage($this->t('Thank you very much for registration to the newsletter.'));
       }
@@ -158,6 +153,8 @@ class UserController extends ControllerBase {
         // If there is anything to do when user is anonymous.
       }
       $group = $this->userManager->getGeneralGroup();
+
+      /** @var \Drupal\group\Entity\GroupRoleStorageInterface $group_role_storage */
       $group_role_storage = $this->entityTypeManager()->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
       $groupRoles = array_keys($groupRoles);
@@ -165,7 +162,7 @@ class UserController extends ControllerBase {
       // If the user is not opted-in (not a subscriber nor a lead).
       if (!in_array('subscription-subscriber', $groupRoles) && !in_array('subscription-lead', $groupRoles)) {
         $this->userManager->addGroupRoleToUser($group, $user, 'subscription-subscriber');
-        $this->eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent($user));
+        $this->eventDispatcher->dispatch(new IqGroupEvent($user), IqGroupEvents::USER_OPT_IN);
       }
 
       /*

@@ -3,16 +3,19 @@
 namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Path\CurrentPathStack;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\Url;
 use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\IqGroupEvents;
 use Drupal\iq_group\Service\IqGroupUserManager;
+use Drupal\language\ConfigurableLanguageManagerInterface;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -25,20 +28,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 class UserEditForm extends FormBase {
 
   /**
-   * The Event dispatcher.
-   *
-   * @var Symfony\Component\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher = NULL;
-
-  /**
-   * The entityTypeManager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager = NULL;
-
-  /**
    * Configuration for the iq_group settings.
    *
    * @var \Drupal\Core\Config\ImmutableConfig
@@ -46,56 +35,36 @@ class UserEditForm extends FormBase {
   protected $config;
 
   /**
-   * Drupal language manager service.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected $languageManager;
-
-  /**
-   * Gets the current active user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $currentUser;
-
-  /**
-   * Gets the iq group user manager.
-   *
-   * @var \Drupal\iq_group\Service\IqGroupUserManager
-   */
-  protected $userManager;
-
-  /**
    * UserEditForm constructor.
    *
-   * @param Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher to dispatch events.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
-   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
    *   The current active user.
-   * @param \Drupal\iq_group\Service\IqGroupUserManager $user_manager
+   * @param \Drupal\iq_group\Service\IqGroupUserManager $userManager
    *   The iq group user manager.
+   * @param \Drupal\Core\Path\CurrentPathStack $currentPath
+   *   The current path.
+   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entityRepository
+   *   The entity repository service.
    */
   public function __construct(
-    EventDispatcherInterface $event_dispatcher,
-    EntityTypeManagerInterface $entity_type_manager,
+    protected EventDispatcherInterface $eventDispatcher,
+    protected EntityTypeManagerInterface $entityTypeManager,
     ConfigFactoryInterface $config_factory,
-    LanguageManagerInterface $language_manager,
-    AccountProxyInterface $current_user,
-    IqGroupUserManager $user_manager
+    protected LanguageManagerInterface $languageManager,
+    protected AccountProxyInterface $currentUser,
+    protected IqGroupUserManager $userManager,
+    protected CurrentPathStack $currentPath,
+    protected EntityRepositoryInterface $entityRepository
   ) {
-    $this->eventDispatcher = $event_dispatcher;
-    $this->entityTypeManager = $entity_type_manager;
     $this->config = $config_factory->get('iq_group.settings');
-    $this->languageManager = $language_manager;
-    $this->currentUser = $current_user;
-    $this->userManager = $user_manager;
   }
 
   /**
@@ -114,7 +83,9 @@ class UserEditForm extends FormBase {
       $container->get('config.factory'),
       $container->get('language_manager'),
       $container->get('current_user'),
-      $container->get('iq_group.user_manager')
+      $container->get('iq_group.user_manager'),
+      $container->get('path.current'),
+      $container->get('entity.repository')
     );
   }
 
@@ -129,8 +100,9 @@ class UserEditForm extends FormBase {
    * {@inheritDoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $currentPath = \Drupal::service('path.current')->getPath();
+    $currentPath = $this->currentPath->getPath();
     if (!$this->currentUser->isAnonymous()) {
+      /** @var \Drupal\user\UserInterface $user */
       $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
       $default_name = $user->getAccountName();
       $form['name'] = [
@@ -154,7 +126,7 @@ class UserEditForm extends FormBase {
         ->loadMultiple();
       $options = [];
       $hidden_groups = $this->userManager->getIqGroupSettings()['hidden_groups'];
-      $hidden_groups = explode(',', $hidden_groups);
+      $hidden_groups = explode(',', (string) $hidden_groups);
       /**
        * @var  int $key
        * @var  \Drupal\group\Entity\Group $group
@@ -170,7 +142,7 @@ class UserEditForm extends FormBase {
         $default_value = [];
         foreach ($selected_preferences as $value) {
           if ($value['target_id'] != $this->config->get('general_group_id')  && !in_array($group->label(), $hidden_groups)) {
-            $default_value = array_merge($default_value, [$value['target_id']]);
+            $default_value = [...$default_value, $value['target_id']];
           }
         }
 
@@ -188,13 +160,17 @@ class UserEditForm extends FormBase {
 
       if ($user->hasField('field_iq_group_branches')) {
         $vid = 'branches';
-        $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree($vid);
+        /** @var \Drupal\taxonomy\StorageInterface $term_storage */
+        $term_storage = $this->entityTypeManager->getStorage('taxonomy_term');
+        $terms = $term_storage->loadTree($vid);
         $term_options = [];
         $language = $this->languageManager->getCurrentLanguage()->getId();
         foreach ($terms as $term) {
+          /** @var \Drupal\taxonomy\TermInterface $term */
           $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($term->tid);
           if ($term->hasTranslation($language)) {
-            $translated_term = \Drupal::service('entity.repository')
+            /** @var \Drupal\taxonomy\TermInterface $translated_term */
+            $translated_term = $this->entityRepository
               ->getTranslationFromContext($term, $language);
             $term_options[$translated_term->id()] = $translated_term->getName();
           }
@@ -206,7 +182,7 @@ class UserEditForm extends FormBase {
           ->getValue();
         $default_branches = [];
         foreach ($selected_branches as $value) {
-          $default_branches = array_merge($default_branches, [$value['target_id']]);
+          $default_branches = [...$default_branches, $value['target_id']];
         }
         if ($currentPath == '/user/edit') {
           $form['branches'] = [
@@ -221,13 +197,16 @@ class UserEditForm extends FormBase {
       }
 
       if ($currentPath == '/user/edit') {
-        $negotiator = $this->languageManager->getNegotiator();
-        $user_language_added =
+        $user_language_added = FALSE;
+        if ($this->languageManager instanceof ConfigurableLanguageManagerInterface) {
+          $negotiator = $this->languageManager->getNegotiator();
+          $user_language_added =
           $negotiator &&
           $negotiator->isNegotiationMethodEnabled(
             LanguageNegotiationUser::METHOD_ID,
-             LanguageInterface::TYPE_INTERFACE
+            LanguageInterface::TYPE_INTERFACE
           );
+        }
         $user_preferred_langcode = $user->getPreferredLangcode();
         $form['language'] = [
           '#type' => $this->languageManager->isMultilingual() ? 'details' : 'container',
@@ -257,69 +236,72 @@ class UserEditForm extends FormBase {
         ];
       }
 
-      $user_id = $this->currentUser->id();
       $group = $this->userManager->getGeneralGroup();
-      $group_role_storage = $this->entityTypeManager->getStorage('group_role');
-      $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
-      $groupRoles = array_keys($groupRoles);
-      if (in_array('subscription-subscriber', $groupRoles)) {
-        $member_area_title = $this->t('Create a login for your @project_name account', ['@project_name' => $this->config->get('project_name')]);
-      }
-      else {
-        $member_area_title = $this->t('Set your password');
-      }
-      $form['member_area'] = [
-        '#type' => 'details',
-        '#title' => $member_area_title,
-        '#weight' => 50,
-        '#open' => FALSE,
-      ];
-      $form['member_area']['password_text'] = [
-        '#type' => 'markup',
-        '#markup' => $this->t('When you create a password, you are automatically creating a login.'),
-        '#weight' => 60,
-      ];
-      $form['member_area']['password'] = [
-        '#type' => 'password',
-        '#title' => $this->t('Password'),
-        '#weight' => 61,
-      ];
-      $form['member_area']['password_confirm'] = [
-        '#type' => 'password',
-        '#title' => $this->t('Confirm password'),
-        '#weight' => 62,
-      ];
-
-      // If user is a lead, show link or edit profile directly.
-      if (in_array('subscription-lead', $groupRoles)) {
-        if ($currentPath == '/user/edit') {
-          $resetURL = 'https://' . $this->userManager->getDomain() . '/user/' . $user_id . '/edit';
-          // @todo if there is a destination, attach it to the url
-          $response = new RedirectResponse($resetURL, 302);
-          $response->send();
-          return;
+      if ($group) {
+        $user_id = $this->currentUser->id();
+        /** @var \Drupal\group\Entity\Storage\GroupRoleStorageInterface $group_role_storage */
+        $group_role_storage = $this->entityTypeManager->getStorage('group_role');
+        $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
+        $groupRoles = array_keys($groupRoles);
+        if (in_array('subscription-subscriber', $groupRoles)) {
+          $member_area_title = $this->t('Create a login for your @project_name account', ['@project_name' => $this->config->get('project_name')]);
         }
         else {
-          unset($form['password']);
-          unset($form['password_confirm']);
-          unset($form['password_text']);
-          $language = $this->languageManager->getCurrentLanguage()->getId();
-          $form['full_profile_edit'] = [
-            '#type' => 'link',
-            '#title' => $this->t('Edit profile'),
-            '#url' => Url::fromRoute('entity.user.edit_form', ['user' => $user_id]),
-            '#weight' => 70,
-          ];
+          $member_area_title = $this->t('Set your password');
         }
-      }
+        $form['member_area'] = [
+          '#type' => 'details',
+          '#title' => $member_area_title,
+          '#weight' => 50,
+          '#open' => FALSE,
+        ];
+        $form['member_area']['password_text'] = [
+          '#type' => 'markup',
+          '#markup' => $this->t('When you create a password, you are automatically creating a login.'),
+          '#weight' => 60,
+        ];
+        $form['member_area']['password'] = [
+          '#type' => 'password',
+          '#title' => $this->t('Password'),
+          '#weight' => 61,
+        ];
+        $form['member_area']['password_confirm'] = [
+          '#type' => 'password',
+          '#title' => $this->t('Confirm password'),
+          '#weight' => 62,
+        ];
 
-      $form['actions']['#type'] = 'actions';
-      $form['actions']['submit'] = [
-        '#type' => 'submit',
-        '#value' => $this->t('Save'),
-        '#button_type' => 'primary',
-        '#weight' => 80,
-      ];
+        // If user is a lead, show link or edit profile directly.
+        if (in_array('subscription-lead', $groupRoles)) {
+          if ($currentPath == '/user/edit') {
+            $resetURL = 'https://' . $this->userManager->getDomain() . '/user/' . $user_id . '/edit';
+            // @todo if there is a destination, attach it to the url
+            $response = new RedirectResponse($resetURL, 302);
+            $response->send();
+            return;
+          }
+          else {
+            unset($form['password']);
+            unset($form['password_confirm']);
+            unset($form['password_text']);
+            $language = $this->languageManager->getCurrentLanguage()->getId();
+            $form['full_profile_edit'] = [
+              '#type' => 'link',
+              '#title' => $this->t('Edit profile'),
+              '#url' => Url::fromRoute('entity.user.edit_form', ['user' => $user_id]),
+              '#weight' => 70,
+            ];
+          }
+        }
+
+        $form['actions']['#type'] = 'actions';
+        $form['actions']['submit'] = [
+          '#type' => 'submit',
+          '#value' => $this->t('Save'),
+          '#button_type' => 'primary',
+          '#weight' => 80,
+        ];
+      }
     }
     return $form;
   }
@@ -339,6 +321,7 @@ class UserEditForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $name = NULL;
+    /** @var \Drupal\user\UserInterface $user */
     $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
     if ($form_state->getValue('name') != NULL) {
       $name = $form_state->getValue('name');
@@ -354,6 +337,7 @@ class UserEditForm extends FormBase {
       // Add the role in general group.
       $group = $this->userManager->getGeneralGroup();
       if ($group) {
+        /** @var \Drupal\group\Entity\Storage\GroupRoleStorageInterface $group_role_storage */
         $group_role_storage = $this->entityTypeManager->getStorage('group_role');
         $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
         $groupRoles = array_keys($groupRoles);

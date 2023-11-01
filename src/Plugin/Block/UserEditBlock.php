@@ -2,9 +2,9 @@
 
 namespace Drupal\iq_group\Plugin\Block;
 
-use Drupal\iq_group\Form\UserEditForm;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Url;
+use Drupal\iq_group\Form\UserEditForm;
 
 /**
  * Provides a 'User edit' Block.

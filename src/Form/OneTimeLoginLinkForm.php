@@ -4,6 +4,9 @@ namespace Drupal\iq_group\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Mail\MailManagerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides a form for the one-time login settings of iq_group module.
@@ -11,6 +14,36 @@ use Drupal\Core\Form\FormStateInterface;
  * @package Drupal\iq_group\Form
  */
 class OneTimeLoginLinkForm extends FormBase {
+
+  /**
+   * One Time Login Link Form constructor.
+   *
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
+   *   The language manager.
+   * @param \Drupal\Core\Mail\MailManagerInterface $mailManager
+   *   The mail manager.
+   */
+  public function __construct(
+    protected LanguageManagerInterface $languageManager,
+    protected MailManagerInterface $mailManager
+  ) {
+  }
+
+  /**
+   * Creates a OneTimeLoginLinkForm instance.
+   *
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The service container.
+   *
+   * @return \Drupal\iq_group\Form\OneTimeLoginLinkForm
+   *   An instance of OneTimeLoginLinkForm.
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('language_manager'),
+      $container->get('plugin.manager.mail')
+    );
+  }
 
   /**
    * {@inheritdoc}
@@ -43,7 +76,7 @@ class OneTimeLoginLinkForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $user_email_name_id = $form_state->getValue('user_email_name');
-    if (preg_match('/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/si', $user_email_name_id)) {
+    if (preg_match('/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/si', (string) $user_email_name_id)) {
       $account = user_load_by_mail($user_email_name_id);
     }
     else {
@@ -60,7 +93,7 @@ class OneTimeLoginLinkForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $params = [];
     $user_email_name = $form_state->getValue('user_email_name');
-    if (preg_match('/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/si', $user_email_name)) {
+    if (preg_match('/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}\b/si', (string) $user_email_name)) {
       $user_account = user_load_by_mail($user_email_name);
     }
     else {
@@ -70,7 +103,7 @@ class OneTimeLoginLinkForm extends FormBase {
     $login_url = user_pass_reset_url($user_account);
 
     if ($login_url) {
-      $this->messenger->addMessage($user_email_name . ' wurde eine Email gesendet zur Passwortwiederherstellung.');
+      $this->messenger()->addMessage($user_email_name . ' wurde eine Email gesendet zur Passwortwiederherstellung.');
       $params['subject'] = $this->t('Password reset');
       /*
        * $params['message'] =
@@ -84,10 +117,9 @@ class OneTimeLoginLinkForm extends FormBase {
       $to = $user_email_name;
       $module = 'iq_group';
       $key = 'iq_group_password_reset';
-      $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
+      $langcode = $this->languageManager->getCurrentLanguage()->getId();
       $send = TRUE;
-      $mailManager = \Drupal::service('plugin.manager.mail');
-      $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+      $this->mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
     }
   }
 

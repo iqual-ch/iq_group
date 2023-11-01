@@ -4,9 +4,13 @@ namespace Drupal\iq_group\Service;
 
 use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\group\Entity\Group;
@@ -20,27 +24,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class IqGroupUserManager {
 
   use StringTranslationTrait;
-
-  /**
-   * The messenger.
-   *
-   * @var \Drupal\Core\Messenger\MessengerInterface
-   */
-  protected $messenger = NULL;
-
-  /**
-   * The entityTypeManager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager = NULL;
-
-  /**
-   * Drupal language manager service.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected $languageManager;
 
   /**
    * The current request.
@@ -57,31 +40,48 @@ class IqGroupUserManager {
   protected $config;
 
   /**
+   * The logger channel.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $logger;
+
+  /**
    * UserController constructor.
    *
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger interface.
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The symfony request stack.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer.
+   * @param \Drupal\Core\Mail\MailManagerInterface $mailManager
+   *   The mail manager.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
+   *   The entity field manager.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   The logger channel factory.
    */
   public function __construct(
-    MessengerInterface $messenger,
-    EntityTypeManagerInterface $entity_type_manager,
-    LanguageManagerInterface $language_manager,
+    protected MessengerInterface $messenger,
+    protected EntityTypeManagerInterface $entityTypeManager,
+    protected LanguageManagerInterface $languageManager,
     RequestStack $request_stack,
-    ConfigFactoryInterface $config_factory
+    ConfigFactoryInterface $config_factory,
+    protected RendererInterface $renderer,
+    protected MailManagerInterface $mailManager,
+    protected EntityFieldManagerInterface $entityFieldManager,
+    LoggerChannelFactoryInterface $logger_factory
   ) {
-    $this->messenger = $messenger;
-    $this->entityTypeManager = $entity_type_manager;
-    $this->languageManager = $language_manager;
     $this->request = $request_stack->getCurrentRequest();
     $this->config = $config_factory->get('iq_group.settings');
+    $this->logger = $logger_factory->get('iq_group');
   }
 
   /**
@@ -252,7 +252,7 @@ class IqGroupUserManager {
         '#USER_PREFERENCES' => [],
         '#EMAIL_URL' => $url,
         '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
-        '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
+        '#EMAIL_FOOTER' => nl2br((string) $iqGroupSettings['project_address']),
       ];
     }
     else {
@@ -266,8 +266,7 @@ class IqGroupUserManager {
     $mail_subject = $this->t('Confirm subscription');
     mb_internal_encoding("UTF-8");
     $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
-    $rendered = \Drupal::service('renderer')->renderPlain($renderable);
-    $mailManager = \Drupal::service('plugin.manager.mail');
+    $rendered = $this->renderer->renderPlain($renderable);
     $module = 'iq_group';
     $langcode = $this->languageManager->getCurrentLanguage()->getId();
     $key = 'iq_group_create_member';
@@ -277,10 +276,10 @@ class IqGroupUserManager {
     $params['message'] = $rendered;
     $send = TRUE;
 
-    $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+    $result = $this->mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
 
     if (empty($result)) {
-      \Drupal::logger('iq_group')->notice('Error while sending email');
+      $this->logger->notice('Error while sending email');
       return NULL;
     }
     return $user;
@@ -315,13 +314,12 @@ class IqGroupUserManager {
       '#EMAIL_PREVIEW_TEXT' => $this->t("Sign into your @project_name account", ['@project_name' => $iqGroupSettings['project_name']]),
       '#EMAIL_URL' => $url,
       '#EMAIL_PROJECT_NAME' => $iqGroupSettings['project_name'],
-      '#EMAIL_FOOTER' => nl2br($iqGroupSettings['project_address']),
+      '#EMAIL_FOOTER' => nl2br((string) $iqGroupSettings['project_address']),
     ];
-    $rendered = \Drupal::service('renderer')->renderPlain($renderable);
+    $rendered = $this->renderer->renderPlain($renderable);
     $mail_subject = $this->t("Sign into your account");
     mb_internal_encoding("UTF-8");
     $mail_subject = mb_encode_mimeheader($mail_subject, 'UTF-8', 'Q');
-    $mailManager = \Drupal::service('plugin.manager.mail');
     $module = 'iq_group';
     $key = 'iq_group_login';
     $to = $user->getEmail();
@@ -329,7 +327,7 @@ class IqGroupUserManager {
     $params['subject'] = $mail_subject;
     $params['message'] = $rendered;
     $send = TRUE;
-    $result = $mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
+    $result = $this->mailManager->mail($module, $key, $to, $langcode, $params, NULL, $send);
     if ($result['result'] !== TRUE) {
       $this->messenger->addMessage($this->t('There was an error while sending login link to your email.'), 'error');
     }
@@ -366,7 +364,7 @@ class IqGroupUserManager {
       return $existing_entities;
     }
     $ids = [];
-    $user_data[$import_key] = explode(',', $user_data[$import_key]);
+    $user_data[$import_key] = explode(',', (string) $user_data[$import_key]);
     foreach ($user_data[$import_key] as $entity) {
       if (in_array(trim($entity), $entity_ids)) {
         $ids[] = ['target_id' => (string) array_search(trim($entity), $entity_ids)];
@@ -381,7 +379,7 @@ class IqGroupUserManager {
       $existing_entities = $user->get($field_key)->getValue();
       $existing_entities = array_filter(array_column($existing_entities, 'target_id'));
       $ids = array_filter(array_column($ids, 'target_id'));
-      $ids = array_merge($existing_entities, $ids);
+      $ids = [...$existing_entities, ...$ids];
     }
     elseif ($option == 'remove_preferences') {
       $existing_entities = $user->get($field_key)->getValue();
@@ -404,11 +402,11 @@ class IqGroupUserManager {
    */
   public function userImportKeyOptions() {
     $user_import_key_options = [];
-    $user_fields = \Drupal::service('entity_field.manager')->getFieldDefinitions('user', 'user');
+    $user_fields = $this->entityFieldManager->getFieldDefinitions('user', 'user');
     foreach ($user_fields as $user_field) {
       $field_name = $user_field->getName();
       $field_label = $user_field->getLabel();
-      if (substr($field_name, -3) == '_id' || $field_name == 'mail') {
+      if (str_ends_with($field_name, '_id') || $field_name == 'mail') {
         $user_import_key_options[$field_name] = $field_label;
       }
       if ($field_name == 'uid') {
