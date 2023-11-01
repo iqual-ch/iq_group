@@ -211,6 +211,7 @@ function csv_import(
       // Load General group and get the roles for the user.
       $generalGroup = $user_manager->getGeneralGroup();
       if ($generalGroup) {
+        /** @var \Drupal\group\Entity\Storage\GroupRoleStorageInterface $group_role_storage */
         $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
         $groupRoles = $group_role_storage->loadByUserAndGroup($user, $generalGroup);
         $groupRoles = array_keys($groupRoles);

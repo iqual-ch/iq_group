@@ -15,6 +15,7 @@ use Drupal\Core\Url;
 use Drupal\iq_group\Event\IqGroupEvent;
 use Drupal\iq_group\IqGroupEvents;
 use Drupal\iq_group\Service\IqGroupUserManager;
+use Drupal\language\ConfigurableLanguageManagerInterface;
 use Drupal\user\Plugin\LanguageNegotiation\LanguageNegotiationUser;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -157,6 +158,7 @@ class UserEditForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $currentPath = $this->currentPath->getPath();
     if (!$this->currentUser->isAnonymous()) {
+      /** @var \Drupal\user\UserInterface $user */
       $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
       $default_name = $user->getAccountName();
       $form['name'] = [
@@ -214,12 +216,16 @@ class UserEditForm extends FormBase {
 
       if ($user->hasField('field_iq_group_branches')) {
         $vid = 'branches';
-        $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree($vid);
+        /** @var \Drupal\taxonomy\StorageInterface $term_storage */
+        $term_storage = $this->entityTypeManager->getStorage('taxonomy_term');
+        $terms = $term_storage->loadTree($vid);
         $term_options = [];
         $language = $this->languageManager->getCurrentLanguage()->getId();
         foreach ($terms as $term) {
+          /** @var \Drupal\taxonomy\TermInterface $term */
           $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($term->tid);
           if ($term->hasTranslation($language)) {
+            /** @var \Drupal\taxonomy\TermInterface $translated_term */
             $translated_term = $this->entityRepository
               ->getTranslationFromContext($term, $language);
             $term_options[$translated_term->id()] = $translated_term->getName();
@@ -247,13 +253,16 @@ class UserEditForm extends FormBase {
       }
 
       if ($currentPath == '/user/edit') {
-        $negotiator = $this->languageManager->getNegotiator();
-        $user_language_added =
+        $user_language_added = FALSE;
+        if ($this->languageManager instanceof ConfigurableLanguageManagerInterface) {
+          $negotiator = $this->languageManager->getNegotiator();
+          $user_language_added =
           $negotiator &&
           $negotiator->isNegotiationMethodEnabled(
             LanguageNegotiationUser::METHOD_ID,
-             LanguageInterface::TYPE_INTERFACE
+            LanguageInterface::TYPE_INTERFACE
           );
+        }
         $user_preferred_langcode = $user->getPreferredLangcode();
         $form['language'] = [
           '#type' => $this->languageManager->isMultilingual() ? 'details' : 'container',
@@ -368,6 +377,7 @@ class UserEditForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $name = NULL;
+    /** @var \Drupal\user\UserInterface $user */
     $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
     if ($form_state->getValue('name') != NULL) {
       $name = $form_state->getValue('name');
@@ -383,6 +393,7 @@ class UserEditForm extends FormBase {
       // Add the role in general group.
       $group = $this->userManager->getGeneralGroup();
       if ($group) {
+        /** @var \Drupal\group\Entity\Storage\GroupRoleStorageInterface $group_role_storage */
         $group_role_storage = $this->entityTypeManager->getStorage('group_role');
         $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
         $groupRoles = array_keys($groupRoles);

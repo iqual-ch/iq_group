@@ -136,8 +136,9 @@ class UserController extends ControllerBase {
     $store = $this->tempStoreFactory->get('iq_group.user_status');
 
     $this->killSwitch->trigger();
-    $user = $this->entityTypeManager()->getStorage('user')->load($user_id);
 
+    /** @var \Drupal\user\UserInterface $user */
+    $user = $this->entityTypeManager()->getStorage('user')->load($user_id);
     if (!empty($store->get($user_id . '_pending_activation')) && !empty($user)) {
       $user->set('status', 1);
       $user->save();
@@ -184,6 +185,8 @@ class UserController extends ControllerBase {
         // If there is anything to do when user is anonymous.
       }
       $group = $this->userManager->getGeneralGroup();
+
+      /** @var \Drupal\group\Entity\GroupRoleStorageInterface $group_role_storage */
       $group_role_storage = $this->entityTypeManager()->getStorage('group_role');
       $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
       $groupRoles = array_keys($groupRoles);

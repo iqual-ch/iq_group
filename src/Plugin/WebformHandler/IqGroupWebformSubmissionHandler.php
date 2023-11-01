@@ -52,6 +52,7 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
           $user_data['langcode'] = $currentLanguage;
         }
         else {
+          /** @var \Drupal\user\UserInterface $user */
           $user = reset($user);
           $email = $user->getEmail();
         }
@@ -67,6 +68,7 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
       }
       // Set the branches through the industry content type.
       elseif ($element['#field_id'] == 'branches' && ($industry_id = $form_state->getValue($key))) {
+        /** @var \Drupal\taxonomy\TermInterface $industry */
         $industry = \Drupal::entityTypeManager()->getStorage('node')->load($industry_id);
         $branch = $industry->get('field_iq_group_branches')->getValue();
         $user_data['field_iq_group_branches'] = $branch;

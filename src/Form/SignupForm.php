@@ -168,6 +168,7 @@ class SignupForm extends FormBase {
     $account = $this->currentUser;
     $default_preferences = [];
     $group = $this->userManager->getGeneralGroup();
+    /** @var \Drupal\group\Entity\Storage\GroupRoleStorageInterface $group_role_storage */
     $group_role_storage = $this->entityTypeManager->getStorage('group_role');
     $groupRoles = $group_role_storage->loadByUserAndGroup($account, $group);
     $groupRoles = array_keys($groupRoles);
@@ -222,6 +223,7 @@ class SignupForm extends FormBase {
     }
     else {
       if (in_array('subscription-lead', $groupRoles) || in_array('subscription-subscriber', $groupRoles)) {
+        /** @var \Drupal\user\UserInterface $user */
         $user = $this->entityTypeManager->getStorage('user')->load($account->id());
         $selected_preferences = $user->get('field_iq_group_preferences')->getValue();
         foreach ($selected_preferences as $value) {
@@ -258,12 +260,16 @@ class SignupForm extends FormBase {
     ];
 
     $vid = 'branches';
-    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree($vid);
+    /** @var \Drupal\taxonomy\TermStorageInterface $term_storage */
+    $term_storage = $this->entityTypeManager->getStorage('taxonomy_term');
+    $terms = $term_storage->loadTree($vid);
     $term_options = [];
     $language = $this->languageManager->getCurrentLanguage()->getId();
     foreach ($terms as $term) {
+      /** @var \Drupal\taxonomy\TermInterface $term */
       $term = $this->entityTypeManager->getStorage('taxonomy_term')->load($term->tid);
       if ($term->hasTranslation($language)) {
+        /** @var \Drupal\taxonomy\TermInterface $translated_term */
         $translated_term = $this->entityRepository
           ->getTranslationFromContext($term, $language);
         $term_options[$translated_term->id()] = $translated_term->getName();
@@ -279,6 +285,7 @@ class SignupForm extends FormBase {
     if ($example_user->hasField('field_iq_group_branches')) {
       $default_branches = [];
       if ($account->isAuthenticated()) {
+        /** @var \Drupal\user\UserInterface $user */
         $user = $this->entityTypeManager->getStorage('user')->load($account->id());
         $selected_branches = $user->get('field_iq_group_branches')
           ->getValue();
@@ -338,6 +345,7 @@ class SignupForm extends FormBase {
         // No success, try to load by name.
         $users = $this->entityTypeManager->getStorage('user')->loadByProperties(['name' => $form_state->getValue('mail')]);
       }
+      /** @var \Drupal\user\UserInterface $user */
       $user = reset($users);
       // If the user exists, send an email to login.
       if ($user) {
@@ -420,6 +428,7 @@ class SignupForm extends FormBase {
       $this->messenger()->addMessage($this->t('Thanks for signing up. You will receive an e-mail with further information about the registration.'));
     }
     else {
+      /** @var \Drupal\user\UserInterface $user */
       $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
       if ($form_state->getValue('preferences') != NULL) {
         $user->set('field_iq_group_preferences', $form_state->getValue('preferences'));

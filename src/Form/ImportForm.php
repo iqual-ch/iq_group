@@ -232,6 +232,7 @@ class ImportForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     $import = $form_state->getValue('import_file');
+    /** @var \Drupal\file\FileInterface $import_file */
     $import_file = $this->entityTypeManager->getStorage('file')->load($import[0]);
 
     // Read CSV file.
@@ -285,6 +286,7 @@ class ImportForm extends FormBase {
      */
     foreach ($result as $branch) {
       if ($branch->hasTranslation('en')) {
+        /** @var \Drupal\taxonomy\TermInterface $translated_term */
         $translated_term = $this->entityRepository->getTranslationFromContext($branch, 'en');
         $branch_ids[$branch->id()] = $translated_term->getName();
       }

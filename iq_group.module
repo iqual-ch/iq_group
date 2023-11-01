@@ -49,6 +49,7 @@ function iq_group_form_user_form_alter(&$form, FormStateInterface $form_state, $
   // If user is subscriber, redirect to the user edit form.
   $group = \Drupal::service('iq_group.user_manager')->getGeneralGroup();
   if (!empty($group)) {
+    /** @var \Drupal\group\Entity\GroupRoleStorageInterface $group_role_storage */
     $group_role_storage = \Drupal::entityTypeManager()
       ->getStorage('group_role');
     $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
@@ -104,6 +105,7 @@ function iq_group_after_register(&$form, FormStateInterface $form_state) {
       // Add the role in general group.
       $group = $user_manager->getGeneralGroup();
       if (!empty($group)) {
+        /** @var \Drupal\group\Entity\GroupRoleStorageInterface $group_role_storage */
         $group_role_storage = \Drupal::entityTypeManager()->getStorage('group_role');
         $groupRoles = $group_role_storage->loadByUserAndGroup($user, $group);
         $groupRoles = array_keys($groupRoles);
@@ -298,9 +300,10 @@ function iq_group_node_access(NodeInterface $node, $op, AccountInterface $accoun
   $plugin_id = 'group_node:' . $node->bundle();
 
   // Load all of the group content for this node.
-  $group_contents = \Drupal::entityTypeManager()
-    ->getStorage('group_content')
-    ->loadByEntity($node);
+  /** @var \Drupal\group\Entity\GroupContentStorageInterface $group_content_storage */
+  $group_content_storage = \Drupal::entityTypeManager()
+    ->getStorage('group_content');
+  $group_contents = $group_content_storage->loadByEntity($node);
 
   // If the node does not belong to any group, we have nothing to say.
   if (empty($group_contents)) {
