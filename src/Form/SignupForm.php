@@ -25,53 +25,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class SignupForm extends FormBase {
 
   /**
-   * The entityTypeManager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager = NULL;
-
-  /**
    * Configuration for the iq_group settings.
    *
    * @var \Drupal\Core\Config\ImmutableConfig
    */
   protected $config;
-
-  /**
-   * Drupal language manager service.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected $languageManager;
-
-  /**
-   * Gets the current active user.
-   *
-   * @var \Drupal\Core\Session\AccountProxyInterface
-   */
-  protected $currentUser;
-
-  /**
-   * Gets the iq group user manager.
-   *
-   * @var \Drupal\iq_group\Service\IqGroupUserManager
-   */
-  protected $userManager;
-
-  /**
-   * The current path.
-   *
-   * @var \Drupal\Core\Path\CurrentPathStack
-   */
-  protected $currentPath;
-
-  /**
-   * The entity repository service.
-   *
-   * @var \Drupal\Core\Entity\EntityRepositoryInterface
-   */
-  protected $entityRepository;
 
   /**
    * The renderer.
@@ -81,54 +39,40 @@ class SignupForm extends FormBase {
   protected $renderer;
 
   /**
-   * The mail manager.
-   *
-   * @var \Drupal\Core\Mail\MailManagerInterface
-   */
-  protected $mailManager;
-
-  /**
    * SignupForm constructor.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
-   * @param \Drupal\Core\Session\AccountProxyInterface $current_user
+   * @param \Drupal\Core\Session\AccountProxyInterface $currentUser
    *   The current active user.
-   * @param \Drupal\iq_group\Service\IqGroupUserManager $user_manager
+   * @param \Drupal\iq_group\Service\IqGroupUserManager $userManager
    *   The iq group user manager.
-   * @param \Drupal\Core\Path\CurrentPathStack $current_path
+   * @param \Drupal\Core\Path\CurrentPathStack $currentPath
    *   The current path.
-   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entity_repository
+   * @param \Drupal\Core\Entity\EntityRepositoryInterface $entityRepository
    *   The entity repository service.
    * @param \Drupal\Core\Render\RendererInterface $renderer
    *   The renderer.
-   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
+   * @param \Drupal\Core\Mail\MailManagerInterface $mailManager
    *   The mail manager.
    */
   public function __construct(
-    EntityTypeManagerInterface $entity_type_manager,
+    protected EntityTypeManagerInterface $entityTypeManager,
     ConfigFactoryInterface $config_factory,
-    LanguageManagerInterface $language_manager,
-    AccountProxyInterface $current_user,
-    IqGroupUserManager $user_manager,
-    CurrentPathStack $current_path,
-    EntityRepositoryInterface $entity_repository,
+    protected LanguageManagerInterface $languageManager,
+    protected AccountProxyInterface $currentUser,
+    protected IqGroupUserManager $userManager,
+    protected CurrentPathStack $currentPath,
+    protected EntityRepositoryInterface $entityRepository,
     RendererInterface $renderer,
-    MailManagerInterface $mail_manager
+    protected MailManagerInterface $mailManager
   ) {
-    $this->entityTypeManager = $entity_type_manager;
     $this->config = $config_factory->get('iq_group.settings');
-    $this->languageManager = $language_manager;
-    $this->currentUser = $current_user;
-    $this->userManager = $user_manager;
-    $this->currentPath = $current_path;
-    $this->entityRepository = $entity_repository;
     $this->renderer = $renderer;
-    $this->mailManager = $mail_manager;
   }
 
   /**

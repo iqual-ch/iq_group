@@ -16,33 +16,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class OneTimeLoginLinkForm extends FormBase {
 
   /**
-   * The language manager.
-   *
-   * @var \Drupal\Core\Language\LanguageManagerInterface
-   */
-  protected $languageManager;
-
-  /**
-   * The mail manager.
-   *
-   * @var \Drupal\Core\Mail\MailManagerInterface
-   */
-  protected $mailManager;
-
-  /**
    * One Time Login Link Form constructor.
    *
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @param \Drupal\Core\Language\LanguageManagerInterface $languageManager
    *   The language manager.
-   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
+   * @param \Drupal\Core\Mail\MailManagerInterface $mailManager
    *   The mail manager.
    */
   public function __construct(
-    LanguageManagerInterface $language_manager,
-    MailManagerInterface $mail_manager
+    protected LanguageManagerInterface $languageManager,
+    protected MailManagerInterface $mailManager
   ) {
-    $this->languageManager = $language_manager;
-    $this->mailManager = $mail_manager;
   }
 
   /**
