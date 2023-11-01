@@ -16,30 +16,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class IqGroupSettingsForm extends ConfigFormBase {
 
   /**
-   * The `iq_group.user_manager` service.
-   *
-   * @var \Drupal\iq_group\Service\IqGroupUserManager
-   */
-  protected $userManager;
-
-  /**
-   * The cache tag invalidator.
-   *
-   * @var \Drupal\Core\Cache\CacheTagsInvalidatorInterface
-   */
-  protected $cacheTagsInvalidator;
-
-  /**
    * Constructs a new `IqGroupSettingsForm` object.
    *
-   * @param \Drupal\iq_group\Service\IqGroupUserManager $user_manager
+   * @param \Drupal\iq_group\Service\IqGroupUserManager $userManager
    *   The Drupal service container.
-   * @param \Drupal\Core\Cache\CacheTagsInvalidatorInterface $cache_tag_invalidator
+   * @param \Drupal\Core\Cache\CacheTagsInvalidatorInterface $cacheTagsInvalidator
    *   The cache tag invalidator.
    */
-  public function __construct(IqGroupUserManager $user_manager, CacheTagsInvalidatorInterface $cache_tag_invalidator) {
-    $this->userManager = $user_manager;
-    $this->cacheTagsInvalidator = $cache_tag_invalidator;
+  public function __construct(protected IqGroupUserManager $userManager, protected CacheTagsInvalidatorInterface $cacheTagsInvalidator) {
   }
 
   /**
