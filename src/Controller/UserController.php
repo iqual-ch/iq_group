@@ -162,7 +162,7 @@ class UserController extends ControllerBase {
       // If the user is not opted-in (not a subscriber nor a lead).
       if (!in_array('subscription-subscriber', $groupRoles) && !in_array('subscription-lead', $groupRoles)) {
         $this->userManager->addGroupRoleToUser($group, $user, 'subscription-subscriber');
-        $this->eventDispatcher->dispatch(IqGroupEvents::USER_OPT_IN, new IqGroupEvent($user));
+        $this->eventDispatcher->dispatch(new IqGroupEvent($user), IqGroupEvents::USER_OPT_IN);
       }
 
       /*
