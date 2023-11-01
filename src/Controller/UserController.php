@@ -22,13 +22,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class UserController extends ControllerBase {
 
   /**
-   * The Event dispatcher.
-   *
-   * @var Symfony\Component\EventDispatcher\EventDispatcherInterface
-   */
-  protected $eventDispatcher = NULL;
-
-  /**
    * The messenger.
    *
    * @var \Drupal\Core\Messenger\MessengerInterface
@@ -50,57 +43,32 @@ class UserController extends ControllerBase {
   protected $config;
 
   /**
-   * Gets the iq group user manager.
-   *
-   * @var \Drupal\iq_group\Service\IqGroupUserManager
-   */
-  protected $userManager;
-
-  /**
-   * The temp store factory.
-   *
-   * @var \Drupal\Core\TempStore\SharedTempStoreFactory
-   */
-  protected $tempStoreFactory;
-
-  /**
-   * Kill Switch for page caching.
-   *
-   * @var \Drupal\Core\PageCache\ResponsePolicy\KillSwitch
-   */
-  protected $killSwitch;
-
-  /**
    * UserController constructor.
    *
-   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
+   * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
    *   The event dispatcher to dispatch events.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger interface.
    * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
    *   The symfony request stack.
-   * @param \Drupal\iq_group\Service\IqGroupUserManager $user_manager
+   * @param \Drupal\iq_group\Service\IqGroupUserManager $userManager
    *   The iq group user manager.
-   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $temp_store_factory
+   * @param \Drupal\Core\TempStore\SharedTempStoreFactory $tempStoreFactory
    *   The factory for the temp store object.
-   * @param \Drupal\Core\PageCache\ResponsePolicy\KillSwitch $kill_switch
+   * @param \Drupal\Core\PageCache\ResponsePolicy\KillSwitch $killSwitch
    *   The page cache kill switch.
    */
   public function __construct(
-    EventDispatcherInterface $event_dispatcher,
+    protected EventDispatcherInterface $eventDispatcher,
     MessengerInterface $messenger,
     RequestStack $request_stack,
-    IqGroupUserManager $user_manager,
-    SharedTempStoreFactory $temp_store_factory,
-    KillSwitch $kill_switch
+    protected IqGroupUserManager $userManager,
+    protected SharedTempStoreFactory $tempStoreFactory,
+    protected KillSwitch $killSwitch
   ) {
-    $this->eventDispatcher = $event_dispatcher;
     $this->messenger = $messenger;
     $this->request = $request_stack->getCurrentRequest();
     $this->config = $this->config('iq_group.settings');
-    $this->userManager = $user_manager;
-    $this->tempStoreFactory = $temp_store_factory;
-    $this->killSwitch = $kill_switch;
   }
 
   /**
