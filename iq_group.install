@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the iq_group module.
+ */
+
+/**
+ * Resolve compatibility issue with swifmailer.
+ */
+function iq_group_update_10001() {
+
+  $moduleList = \Drupal::service('extension.list.module');
+  $moduleInstaller = \Drupal::service('module_installer');
+
+  // Enable Symfony Mailer module.
+  if ($moduleList->exists('symfony_mailer')) {
+    $moduleInstaller->install(['symfony_mailer']);
+    echo "Enabled symfony_mailer \n";
+  }
+
+  // Disable Swiftmailer module.
+  if ($moduleList->exists('mailsystem')) {
+    $moduleInstaller->uninstall(['mailsystem']);
+    echo "Disabled mailsystem \n";
+  }
+
+  // Disable Mailsystem module.
+  if ($moduleList->exists('swiftmailer')) {
+    $moduleInstaller->uninstall(['swiftmailer']);
+    echo "Disabled swiftmailer \n";
+  }
+
+}
