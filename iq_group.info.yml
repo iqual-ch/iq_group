@@ -8,4 +8,3 @@ dependencies:
   - iq_user_base:iq_user_base
   - login_emailusername:login_emailusername
   - drupal:route_condition
-  - drupal:swiftmailer
