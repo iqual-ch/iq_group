@@ -16,7 +16,6 @@
     "iqual/iq_user_base": "^3.0",
     "drupal/login_emailusername": "^2.0",
     "drupal/route_condition": "^2.0",
-    "drupal/swiftmailer": "^2.0",
     "drupal/symfony_mailer": "^1.4"
   }
 }
