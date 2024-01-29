@@ -7,4 +7,5 @@ dependencies:
   - group:group
   - iq_user_base:iq_user_base
   - login_emailusername:login_emailusername
-  - drupal:route_condition
+  - route_condition:route_condition
+  - symfony_mailer:symfony_mailer
