@@ -210,7 +210,7 @@ function iq_group_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   }
   if (($form_id == 'user_form' || $form_id == 'user_register_form') && !empty($form['user_picture'])) {
     $form['user_picture']['widget'][0]['#description'] = t('Available file types: @types', [
-      '@types' => str_replace(' ', ', ', trim((string) reset($form['user_picture']['widget'][0]['#upload_validators']['file_validate_extensions']))),
+      '@types' => str_replace(' ', ', ', trim((string) reset($form['user_picture']['widget'][0]['#upload_validators']['FileExtension']))),
     ]);
   }
   if ($form_id == 'user_register_form') {
