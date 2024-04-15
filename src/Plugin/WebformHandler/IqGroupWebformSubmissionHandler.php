@@ -127,7 +127,7 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
      * attribute the submission to the user.
      */
     if (!empty($user) && $userExists) {
-      $webform_submission->setOwnerId($user->id())->save();
+      $webform_submission->setOwnerId($user->id());
 
       // Send login email to the user.
       if (\Drupal::currentUser()->getEmail() != $email) {
@@ -172,7 +172,7 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
       $user = \Drupal::service('iq_group.user_manager')->createMember($user_data, [], $destination . '&source_form=' . rawurlencode($webform_submission->getWebform()->id()));
       $store = \Drupal::service('tempstore.shared')->get('iq_group.user_status');
       $store->set($user->id() . '_pending_activation', TRUE);
-      $webform_submission->setOwnerId($user->id())->save();
+      $webform_submission->setOwnerId($user->id());
     }
   }
 
