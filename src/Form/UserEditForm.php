@@ -343,7 +343,7 @@ class UserEditForm extends FormBase {
         $groupRoles = array_keys($groupRoles);
         if (!in_array('subscription-lead', $groupRoles)) {
           $this->userManager->addGroupRoleToUser($group, $user, 'subscription-lead');
-          $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
+          $this->eventDispatcher->dispatch(new IqGroupEvent($user), IqGroupEvents::USER_PROFILE_EDIT);
         }
       }
 
@@ -366,7 +366,7 @@ class UserEditForm extends FormBase {
 
     $this->messenger()->addMessage($this->t('Your profile has been saved.'));
     $user->save();
-    $this->eventDispatcher->dispatch(IqGroupEvents::USER_PROFILE_EDIT, new IqGroupEvent($user));
+    $this->eventDispatcher->dispatch(new IqGroupEvent($user), IqGroupEvents::USER_PROFILE_EDIT);
     // Redirect after saving
     // It would be on the same page as the private resource, so no redirect.
   }
