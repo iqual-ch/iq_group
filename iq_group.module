@@ -48,7 +48,7 @@ function iq_group_form_user_form_alter(&$form, FormStateInterface $form_state, $
 
   // If user is subscriber, redirect to the user edit form.
   $group = \Drupal::service('iq_group.user_manager')->getGeneralGroup();
-  if (!empty($group)) {
+  if (!$loggedInUser->hasPermission('administer users') && !empty($group)) {
     /** @var \Drupal\group\Entity\GroupRoleStorageInterface $group_role_storage */
     $group_role_storage = \Drupal::entityTypeManager()
       ->getStorage('group_role');
