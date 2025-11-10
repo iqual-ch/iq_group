@@ -97,7 +97,7 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
           }
           // Entity branches.
           $entity_branches = $node->get('field_iq_group_branches')->getValue();
-          foreach ($entity_branches as $key => $value) {
+          foreach ($entity_branches as $value) {
             $default_branches = [...$default_branches, $value['target_id']];
           }
           $user->set('field_iq_group_branches', $default_branches);
@@ -113,7 +113,7 @@ class IqGroupWebformSubmissionHandler extends WebformHandlerBase {
 
           // Entity products.
           $entity_products = $node->get('field_iq_group_products')->getValue();
-          foreach ($entity_products as $key => $value) {
+          foreach ($entity_products as $value) {
             $default_products = [...$default_products, $value['target_id']];
           }
           $user->set('field_iq_group_products', $default_products);

@@ -25,7 +25,7 @@ class OneTimeLoginLinkForm extends FormBase {
    */
   public function __construct(
     protected LanguageManagerInterface $languageManager,
-    protected MailManagerInterface $mailManager
+    protected MailManagerInterface $mailManager,
   ) {
   }
 

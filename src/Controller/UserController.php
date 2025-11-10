@@ -64,7 +64,7 @@ class UserController extends ControllerBase {
     RequestStack $request_stack,
     protected IqGroupUserManager $userManager,
     protected SharedTempStoreFactory $tempStoreFactory,
-    protected KillSwitch $killSwitch
+    protected KillSwitch $killSwitch,
   ) {
     $this->messenger = $messenger;
     $this->request = $request_stack->getCurrentRequest();

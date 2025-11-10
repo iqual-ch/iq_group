@@ -27,7 +27,7 @@ function csv_import(
   $existing_terms,
   $product_ids,
   $branch_ids,
-  &$context
+  &$context,
 ) {
   $user_manager = \Drupal::service('iq_group.user_manager');
   $reader = Reader::createFromPath($import_file_url, 'r');
