@@ -51,7 +51,7 @@ class ImportForm extends FormBase {
     protected IqGroupUserManager $userManager,
     protected FileSystemInterface $fileSystem,
     protected EntityRepositoryInterface $entityRepository,
-    protected ModuleExtensionList $moduleExtensionList
+    protected ModuleExtensionList $moduleExtensionList,
   ) {
     $this->config = $config_factory->get('iq_group.settings');
   }

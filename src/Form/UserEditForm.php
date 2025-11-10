@@ -62,7 +62,7 @@ class UserEditForm extends FormBase {
     protected AccountProxyInterface $currentUser,
     protected IqGroupUserManager $userManager,
     protected CurrentPathStack $currentPath,
-    protected EntityRepositoryInterface $entityRepository
+    protected EntityRepositoryInterface $entityRepository,
   ) {
     $this->config = $config_factory->get('iq_group.settings');
   }

@@ -77,7 +77,7 @@ class IqGroupUserManager {
     protected RendererInterface $renderer,
     protected MailManagerInterface $mailManager,
     protected EntityFieldManagerInterface $entityFieldManager,
-    LoggerChannelFactoryInterface $logger_factory
+    LoggerChannelFactoryInterface $logger_factory,
   ) {
     $this->request = $request_stack->getCurrentRequest();
     $this->config = $config_factory->get('iq_group.settings');

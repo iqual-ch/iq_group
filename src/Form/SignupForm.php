@@ -69,7 +69,7 @@ class SignupForm extends FormBase {
     protected CurrentPathStack $currentPath,
     protected EntityRepositoryInterface $entityRepository,
     RendererInterface $renderer,
-    protected MailManagerInterface $mailManager
+    protected MailManagerInterface $mailManager,
   ) {
     $this->config = $config_factory->get('iq_group.settings');
     $this->renderer = $renderer;
